@@ -1,0 +1,92 @@
+[
+  {
+    "client": 1487,
+    "height": 1058,
+    "scroll": 1487,
+    "theme": "light",
+    "width": 1487,
+    "page": "discipline",
+    "name": "desktop"
+  },
+  {
+    "client": 819,
+    "height": 1194,
+    "scroll": 819,
+    "theme": "light",
+    "width": 834,
+    "page": "discipline",
+    "name": "tablet"
+  },
+  {
+    "client": 585,
+    "height": 900,
+    "scroll": 585,
+    "theme": "light",
+    "width": 600,
+    "page": "discipline",
+    "name": "mobile"
+  },
+  {
+    "client": 375,
+    "height": 844,
+    "scroll": 375,
+    "theme": "light",
+    "width": 390,
+    "page": "discipline",
+    "name": "phone"
+  },
+  {
+    "client": 305,
+    "height": 740,
+    "scroll": 305,
+    "theme": "light",
+    "width": 320,
+    "page": "discipline",
+    "name": "320"
+  },
+  {
+    "client": 1487,
+    "height": 1058,
+    "scroll": 1487,
+    "theme": "dark",
+    "width": 1487,
+    "page": "discipline",
+    "name": "desktop"
+  },
+  {
+    "client": 819,
+    "height": 1194,
+    "scroll": 819,
+    "theme": "dark",
+    "width": 834,
+    "page": "discipline",
+    "name": "tablet"
+  },
+  {
+    "client": 585,
+    "height": 900,
+    "scroll": 585,
+    "theme": "dark",
+    "width": 600,
+    "page": "discipline",
+    "name": "mobile"
+  },
+  {
+    "client": 375,
+    "height": 844,
+    "scroll": 375,
+    "theme": "dark",
+    "width": 390,
+    "page": "discipline",
+    "name": "phone"
+  },
+  {
+    "client": 305,
+    "height": 740,
+    "scroll": 305,
+    "theme": "dark",
+    "width": 320,
+    "page": "discipline",
+    "name": "320"
+  }
+]
