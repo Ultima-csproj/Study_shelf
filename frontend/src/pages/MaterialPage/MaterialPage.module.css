@@ -1,0 +1,45 @@
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.breadcrumbs a:hover {
+  color: var(--color-primary-text);
+  text-decoration: underline;
+}
+
+.disciplineLink {
+  display: block;
+  margin: 12px 0;
+  color: var(--color-primary-text);
+  overflow-wrap: anywhere;
+}
+
+.disciplineLink:hover {
+  text-decoration: underline;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.summary h1 {
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.availability {
+  font-size: 14px;
+}
+@media (max-width: 479px) {
+  .summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

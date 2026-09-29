@@ -1,0 +1,152 @@
+.header {
+  height: 55px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.inner {
+  width: calc(100% - 68px);
+  max-width: 1420px;
+  height: 100%;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  white-space: nowrap;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.brand svg {
+  color: var(--color-primary);
+}
+.nav {
+  display: flex;
+  align-self: stretch;
+  align-items: stretch;
+  gap: 38px;
+  margin-left: 14px;
+  margin-right: auto;
+}
+.nav a {
+  display: flex;
+  align-items: center;
+  padding: 0 3px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+.nav a.active {
+  color: var(--color-primary-text);
+  border-bottom-color: var(--color-primary);
+}
+.search {
+  width: 370px;
+  flex-shrink: 1;
+  min-width: 160px;
+}
+.login {
+  display: block;
+  padding: 7px 23px;
+  border: 1px solid var(--color-primary);
+  border-radius: 5px;
+  color: var(--color-primary-text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.login:hover {
+  background: var(--color-primary-soft);
+}
+.hamburger {
+  display: none;
+}
+@media (min-width: 1200px) and (max-width: 1350px) {
+  .inner {
+    gap: 20px;
+  }
+  .brand {
+    font-size: 22px;
+    gap: 9px;
+  }
+  .nav {
+    gap: 25px;
+    margin-left: 0;
+  }
+  .search {
+    width: 270px;
+  }
+}
+@media (max-width: 1200px) {
+  .inner {
+    gap: 20px;
+    width: calc(100% - 40px);
+  }
+  .brand {
+    font-size: 21px;
+    gap: 8px;
+  }
+  .nav {
+    gap: 22px;
+    margin-left: 0;
+  }
+  .search {
+    width: 260px;
+  }
+}
+@media (max-width: 1199px) {
+  .search {
+    display: none;
+  }
+  .nav {
+    margin-right: auto;
+  }
+}
+@media (max-width: 767px) {
+  .inner {
+    width: calc(100% - 28px);
+    gap: 14px;
+  }
+  .brand {
+    font-size: 18px;
+    gap: 7px;
+  }
+  .brand svg {
+    width: 28px;
+  }
+  .nav {
+    display: none;
+  }
+  .account {
+    display: none;
+  }
+  .brand {
+    margin-right: auto;
+  }
+  .hamburger {
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 4px;
+  }
+  .hamburger:hover {
+    background: var(--color-hover);
+  }
+}
+@media (max-width: 380px) {
+  .brand {
+    font-size: 16px;
+  }
+  .inner {
+    gap: 9px;
+  }
+}

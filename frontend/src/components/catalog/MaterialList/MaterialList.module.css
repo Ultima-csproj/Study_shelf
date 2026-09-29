@@ -1,0 +1,18 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.state {
+  padding: 70px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.state h2 {
+  color: var(--color-text);
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.state p {
+  margin-bottom: 20px;
+}

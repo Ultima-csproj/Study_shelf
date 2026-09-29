@@ -1,0 +1,23 @@
+.select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.select select {
+  padding: 8px 36px 8px 14px;
+  appearance: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-field);
+  color: var(--color-text);
+  font-size: 13px;
+  line-height: 18px;
+  min-width: 164px;
+  cursor: pointer;
+}
+.select svg {
+  position: absolute;
+  right: 13px;
+  pointer-events: none;
+  color: var(--color-text);
+}

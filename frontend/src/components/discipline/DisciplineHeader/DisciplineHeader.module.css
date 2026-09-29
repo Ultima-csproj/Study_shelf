@@ -1,0 +1,130 @@
+.header {
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--color-border);
+}
+.breadcrumbs {
+  display: flex;
+  gap: 9px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 21px;
+  margin-bottom: 19px;
+  flex-wrap: wrap;
+}
+.breadcrumbs a:hover {
+  color: var(--color-primary-text);
+}
+.header h1 {
+  font-size: clamp(27px, 2.2vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: 10px;
+}
+.description {
+  font-size: 16px;
+  line-height: 23px;
+  max-width: 830px;
+  color: var(--color-text);
+  margin-bottom: 9px;
+  overflow-wrap: anywhere;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 23px;
+  color: var(--color-text-secondary);
+}
+.meta > span:first-child span {
+  margin: 0 8px;
+}
+.teacher::before {
+  content: '·';
+  margin-right: 12px;
+}
+.hint {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.mobileHint,
+.more,
+.compactDescription {
+  display: none;
+}
+@media (max-width: 1199px) {
+  .header h1 {
+    font-size: 40px;
+  }
+  .fullDescription {
+    display: none;
+  }
+  .compactDescription {
+    display: inline;
+  }
+  .breadcrumbs {
+    display: none;
+  }
+  .header {
+    padding-bottom: 16px;
+  }
+  .hint {
+    margin-top: 8px;
+    font-size: 14px;
+  }
+}
+@media (max-width: 767px) {
+  .header {
+    padding-bottom: 20px;
+  }
+  .header h1 {
+    margin-bottom: 11px;
+    font-size: 32px;
+  }
+  .description {
+    font-size: 14px;
+    line-height: 21px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+  .description.expanded {
+    display: block;
+  }
+  .more {
+    display: inline-block;
+    margin: 2px 0 10px;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: var(--color-primary-text);
+    font-size: 14px;
+  }
+  .meta {
+    display: grid;
+    gap: 2px;
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .teacher::before {
+    display: none;
+  }
+  .hint {
+    font-size: 12px;
+    gap: 8px;
+    margin-top: 9px;
+  }
+  .desktopHint {
+    display: none;
+  }
+  .mobileHint {
+    display: inline;
+  }
+}

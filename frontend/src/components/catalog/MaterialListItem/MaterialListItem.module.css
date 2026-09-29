@@ -1,0 +1,144 @@
+.item {
+  display: flex;
+  gap: 30px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+  min-height: 142px;
+}
+.item:hover {
+  background: var(--color-hover);
+}
+.body {
+  flex: 1;
+  min-width: 0;
+}
+.titleRow {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 3px;
+} 
+.titleRow h2 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 23px;
+  padding-top: 1px;
+  overflow-wrap: anywhere;
+}
+.date {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 23px;
+  padding-top: 1px;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--color-text-secondary);
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+.meta span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.meta .mobileDuration {
+  display: none;
+}
+.discipline {
+  border-left: 1px solid var(--color-border);
+  padding-left: 14px;
+}
+.description {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  max-width: 850px;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag {
+  border: 0;
+  background: var(--color-tag);
+  color: var(--color-tag-text);
+  border-radius: 6px;
+  padding: 3px 13px;
+  font-size: 12px;
+  line-height: 19px;
+}
+.tag:hover,
+.tag[aria-pressed='true'] {
+  color: var(--color-primary-text);
+  background: var(--color-primary-soft);
+}
+@media (max-width: 1320px) {
+  .titleRow {
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+  .date {
+    width: 100%;
+    font-size: 12px;
+    order: 3;
+    line-height: 18px;
+  }
+  .titleRow h2 {
+    flex: 1;
+  }
+  .item {
+    gap: 22px;
+  }
+}
+@media (max-width: 980px) {
+  .titleRow .date {
+    width: auto;
+    margin-left: auto;
+  }
+  .item {
+    gap: 24px;
+  }
+}
+@media (max-width: 700px) {
+  .titleRow .date {
+    width: 100%;
+    margin-left: 0;
+  }
+  .titleRow h2 {
+    flex-basis: 100%;
+    font-size: 16px;
+  }
+  .item {
+    gap: 14px;
+    min-height: 0;
+  }
+  .meta {
+    gap: 6px 10px;
+  }
+  .description {
+    font-size: 13px;
+    line-height: 19px;
+  }
+  .tag {
+    padding: 2px 8px;
+  }
+}
+@media (max-width: 420px) {
+  .discipline {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .meta .mobileDuration {
+    display: inline-flex;
+  }
+}

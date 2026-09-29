@@ -1,0 +1,296 @@
+.layout {
+  display: grid;
+  grid-template-columns: 284px minmax(0, 1fr);
+  max-width: 1488px;
+  min-height: calc(100dvh - 55px);
+  margin: auto;
+}
+
+.sidebar {
+  padding: 23px 14px;
+  background: var(--color-subtle);
+  border-right: 1px solid var(--color-border);
+}
+
+.sticky {
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar h2 {
+  margin: 0 14px 16px;
+  font-size: 21px;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 2px;
+}
+
+.sidebar nav a {
+  display: flex;
+  align-items: baseline;
+  gap: 15px;
+  min-height: 43px;
+  padding: 10px 14px;
+  border-left: 4px solid transparent;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.sidebar nav a:hover {
+  background: var(--color-hover);
+}
+
+.sidebar nav a.selected {
+  background: var(--color-primary-soft);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.allCollections {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-primary-text);
+  margin: 20px 14px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.mobileNavigation {
+  display: none;
+}
+
+.content {
+  min-width: 0;
+  padding: 23px 30px 40px;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+}
+
+.breadcrumbs a:hover {
+  color: var(--color-primary-text);
+}
+
+.heading {
+  display: flex;
+  align-items: start;
+  gap: 20px;
+}
+
+.intro {
+  flex: 1;
+  min-width: 0;
+}
+
+.intro h1 {
+  font-size: 32px;
+  line-height: 40px;
+  margin-bottom: 5px;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+}
+
+.metadata,
+.contributors {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.save {
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.save p {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.purpose {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin: 28px 0 24px;
+}
+
+.purpose section + section {
+  border-left: 1px solid var(--color-border);
+  padding-left: 32px;
+}
+
+.purpose h2 {
+  font-size: 21px;
+  line-height: 28px;
+}
+
+.purpose p {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--color-text-secondary);
+  max-width: 65ch;
+}
+
+.section {
+  border-top: 1px solid var(--color-border);
+  padding: 11px 0 14px;
+  scroll-margin-top: 20px;
+}
+
+.section > h2 {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  font-size: 21px;
+  line-height: 32px;
+  margin-bottom: 4px;
+}
+
+.section > h2 span {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 21px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.section ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.state {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+.state h1 {
+  font-size: 28px;
+}
+
+.state p {
+  margin: 12px 0;
+}
+
+.state a,
+.state button {
+  color: var(--color-primary-text);
+}
+
+.state button {
+  padding: 9px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+}
+
+.empty {
+  margin-top: 30px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 1199px) {
+  .layout {
+    display: block;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: 14px 24px;
+  }
+
+  .sticky {
+    position: static;
+  }
+
+  .desktopNavigation,
+  .allCollections {
+    display: none;
+  }
+
+  .mobileNavigation {
+    display: block;
+  }
+
+  .mobileNavigation summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 6px 0;
+  }
+
+  .content {
+    padding: 24px;
+  }
+
+  .heading {
+    flex-wrap: wrap;
+  }
+
+  .intro {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .content {
+    padding: 20px 16px 30px;
+  }
+
+  .sidebar {
+    padding: 10px 16px;
+  }
+
+  .intro h1 {
+    font-size: 28px;
+    line-height: 35px;
+  }
+
+  .purpose {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .purpose section + section {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .save p {
+    text-align: left;
+  }
+
+  .section > h2 {
+    gap: 12px;
+    font-size: 20px;
+  }
+
+  .section > h2 span {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+}
