@@ -1,5 +1,6 @@
 # Rust build output
 /backend/target/
+/backend/data/
 
 # Frontend dependencies and build output
 **/node_modules/
