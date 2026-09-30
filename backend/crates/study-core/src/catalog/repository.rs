@@ -11,4 +11,3 @@ pub trait MaterialRepository: Send + Sync {
 
     async fn search(&self, query: CatalogQuery) -> Result<CatalogPage>;
 }
- 

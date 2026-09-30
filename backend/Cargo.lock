@@ -45,6 +45,7 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "sqlx",
  "study-core",
  "study-storage-sqlite",
  "tokio",
@@ -1094,6 +1095,7 @@ name = "study-storage-sqlite"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "sqlx",
  "study-core",
 ]

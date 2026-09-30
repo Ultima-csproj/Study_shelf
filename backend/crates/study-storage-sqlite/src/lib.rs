@@ -4,6 +4,8 @@ use anyhow::Result;
 use sqlx::SqlitePool;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
+pub mod catalog;
+
 pub struct SqliteStorage {
     pool: SqlitePool,
 }

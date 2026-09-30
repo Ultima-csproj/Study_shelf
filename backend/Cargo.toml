@@ -26,3 +26,4 @@ anyhow.workspace = true
 study-core = { path = "crates/study-core" }
 study-storage-sqlite = { path = "crates/study-storage-sqlite" }
 tokio.workspace = true
+sqlx.workspace = true
