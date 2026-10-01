@@ -18,22 +18,22 @@ node .\node_modules\vite\bin\vite.js --host=127.0.0.1 --port=5173 --strictPort
 
 ## Маршруты
 
-| Адрес | Экран |
-| --- | --- |
-| `/` | Переход на `/catalog` |
-| `/catalog` | Поиск, фильтры, сортировка и страницы в URL |
-| `/disciplines/database` | Утверждённая дисциплина «Базы данных» |
-| `/disciplines/:disciplineId` | Поддерживает slug и числовой ID |
-| `/materials/:materialId` | Минимальная публичная информация о материале |
-| `/login?redirect=...` | Демонстрационный вход с возвратом на исходный URL |
-| `/collections` | Публичные подборки: поиск, дисциплины, курс, сортировка в URL |
-| `/collections/:collectionId` | Учебный маршрут; slug или числовой ID |
-| `/profile` | Свой профиль и редактирование демо-данных |
-| `/library?tab=saved` | Сохранённые материалы |
-| `/library?tab=collections` | Сохранённые подборки и подборки с вашим участием |
-| `/settings` | Переключение темы; информация о будущем аккаунте |
-| `/references/catalog-d` | Прежний адрес, перенаправляет в каталог |
-| Неизвестный адрес | Простая страница «Страница не найдена» |
+| Адрес                        | Экран                                                         |
+| ---------------------------- | ------------------------------------------------------------- |
+| `/`                          | Переход на `/catalog`                                         |
+| `/catalog`                   | Поиск, фильтры, сортировка и страницы в URL                   |
+| `/disciplines/database`      | Утверждённая дисциплина «Базы данных»                         |
+| `/disciplines/:disciplineId` | Поддерживает slug и числовой ID                               |
+| `/materials/:materialId`     | Минимальная публичная информация о материале                  |
+| `/login?redirect=...`        | Демонстрационный вход с возвратом на исходный URL             |
+| `/collections`               | Публичные подборки: поиск, дисциплины, курс, сортировка в URL |
+| `/collections/:collectionId` | Учебный маршрут; slug или числовой ID                         |
+| `/profile`                   | Свой профиль и редактирование демо-данных                     |
+| `/library?tab=saved`         | Сохранённые материалы                                         |
+| `/library?tab=collections`   | Сохранённые подборки и подборки с вашим участием              |
+| `/settings`                  | Переключение темы; информация о будущем аккаунте              |
+| `/references/catalog-d`      | Прежний адрес, перенаправляет в каталог                       |
+| Неизвестный адрес            | Простая страница «Страница не найдена»                        |
 
 На production-сервере прямые переходы на frontend-маршруты должны возвращать `dist/index.html`; будущие запросы `/api/*` обрабатываются отдельно.
 
@@ -64,26 +64,26 @@ node .\node_modules\vite\bin\vite.js --host=127.0.0.1 --port=5173 --strictPort
 
 ## Декомпозиция
 
-| Часть | Ответственность |
-| --- | --- |
-| `app/App`, `router`, `AppShell` | Провайдеры, маршруты, общая шапка и outlet |
-| `ThemeProvider` | Тема и сохранение |
-| `ViewerProvider` | Guest/demo viewer и локальные сохранения |
-| `pages/CatalogPage` | Сборка существующего каталога, параметры URL |
-| `pages/DisciplinePage` | Загрузка дисциплины и сборка секций |
-| `pages/CollectionsPage`, `CollectionPage` | Поиск подборок и упорядоченный маршрут |
-| `pages/ProfilePage`, `LibraryPage`, `SettingsPage` | Личная зона демо-пользователя |
-| `components/layout` | Header, MobileMenu, PageContainer |
-| `components/catalog` | Фильтры, поиск, toolbar, список, строка, пагинация |
-| `components/discipline` | Sidebar, Selector, Header, Section, MaterialItem |
-| `components/collections` | Фильтры, строка подборки, строка материала маршрута |
-| `components/layout/AccountMenu`, `PersonalLayout` | Меню аккаунта и навигация личной зоны |
-| `components/common` | Preview, SaveAction, ThemeToggle и базовые контролы |
-| `api` | Простые Promise-функции с AbortSignal |
-| `hooks/useCatalog`, `useDiscipline`, `useMaterial` | Загрузка, отмена устаревших ответов, повторение |
-| `hooks/useApiResource`, `useCollections` | Загрузка подборок и библиотеки, отмена, retry |
-| `types`, `data` | Domain types и отдельные mock-данные |
-| `styles` | Base/accessibility, размеры и semantic colors |
+| Часть                                              | Ответственность                                     |
+| -------------------------------------------------- | --------------------------------------------------- |
+| `app/App`, `router`, `AppShell`                    | Провайдеры, маршруты, общая шапка и outlet          |
+| `ThemeProvider`                                    | Тема и сохранение                                   |
+| `ViewerProvider`                                   | Guest/demo viewer и локальные сохранения            |
+| `pages/CatalogPage`                                | Сборка существующего каталога, параметры URL        |
+| `pages/DisciplinePage`                             | Загрузка дисциплины и сборка секций                 |
+| `pages/CollectionsPage`, `CollectionPage`          | Поиск подборок и упорядоченный маршрут              |
+| `pages/ProfilePage`, `LibraryPage`, `SettingsPage` | Личная зона демо-пользователя                       |
+| `components/layout`                                | Header, MobileMenu, PageContainer                   |
+| `components/catalog`                               | Фильтры, поиск, toolbar, список, строка, пагинация  |
+| `components/discipline`                            | Sidebar, Selector, Header, Section, MaterialItem    |
+| `components/collections`                           | Фильтры, строка подборки, строка материала маршрута |
+| `components/layout/AccountMenu`, `PersonalLayout`  | Меню аккаунта и навигация личной зоны               |
+| `components/common`                                | Preview, SaveAction, ThemeToggle и базовые контролы |
+| `api`                                              | Простые Promise-функции с AbortSignal               |
+| `hooks/useCatalog`, `useDiscipline`, `useMaterial` | Загрузка, отмена устаревших ответов, повторение     |
+| `hooks/useApiResource`, `useCollections`           | Загрузка подборок и библиотеки, отмена, retry       |
+| `types`, `data`                                    | Domain types и отдельные mock-данные                |
+| `styles`                                           | Base/accessibility, размеры и semantic colors       |
 
 ## Подключение Axum
 
