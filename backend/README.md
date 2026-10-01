@@ -38,6 +38,8 @@ cargo run
 - `GET /api/catalog`: каталог; параметры `q`, повторяемые `type`, `discipline`, `teacher`, `course`, `year`, `tag`, одиночные `sort`, `page`, `pageSize`.
 - `GET /api/materials/{id}`: материал со связанными преподавателем и дисциплиной.
 
+Ошибки имеют форму `{ "error": { "code": "...", "message": "..." } }`. Некорректный запрос возвращает `400`, отсутствующий материал — `404`, неподдерживаемый метод — `405`. Недоступность хранилища возвращает `503` с кодом `service_unavailable`; повреждённые данные и неожиданные внутренние ошибки — `500` с кодом `internal_error`. Подробная причина сохраняется в серверном логе.
+
 ```powershell
 Invoke-RestMethod "http://127.0.0.1:3000/api/catalog?type=book&type=video&pageSize=5"
 Invoke-RestMethod "http://127.0.0.1:3000/api/materials/1001"

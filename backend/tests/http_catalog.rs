@@ -144,11 +144,75 @@ async fn material_health_and_error_routes() {
 }
 
 #[tokio::test]
-async fn database_failure_returns_generic_internal_error() {
+async fn unavailable_database_returns_generic_service_unavailable() {
     let (app, pool) = fixture().await;
     pool.close().await;
-    let (status, body) = request(app, Method::GET, "/api/catalog").await;
+    for uri in ["/api/catalog", "/api/materials/1001"] {
+        let (status, body) = request(app.clone(), Method::GET, uri).await;
+        assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(body["error"]["code"], "service_unavailable");
+        assert_eq!(
+            body["error"]["message"],
+            "Хранилище временно недоступно. Попробуйте позже"
+        );
+    }
+}
+
+#[tokio::test]
+async fn invalid_stored_material_returns_generic_internal_error() {
+    let (app, pool) = fixture().await;
+    // Simulate a damaged database without modifying the production migration.
+    sqlx::query("PRAGMA ignore_check_constraints = ON")
+        .execute(&pool)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE materials SET course = 0 WHERE id = 1001")
+        .execute(&pool)
+        .await
+        .unwrap();
+    for uri in ["/api/catalog", "/api/materials/1001"] {
+        assert_internal_error(app.clone(), uri).await;
+    }
+}
+
+#[tokio::test]
+async fn missing_required_reference_returns_internal_error_instead_of_not_found() {
+    for statement in [
+        "UPDATE materials SET teacher_id = 99999 WHERE id = 1001",
+        "UPDATE materials SET discipline_id = 99999 WHERE id = 1001",
+    ] {
+        let (app, pool) = fixture().await;
+        sqlx::query("PRAGMA foreign_keys = OFF")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query(statement).execute(&pool).await.unwrap();
+        for uri in ["/api/catalog", "/api/materials/1001"] {
+            assert_internal_error(app.clone(), uri).await;
+        }
+    }
+}
+
+#[tokio::test]
+async fn unexpected_database_failure_returns_generic_internal_error() {
+    let (app, pool) = fixture().await;
+    sqlx::query("DROP TABLE material_tags")
+        .execute(&pool)
+        .await
+        .unwrap();
+    assert_internal_error(app, "/api/catalog").await;
+}
+
+async fn assert_internal_error(app: Router, uri: &str) {
+    let (status, body) = request(app, Method::GET, uri).await;
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
-    assert_eq!(body["error"]["code"], "internal_error");
-    assert_eq!(body["error"]["message"], "Не удалось обработать запрос");
+    assert_eq!(
+        body,
+        serde_json::json!({
+            "error": {
+                "code": "internal_error",
+                "message": "Не удалось обработать запрос",
+            }
+        })
+    );
 }

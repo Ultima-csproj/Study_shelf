@@ -1,5 +1,8 @@
 use study_core::error::RepositoryError;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn map_sqlx_error(error: sqlx::Error) -> RepositoryError {
     match &error {
         sqlx::Error::PoolClosed | sqlx::Error::PoolTimedOut => RepositoryError::unavailable(error),

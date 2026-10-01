@@ -2,6 +2,9 @@ use axum::Json;
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
+use study_core::error::RepositoryErrorKind;
+
+use crate::catalog::CatalogError;
 
 pub struct ApiError {
     status: StatusCode,
@@ -55,6 +58,32 @@ impl ApiError {
             status: StatusCode::INTERNAL_SERVER_ERROR,
             code: "internal_error",
             message: "Не удалось обработать запрос".to_owned(),
+        }
+    }
+
+    fn unavailable(error: CatalogError) -> Self {
+        tracing::warn!(error = ?error, "Хранилище временно недоступно");
+
+        Self {
+            status: StatusCode::SERVICE_UNAVAILABLE,
+            code: "service_unavailable",
+            message: "Хранилище временно недоступно. Попробуйте позже".to_owned(),
+        }
+    }
+}
+
+impl From<CatalogError> for ApiError {
+    fn from(error: CatalogError) -> Self {
+        match &error {
+            CatalogError::Storage(storage) => match storage.kind() {
+                RepositoryErrorKind::Unavailable => Self::unavailable(error),
+                RepositoryErrorKind::InvalidData | RepositoryErrorKind::Unexpected => {
+                    Self::internal(error)
+                }
+            },
+            CatalogError::MissingDiscipline { .. } | CatalogError::MissingTeacher { .. } => {
+                Self::internal(error)
+            }
         }
     }
 }

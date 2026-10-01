@@ -19,11 +19,7 @@ pub async fn list(
 ) -> Result<Json<CatalogResponse>, ApiError> {
     let query = parse_catalog_query(raw_query.as_deref())?;
 
-    let view = state
-        .catalog
-        .list(query)
-        .await
-        .map_err(ApiError::internal)?;
+    let view = state.catalog.list(query).await.map_err(ApiError::from)?;
 
     Ok(Json(view.into()))
 }
@@ -48,7 +44,7 @@ pub async fn get_by_id(
         .catalog
         .get_by_id(MaterialId(id))
         .await
-        .map_err(ApiError::internal)?
+        .map_err(ApiError::from)?
         .ok_or_else(|| ApiError::not_found("Материал не найден"))?;
 
     Ok(Json(item.into()))
