@@ -31,7 +31,7 @@
 .pages button:last-child {
   margin-right: 0;
 }
-.pages button[aria-current='page'] {
+.pages button[aria-current="page"] {
   position: relative;
   border-color: var(--color-primary-text);
   background: var(--color-primary-text);

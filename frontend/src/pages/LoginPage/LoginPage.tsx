@@ -1,38 +1,32 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useViewer } from '../../hooks/useViewer'
-import { safeRedirect } from '../../utils/redirect'
-import styles from '../InformationPage/InformationPage.module.css'
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useViewer } from "../../hooks/useViewer";
+import { safeRedirect } from "../../utils/redirect";
+import styles from "../InformationPage/InformationPage.module.css";
 
 export function LoginPage() {
-  const [params] = useSearchParams()
-  const navigate = useNavigate()
-  const { viewer, signInDemo } = useViewer()
-  const redirect = safeRedirect(params.get('redirect'))
-  const redirectPathname = new URL(redirect, 'https://study-shelf.local')
-    .pathname
-  const personalPage = ['/profile', '/library', '/settings'].includes(
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { viewer, signInDemo } = useViewer();
+  const redirect = safeRedirect(params.get("redirect"));
+  const redirectPathname = new URL(redirect, "https://study-shelf.local")
+    .pathname;
+  const personalPage = ["/profile", "/library", "/settings"].includes(
     redirectPathname,
-  )
-  const backPath = personalPage ? '/catalog' : redirect
-  const register = params.get('mode') === 'register'
-  const title = register ? 'Создать аккаунт' : 'Войти'
+  );
+  const backPath = personalPage ? "/catalog" : redirect;
+  const register = params.get("mode") === "register";
+  const title = register ? "Создать аккаунт" : "Войти";
   const buttonLabel =
-    viewer.kind === 'authenticated'
-      ? 'Продолжить просмотр'
-      : 'Войти в демо-аккаунт'
+    viewer.kind === "authenticated"
+      ? "Продолжить просмотр"
+      : "Войти в демо-аккаунт";
   const enter = () => {
-    signInDemo()
-    navigate(redirect, { replace: true })
-  }
+    signInDemo();
+    navigate(redirect, { replace: true });
+  };
   return (
-    <main
-      id="main-content"
-      className={styles.page}
-    >
-      <Link
-        className={styles.back}
-        to={backPath}
-      >
+    <main id="main-content" className={styles.page}>
+      <Link className={styles.back} to={backPath}>
         ← Вернуться к просмотру
       </Link>
       <h1>{title}</h1>
@@ -46,14 +40,10 @@ export function LoginPage() {
           Сейчас можно посмотреть интерфейс от лица Алексея К. Настоящий вход и
           регистрация появятся после подключения сервера.
         </p>
-        <button
-          className={styles.primary}
-          type="button"
-          onClick={enter}
-        >
+        <button className={styles.primary} type="button" onClick={enter}>
           {buttonLabel}
         </button>
       </div>
     </main>
-  )
+  );
 }

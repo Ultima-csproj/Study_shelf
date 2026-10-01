@@ -1,39 +1,36 @@
-import { UserIcon } from '@phosphor-icons/react/dist/csr/User'
-import { Link, useLocation } from 'react-router-dom'
-import type { CatalogMaterial } from '../../../types/material'
-import { Badge } from '../../common/Badge/Badge'
-import { MaterialPreview } from '../../common/MaterialPreview/MaterialPreview'
-import styles from './MaterialListItem.module.css'
-import { locationPath, withNavigationOrigin } from '../../../utils/navigation'
+import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
+import { Link, useLocation } from "react-router-dom";
+import type { CatalogMaterial } from "../../../types/material";
+import { Badge } from "../../common/Badge/Badge";
+import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
+import styles from "./MaterialListItem.module.css";
+import { locationPath, withNavigationOrigin } from "../../../utils/navigation";
 
-const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+const dateFormatter = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
 interface MaterialListItemProps {
-  material: CatalogMaterial
-  selectedTags: string[]
-  onTagClick: (tag: string) => void
+  material: CatalogMaterial;
+  selectedTags: string[];
+  onTagClick: (tag: string) => void;
 }
 export function MaterialListItem({
   material,
   selectedTags,
   onTagClick,
 }: MaterialListItemProps) {
-  const { teacher, discipline } = material
-  const location = useLocation()
+  const { teacher, discipline } = material;
+  const location = useLocation();
   const path = withNavigationOrigin(
     `/materials/${material.id}`,
     locationPath(location),
-  )
+  );
   return (
     <li className={styles.item}>
-      <Link
-        to={path}
-        aria-label={`Открыть материал: ${material.title}`}
-      >
+      <Link to={path} aria-label={`Открыть материал: ${material.title}`}>
         <MaterialPreview material={material} />
       </Link>
       <article className={styles.body}>
@@ -42,22 +39,16 @@ export function MaterialListItem({
           <h2>
             <Link to={path}>{material.title}</Link>
           </h2>
-          <time
-            dateTime={material.createdAt}
-            className={styles.date}
-          >
-            {material.dateLabel}{' '}
+          <time dateTime={material.createdAt} className={styles.date}>
+            {material.dateLabel}{" "}
             {dateFormatter
               .format(new Date(material.createdAt))
-              .replace(/\s?г\.$/, '')}
+              .replace(/\s?г\.$/, "")}
           </time>
         </div>
         <div className={styles.meta}>
           <span title={teacher?.name}>
-            <UserIcon
-              size={15}
-              aria-hidden="true"
-            />
+            <UserIcon size={15} aria-hidden="true" />
             {teacher?.shortName}
           </span>
           <Link
@@ -74,10 +65,7 @@ export function MaterialListItem({
           )}
         </div>
         <p className={styles.description}>{material.description}</p>
-        <div
-          className={styles.tags}
-          aria-label="Теги материала"
-        >
+        <div className={styles.tags} aria-label="Теги материала">
           {material.tags.map((tag) => (
             <button
               type="button"
@@ -93,5 +81,5 @@ export function MaterialListItem({
         </div>
       </article>
     </li>
-  )
+  );
 }

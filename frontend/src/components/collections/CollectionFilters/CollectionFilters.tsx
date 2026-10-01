@@ -1,7 +1,7 @@
-import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise'
-import type { CollectionRequest } from '../../../types/collection'
-import type { Discipline } from '../../../types/discipline'
-import styles from './CollectionFilters.module.css'
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
+import type { CollectionRequest } from "../../../types/collection";
+import type { Discipline } from "../../../types/discipline";
+import styles from "./CollectionFilters.module.css";
 
 export function CollectionFilters({
   request,
@@ -10,27 +10,27 @@ export function CollectionFilters({
   onChange,
   onReset,
 }: {
-  request: CollectionRequest
-  disciplines: Discipline[]
-  courses: number[]
-  onChange: (request: CollectionRequest) => void
-  onReset: () => void
+  request: CollectionRequest;
+  disciplines: Discipline[];
+  courses: number[];
+  onChange: (request: CollectionRequest) => void;
+  onReset: () => void;
 }) {
   const toggleDiscipline = (id: number) => {
     const disciplineIds = request.disciplineIds.includes(id)
       ? request.disciplineIds.filter((value) => value !== id)
-      : [...request.disciplineIds, id]
+      : [...request.disciplineIds, id];
 
-    onChange({ ...request, disciplineIds })
-  }
+    onChange({ ...request, disciplineIds });
+  };
 
   const toggleCourse = (course: number) => {
     const courses = request.courses.includes(course)
       ? request.courses.filter((value) => value !== course)
-      : [...request.courses, course]
+      : [...request.courses, course];
 
-    onChange({ ...request, courses })
-  }
+    onChange({ ...request, courses });
+  };
 
   return (
     <div className={styles.filters}>
@@ -61,17 +61,10 @@ export function CollectionFilters({
           </label>
         ))}
       </fieldset>
-      <button
-        type="button"
-        className={styles.reset}
-        onClick={onReset}
-      >
-        <ArrowCounterClockwiseIcon
-          size={20}
-          aria-hidden="true"
-        />
+      <button type="button" className={styles.reset} onClick={onReset}>
+        <ArrowCounterClockwiseIcon size={20} aria-hidden="true" />
         Сбросить фильтры
       </button>
     </div>
-  )
+  );
 }

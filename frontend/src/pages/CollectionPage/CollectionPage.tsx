@@ -1,122 +1,111 @@
-import { useEffect } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
-import { ArrowRightIcon } from '@phosphor-icons/react/dist/csr/ArrowRight'
-import { LinkIcon } from '@phosphor-icons/react/dist/csr/Link'
-import { CollectionRouteItem } from '../../components/collections/CollectionRouteItem/CollectionRouteItem'
-import { SaveAction } from '../../components/common/SaveAction/SaveAction'
-import { useCollection } from '../../hooks/useCollections'
-import { useViewer } from '../../hooks/useViewer'
+import { useEffect } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
+import { CollectionRouteItem } from "../../components/collections/CollectionRouteItem/CollectionRouteItem";
+import { SaveAction } from "../../components/common/SaveAction/SaveAction";
+import { useCollection } from "../../hooks/useCollections";
+import { useViewer } from "../../hooks/useViewer";
 import {
   collectionMetadata,
   compilerNames,
   difficultyLabels,
-} from '../../utils/collectionLabels'
-import styles from './CollectionPage.module.css'
+} from "../../utils/collectionLabels";
+import styles from "./CollectionPage.module.css";
 import {
   collectionsForDiscipline,
   navigationOrigin,
-} from '../../utils/navigation'
+} from "../../utils/navigation";
 
 export function CollectionPage() {
-  const { collectionId = '' } = useParams()
-  const location = useLocation()
+  const { collectionId = "" } = useParams();
+  const location = useLocation();
   const {
     result: collection,
     loading,
     error,
     retry,
-  } = useCollection(collectionId)
-  const { viewer } = useViewer()
-  const origin = navigationOrigin(location.search)
+  } = useCollection(collectionId);
+  const { viewer } = useViewer();
+  const origin = navigationOrigin(location.search);
   const parentPath =
-    origin?.kind === 'collections' || origin?.kind === 'library'
+    origin?.kind === "collections" || origin?.kind === "library"
       ? origin.path
-      : '/collections'
-  const parentLabel = origin?.kind === 'library' ? 'Моя библиотека' : 'Подборки'
+      : "/collections";
+  const parentLabel =
+    origin?.kind === "library" ? "Моя библиотека" : "Подборки";
   const backLabel =
-    origin?.kind === 'library' ? 'Моя библиотека' : 'К списку подборок'
-  const requestedSection = location.hash.slice(1)
+    origin?.kind === "library" ? "Моя библиотека" : "К списку подборок";
+  const requestedSection = location.hash.slice(1);
 
   useEffect(() => {
     if (!collection || loading || !requestedSection) {
-      return
+      return;
     }
 
     const validSection = collection.sections.some((section) => {
-      return `route-${section.id}` === requestedSection
-    })
+      return `route-${section.id}` === requestedSection;
+    });
 
     if (validSection) {
       document
         .getElementById(requestedSection)
-        ?.scrollIntoView({ block: 'start' })
+        ?.scrollIntoView({ block: "start" });
     }
-  }, [collection, loading, requestedSection])
+  }, [collection, loading, requestedSection]);
 
   if (loading) {
     return (
-      <main
-        id="main-content"
-        className={styles.state}
-      >
+      <main id="main-content" className={styles.state}>
         <p role="status">Загружаем подборку…</p>
       </main>
-    )
+    );
   }
 
   if (error) {
     return (
-      <main
-        id="main-content"
-        className={styles.state}
-      >
+      <main id="main-content" className={styles.state}>
         <h1>Не удалось загрузить подборку</h1>
         <p role="alert">{error}</p>
-        <button
-          type="button"
-          onClick={retry}
-        >
+        <button type="button" onClick={retry}>
           Повторить загрузку
         </button>
       </main>
-    )
+    );
   }
 
   if (!collection) {
     return (
-      <main
-        id="main-content"
-        className={styles.state}
-      >
+      <main id="main-content" className={styles.state}>
         <h1>Подборка не найдена</h1>
         <p>Она могла быть удалена или закрыта для публичного просмотра.</p>
         <Link to={parentPath}>{backLabel} →</Link>
       </main>
-    )
+    );
   }
 
-  const metadata = collectionMetadata(collection)
+  const metadata = collectionMetadata(collection);
   const difficulty = collection.difficulty
     ? difficultyLabels[collection.difficulty]
-    : null
-  const fullMetadata = difficulty ? `${metadata} · ${difficulty}` : metadata
-  const names = compilerNames(collection.contributors)
+    : null;
+  const fullMetadata = difficulty ? `${metadata} · ${difficulty}` : metadata;
+  const names = compilerNames(collection.contributors);
   const validSection = collection.sections.some((section) => {
-    return `route-${section.id}` === requestedSection
-  })
+    return `route-${section.id}` === requestedSection;
+  });
   const currentSection = validSection
     ? requestedSection
-    : `route-${collection.sections[0]?.id}`
+    : `route-${collection.sections[0]?.id}`;
   const disciplinePath = collection.discipline
     ? collectionsForDiscipline(collection.discipline.id)
-    : null
+    : null;
   const navigation = (
     <nav aria-label="Разделы подборки">
       {collection.sections.map((section) => {
-        const id = `route-${section.id}`
-        const selected = currentSection === id
-        const className = selected ? styles.selected : ''
-        const current = selected ? 'location' : undefined
+        const id = `route-${section.id}`;
+        const selected = currentSection === id;
+        const className = selected ? styles.selected : "";
+        const current = selected ? "location" : undefined;
 
         return (
           <a
@@ -128,10 +117,10 @@ export function CollectionPage() {
             <span>{section.position}.</span>
             {section.title}
           </a>
-        )
+        );
       })}
     </nav>
-  )
+  );
 
   return (
     <div className={styles.layout}>
@@ -145,39 +134,20 @@ export function CollectionPage() {
             <summary>В этой подборке</summary>
             {navigation}
           </details>
-          <Link
-            to={parentPath}
-            className={styles.allCollections}
-          >
-            <LinkIcon
-              size={21}
-              aria-hidden="true"
-            />
+          <Link to={parentPath} className={styles.allCollections}>
+            <LinkIcon size={21} aria-hidden="true" />
             {backLabel}
-            <ArrowRightIcon
-              size={19}
-              aria-hidden="true"
-            />
+            <ArrowRightIcon size={19} aria-hidden="true" />
           </Link>
         </div>
       </aside>
-      <main
-        id="main-content"
-        className={styles.content}
-        tabIndex={-1}
-      >
-        <nav
-          aria-label="Хлебные крошки"
-          className={styles.breadcrumbs}
-        >
+      <main id="main-content" className={styles.content} tabIndex={-1}>
+        <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}>
           <Link to={parentPath}>{parentLabel}</Link>
           {disciplinePath && (
             <>
               <span aria-hidden="true">/</span>
-              <Link
-                to={disciplinePath}
-                title="Подборки по этой дисциплине"
-              >
+              <Link to={disciplinePath} title="Подборки по этой дисциплине">
                 {collection.discipline?.name}
               </Link>
             </>
@@ -197,7 +167,7 @@ export function CollectionPage() {
               title={collection.title}
               outlined
             />
-            {viewer.kind === 'guest' && <p>Сохранение — после входа.</p>}
+            {viewer.kind === "guest" && <p>Сохранение — после входа.</p>}
           </div>
         </div>
         <div className={styles.purpose}>
@@ -214,8 +184,8 @@ export function CollectionPage() {
           <p className={styles.empty}>В этой подборке пока нет материалов.</p>
         )}
         {collection.sections.map((section) => {
-          const id = `route-${section.id}`
-          const headingId = `${id}-heading`
+          const id = `route-${section.id}`;
+          const headingId = `${id}-heading`;
 
           return (
             <section
@@ -239,9 +209,9 @@ export function CollectionPage() {
                 ))}
               </ol>
             </section>
-          )
+          );
         })}
       </main>
     </div>
-  )
+  );
 }

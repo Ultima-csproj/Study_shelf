@@ -1,5 +1,5 @@
-import { ThemeToggle } from '../../components/common/ThemeToggle/ThemeToggle'
-import styles from './SettingsPage.module.css'
+import { ThemeToggle } from "../../components/common/ThemeToggle/ThemeToggle";
+import styles from "./SettingsPage.module.css";
 
 export function SettingsPage() {
   return (
@@ -20,5 +20,5 @@ export function SettingsPage() {
         </p>
       </section>
     </div>
-  )
+  );
 }

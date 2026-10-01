@@ -1,12 +1,12 @@
-import type { ButtonHTMLAttributes } from 'react'
-import styles from './Button.module.css'
+import type { ButtonHTMLAttributes } from "react";
+import styles from "./Button.module.css";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'text' | 'secondary'
+  variant?: "text" | "secondary";
 }
 export function Button({
-  variant = 'text',
-  className = '',
+  variant = "text",
+  className = "",
   ...props
 }: ButtonProps) {
   return (
@@ -15,5 +15,5 @@ export function Button({
       className={`${styles.button} ${styles[variant]} ${className}`}
       {...props}
     />
-  )
+  );
 }

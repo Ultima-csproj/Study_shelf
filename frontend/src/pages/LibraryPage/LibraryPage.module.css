@@ -25,7 +25,7 @@
   padding: 10px 0;
 }
 
-.tabs button[aria-current='page'] {
+.tabs button[aria-current="page"] {
   border-bottom-color: var(--color-primary);
   color: var(--color-primary-text);
 }

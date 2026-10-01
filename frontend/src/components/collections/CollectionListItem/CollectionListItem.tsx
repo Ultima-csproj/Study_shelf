@@ -1,37 +1,38 @@
-import { Link, useLocation } from 'react-router-dom'
-import { BookBookmarkIcon } from '@phosphor-icons/react/dist/csr/BookBookmark'
-import { ArrowRightIcon } from '@phosphor-icons/react/dist/csr/ArrowRight'
-import type { CollectionSummary } from '../../../types/collection'
+import { Link, useLocation } from "react-router-dom";
+import { BookBookmarkIcon } from "@phosphor-icons/react/dist/csr/BookBookmark";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import type { CollectionSummary } from "../../../types/collection";
 import {
   collectionMaterialCount,
   compilerNames,
-} from '../../../utils/collectionLabels'
-import styles from './CollectionListItem.module.css'
+} from "../../../utils/collectionLabels";
+import styles from "./CollectionListItem.module.css";
 import {
   collectionsForDiscipline,
   locationPath,
   withNavigationOrigin,
-} from '../../../utils/navigation'
+} from "../../../utils/navigation";
 
 export function CollectionListItem({
   collection,
 }: {
-  collection: CollectionSummary
+  collection: CollectionSummary;
 }) {
-  const location = useLocation()
+  const location = useLocation();
   const path = withNavigationOrigin(
     `/collections/${collection.slug}`,
     locationPath(location),
-  )
-  const names = compilerNames(collection.contributors)
-  const count = collectionMaterialCount(collection.materialCount)
-  const course = collection.course === null ? null : `${collection.course} курс`
+  );
+  const names = compilerNames(collection.contributors);
+  const count = collectionMaterialCount(collection.materialCount);
+  const course =
+    collection.course === null ? null : `${collection.course} курс`;
   const metadata = [course, collection.estimatedTime]
     .filter(Boolean)
-    .join(' · ')
+    .join(" · ");
   const disciplinePath = collection.discipline
     ? collectionsForDiscipline(collection.discipline.id)
-    : null
+    : null;
 
   return (
     <li className={styles.row}>
@@ -41,10 +42,7 @@ export function CollectionListItem({
         tabIndex={-1}
         aria-hidden="true"
       >
-        <BookBookmarkIcon
-          size={38}
-          aria-hidden="true"
-        />
+        <BookBookmarkIcon size={38} aria-hidden="true" />
       </Link>
       <article className={styles.body}>
         <h2>
@@ -56,11 +54,8 @@ export function CollectionListItem({
           {count}
           {disciplinePath && (
             <>
-              {' · '}
-              <Link
-                to={disciplinePath}
-                title="Подборки по этой дисциплине"
-              >
+              {" · "}
+              <Link to={disciplinePath} title="Подборки по этой дисциплине">
                 {collection.discipline?.name}
               </Link>
             </>
@@ -74,11 +69,8 @@ export function CollectionListItem({
         aria-label={`Открыть подборку: ${collection.title}`}
       >
         Открыть
-        <ArrowRightIcon
-          size={20}
-          aria-hidden="true"
-        />
+        <ArrowRightIcon size={20} aria-hidden="true" />
       </Link>
     </li>
-  )
+  );
 }

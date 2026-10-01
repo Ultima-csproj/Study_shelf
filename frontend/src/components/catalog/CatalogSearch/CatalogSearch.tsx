@@ -1,11 +1,11 @@
-import { SearchInput } from '../../common/SearchInput/SearchInput'
+import { SearchInput } from "../../common/SearchInput/SearchInput";
 
 export function CatalogSearch({
   value,
   onChange,
 }: {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <SearchInput
@@ -14,5 +14,5 @@ export function CatalogSearch({
       label="Поиск материалов"
       placeholder="Поиск по названию, теме или автору"
     />
-  )
+  );
 }

@@ -40,7 +40,7 @@
   margin: 0 8px;
 }
 .teacher::before {
-  content: '·';
+  content: "·";
   margin-right: 12px;
 }
 .hint {

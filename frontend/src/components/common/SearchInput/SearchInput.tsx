@@ -1,14 +1,14 @@
-import { useId } from 'react'
-import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
-import { XIcon } from '@phosphor-icons/react/dist/csr/X'
-import styles from './SearchInput.module.css'
+import { useId } from "react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import styles from "./SearchInput.module.css";
 
 interface SearchInputProps {
-  value: string
-  onChange: (value: string) => void
-  label: string
-  placeholder: string
-  compact?: boolean
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  placeholder: string;
+  compact?: boolean;
 }
 export function SearchInput({
   value,
@@ -17,14 +17,11 @@ export function SearchInput({
   placeholder,
   compact = false,
 }: SearchInputProps) {
-  const id = useId()
-  const className = `${styles.field} ${compact ? styles.compact : ''}`
+  const id = useId();
+  const className = `${styles.field} ${compact ? styles.compact : ""}`;
   return (
     <div className={className}>
-      <label
-        className="visually-hidden"
-        htmlFor={id}
-      >
+      <label className="visually-hidden" htmlFor={id}>
         {label}
       </label>
       <MagnifyingGlassIcon
@@ -44,15 +41,12 @@ export function SearchInput({
         <button
           type="button"
           className={styles.clear}
-          onClick={() => onChange('')}
+          onClick={() => onChange("")}
           aria-label={`Очистить: ${label}`}
         >
-          <XIcon
-            size={16}
-            aria-hidden="true"
-          />
+          <XIcon size={16} aria-hidden="true" />
         </button>
       )}
     </div>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import type { MaterialSectionData } from '../../../types/material'
-import { DisciplineMaterialItem } from '../DisciplineMaterialItem/DisciplineMaterialItem'
-import styles from './MaterialSection.module.css'
+import type { MaterialSectionData } from "../../../types/material";
+import { DisciplineMaterialItem } from "../DisciplineMaterialItem/DisciplineMaterialItem";
+import styles from "./MaterialSection.module.css";
 export function MaterialSection({ section }: { section: MaterialSectionData }) {
   if (!section.items.length) {
-    return null
+    return null;
   }
   return (
     <section
@@ -19,12 +19,9 @@ export function MaterialSection({ section }: { section: MaterialSectionData }) {
       </p>
       <ol>
         {section.items.map((item) => (
-          <DisciplineMaterialItem
-            key={item.material.id}
-            item={item}
-          />
+          <DisciplineMaterialItem key={item.material.id} item={item} />
         ))}
       </ol>
     </section>
-  )
+  );
 }

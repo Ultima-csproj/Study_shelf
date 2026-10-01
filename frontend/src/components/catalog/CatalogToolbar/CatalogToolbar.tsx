@@ -1,23 +1,23 @@
-import { XIcon } from '@phosphor-icons/react/dist/csr/X'
-import { FunnelIcon } from '@phosphor-icons/react/dist/csr/Funnel'
-import { materialTypeLabels } from '../../../utils/materialLabels'
+import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { FunnelIcon } from "@phosphor-icons/react/dist/csr/Funnel";
+import { materialTypeLabels } from "../../../utils/materialLabels";
 import type {
   CatalogFacets,
   CatalogFilters,
   CatalogSort,
-} from '../../../types/material'
-import { Button } from '../../common/Button/Button'
-import { Select } from '../../common/Select/Select'
-import styles from './CatalogToolbar.module.css'
+} from "../../../types/material";
+import { Button } from "../../common/Button/Button";
+import { Select } from "../../common/Select/Select";
+import styles from "./CatalogToolbar.module.css";
 
 interface CatalogToolbarProps {
-  filters: CatalogFilters
-  facets: CatalogFacets
-  sort: CatalogSort
-  onFiltersChange: (filters: CatalogFilters) => void
-  onSortChange: (sort: CatalogSort) => void
-  onReset: () => void
-  onOpenFilters: () => void
+  filters: CatalogFilters;
+  facets: CatalogFacets;
+  sort: CatalogSort;
+  onFiltersChange: (filters: CatalogFilters) => void;
+  onSortChange: (sort: CatalogSort) => void;
+  onReset: () => void;
+  onOpenFilters: () => void;
 }
 export function CatalogToolbar({
   filters,
@@ -28,7 +28,7 @@ export function CatalogToolbar({
   onReset,
   onOpenFilters,
 }: CatalogToolbarProps) {
-  const { disciplines, teachers } = facets
+  const { disciplines, teachers } = facets;
   const chips = [
     ...filters.types.map((type) => ({
       key: `type-${type}`,
@@ -84,7 +84,7 @@ export function CatalogToolbar({
           tags: filters.tags.filter((item) => item !== tag),
         }),
     })),
-  ]
+  ];
   return (
     <div className={styles.toolbar}>
       <Button
@@ -92,16 +92,10 @@ export function CatalogToolbar({
         className={styles.mobileFilters}
         onClick={onOpenFilters}
       >
-        <FunnelIcon
-          size={16}
-          aria-hidden="true"
-        />
-        Фильтры{chips.length ? ` (${chips.length})` : ''}
+        <FunnelIcon size={16} aria-hidden="true" />
+        Фильтры{chips.length ? ` (${chips.length})` : ""}
       </Button>
-      <div
-        className={styles.chips}
-        aria-label="Выбранные фильтры"
-      >
+      <div className={styles.chips} aria-label="Выбранные фильтры">
         {chips.map((chip) => (
           <button
             type="button"
@@ -111,17 +105,11 @@ export function CatalogToolbar({
             aria-label={`Убрать фильтр: ${chip.label}`}
           >
             {chip.label}
-            <XIcon
-              size={13}
-              aria-hidden="true"
-            />
+            <XIcon size={13} aria-hidden="true" />
           </button>
         ))}
         {(chips.length > 0 || filters.query) && (
-          <Button
-            onClick={onReset}
-            className={styles.reset}
-          >
+          <Button onClick={onReset} className={styles.reset}>
             Сбросить фильтры
           </Button>
         )}
@@ -133,12 +121,12 @@ export function CatalogToolbar({
           value={sort}
           onChange={(value) => onSortChange(value as CatalogSort)}
           options={[
-            { value: 'newest', label: 'Сначала новые' },
-            { value: 'oldest', label: 'Сначала старые' },
-            { value: 'title', label: 'По названию' },
+            { value: "newest", label: "Сначала новые" },
+            { value: "oldest", label: "Сначала старые" },
+            { value: "title", label: "По названию" },
           ]}
         />
       </div>
     </div>
-  )
+  );
 }

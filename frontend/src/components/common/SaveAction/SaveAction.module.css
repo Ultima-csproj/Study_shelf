@@ -20,7 +20,7 @@
 .action:active {
   background: var(--color-tag);
 }
-.action[aria-pressed='true'] {
+.action[aria-pressed="true"] {
   color: var(--color-primary-text);
 }
 .compact span {

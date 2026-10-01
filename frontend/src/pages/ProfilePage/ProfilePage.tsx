@@ -1,69 +1,65 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { PencilSimpleIcon } from '@phosphor-icons/react/dist/csr/PencilSimple'
-import { ArrowRightIcon } from '@phosphor-icons/react/dist/csr/ArrowRight'
-import { ArrowSquareOutIcon } from '@phosphor-icons/react/dist/csr/ArrowSquareOut'
-import { useViewer } from '../../hooks/useViewer'
-import { updateProfile } from '../../api/profile'
-import { roleLabels } from '../../utils/viewerLabels'
-import type { ProfileInput, User } from '../../types/viewer'
-import styles from './ProfilePage.module.css'
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { useViewer } from "../../hooks/useViewer";
+import { updateProfile } from "../../api/profile";
+import { roleLabels } from "../../utils/viewerLabels";
+import type { ProfileInput, User } from "../../types/viewer";
+import styles from "./ProfilePage.module.css";
 
 export function ProfilePage() {
-  const { viewer, updateUser } = useViewer()
+  const { viewer, updateUser } = useViewer();
 
-  if (viewer.kind !== 'authenticated') {
-    return null
+  if (viewer.kind !== "authenticated") {
+    return null;
   }
 
-  return (
-    <ProfileContent
-      user={viewer.user}
-      onSaved={updateUser}
-    />
-  )
+  return <ProfileContent user={viewer.user} onSaved={updateUser} />;
 }
 
 function ProfileContent({
   user,
   onSaved,
 }: {
-  user: User
-  onSaved: (user: User) => void
+  user: User;
+  onSaved: (user: User) => void;
 }) {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(false);
   const [input, setInput] = useState<ProfileInput>({
     firstName: user.firstName,
     lastName: user.lastName,
     course: user.course,
     group: user.group,
-  })
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState('')
-  const request = useRef<AbortController | null>(null)
-  const editButton = useRef<HTMLButtonElement>(null)
-  const firstNameInput = useRef<HTMLInputElement>(null)
-  const wasEditing = useRef(false)
-  const student = user.role === 'student'
-  const courseValue = input.course === null ? '' : String(input.course)
-  const courseLabel = user.course === null ? 'Не указан' : `${user.course} курс`
-  const groupLabel = user.group || 'Не указана'
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const request = useRef<AbortController | null>(null);
+  const editButton = useRef<HTMLButtonElement>(null);
+  const firstNameInput = useRef<HTMLInputElement>(null);
+  const wasEditing = useRef(false);
+  const student = user.role === "student";
+  const courseValue = input.course === null ? "" : String(input.course);
+  const courseLabel =
+    user.course === null ? "Не указан" : `${user.course} курс`;
+  const groupLabel = user.group || "Не указана";
 
   useEffect(() => {
     return () => {
-      request.current?.abort()
-    }
-  }, [])
+      request.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (editing) {
-      firstNameInput.current?.focus()
+      firstNameInput.current?.focus();
     } else if (wasEditing.current) {
-      editButton.current?.focus()
+      editButton.current?.focus();
     }
-    wasEditing.current = editing
-  }, [editing])
+    wasEditing.current = editing;
+  }, [editing]);
 
   const startEditing = () => {
     setInput({
@@ -71,53 +67,53 @@ function ProfileContent({
       lastName: user.lastName,
       course: user.course,
       group: user.group,
-    })
-    setError(null)
-    setNotice('')
-    setEditing(true)
-  }
+    });
+    setError(null);
+    setNotice("");
+    setEditing(true);
+  };
 
   const cancelEditing = () => {
-    request.current?.abort()
-    setSaving(false)
-    setError(null)
-    setEditing(false)
-  }
+    request.current?.abort();
+    setSaving(false);
+    setError(null);
+    setEditing(false);
+  };
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
     if (saving) {
-      return
+      return;
     }
 
-    const controller = new AbortController()
-    request.current = controller
-    setSaving(true)
-    setError(null)
+    const controller = new AbortController();
+    request.current = controller;
+    setSaving(true);
+    setError(null);
 
     try {
-      const updated = await updateProfile(user, input, controller.signal)
+      const updated = await updateProfile(user, input, controller.signal);
 
       if (!controller.signal.aborted) {
-        onSaved(updated)
-        setNotice('Изменения профиля сохранены в текущей демо-сессии.')
-        setEditing(false)
+        onSaved(updated);
+        setNotice("Изменения профиля сохранены в текущей демо-сессии.");
+        setEditing(false);
       }
     } catch (reason: unknown) {
       if (!controller.signal.aborted) {
         const message =
           reason instanceof Error
             ? reason.message
-            : 'Не удалось сохранить профиль.'
-        setError(message)
+            : "Не удалось сохранить профиль.";
+        setError(message);
       }
     } finally {
       if (!controller.signal.aborted) {
-        setSaving(false)
+        setSaving(false);
       }
     }
-  }
+  };
 
   const profileFields = editing ? (
     <form
@@ -161,16 +157,13 @@ function ProfileContent({
             onChange={(event) => {
               const course = event.target.value
                 ? Number(event.target.value)
-                : null
-              setInput({ ...input, course })
+                : null;
+              setInput({ ...input, course });
             }}
           >
             <option value="">Не указан</option>
             {[1, 2, 3, 4, 5, 6].map((course) => (
-              <option
-                key={course}
-                value={course}
-              >
+              <option key={course} value={course}>
                 {course} курс
               </option>
             ))}
@@ -188,12 +181,8 @@ function ProfileContent({
       )}
       {error && <p role="alert">{error}</p>}
       <div className={styles.actions}>
-        <button
-          type="submit"
-          className={styles.primary}
-          disabled={saving}
-        >
-          {saving ? 'Сохраняем…' : 'Сохранить изменения'}
+        <button type="submit" className={styles.primary} disabled={saving}>
+          {saving ? "Сохраняем…" : "Сохранить изменения"}
         </button>
         <button
           type="button"
@@ -227,14 +216,11 @@ function ProfileContent({
         </section>
       )}
     </>
-  )
+  );
 
   return (
     <div className={styles.page}>
-      <nav
-        aria-label="Хлебные крошки"
-        className={styles.breadcrumbs}
-      >
+      <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}>
         <span>Личная зона</span>
         <span aria-hidden="true">/</span>
         <span>Профиль</span>
@@ -251,19 +237,13 @@ function ProfileContent({
             className={styles.primary}
             onClick={startEditing}
           >
-            <PencilSimpleIcon
-              size={20}
-              aria-hidden="true"
-            />
+            <PencilSimpleIcon size={20} aria-hidden="true" />
             Редактировать профиль
           </button>
         )}
       </div>
       <div className={styles.identity}>
-        <span
-          className={styles.avatar}
-          aria-hidden="true"
-        >
+        <span className={styles.avatar} aria-hidden="true">
           {user.initials}
         </span>
         <div>
@@ -273,28 +253,16 @@ function ProfileContent({
         </div>
       </div>
       {notice && (
-        <p
-          role="status"
-          className={styles.notice}
-        >
+        <p role="status" className={styles.notice}>
           {notice}
         </p>
       )}
       {profileFields}
-      <Link
-        to="/settings"
-        className={styles.settingsLink}
-      >
-        <ArrowSquareOutIcon
-          size={20}
-          aria-hidden="true"
-        />
+      <Link to="/settings" className={styles.settingsLink}>
+        <ArrowSquareOutIcon size={20} aria-hidden="true" />
         <span>Email, пароль и безопасность — в настройках аккаунта</span>
-        <ArrowRightIcon
-          size={18}
-          aria-hidden="true"
-        />
+        <ArrowRightIcon size={18} aria-hidden="true" />
       </Link>
     </div>
-  )
+  );
 }

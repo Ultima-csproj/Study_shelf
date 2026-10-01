@@ -28,7 +28,7 @@
   --color-preview-play: #10203da3;
   --color-preview-duration: #10203dbf;
 }
-:root[data-theme='dark'] {
+:root[data-theme="dark"] {
   color-scheme: dark;
   --color-bg: #10141b;
   --color-surface: #171c24;

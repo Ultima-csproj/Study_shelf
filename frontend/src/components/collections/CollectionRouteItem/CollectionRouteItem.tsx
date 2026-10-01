@@ -1,54 +1,51 @@
-import { Link, useLocation } from 'react-router-dom'
-import { LinkIcon } from '@phosphor-icons/react/dist/csr/Link'
-import { MaterialPreview } from '../../common/MaterialPreview/MaterialPreview'
-import type { CollectionItemView } from '../../../types/collection'
-import type { PreviewKind } from '../../../types/material'
-import styles from './CollectionRouteItem.module.css'
-import { withNavigationOrigin } from '../../../utils/navigation'
+import { Link, useLocation } from "react-router-dom";
+import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
+import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
+import type { CollectionItemView } from "../../../types/collection";
+import type { PreviewKind } from "../../../types/material";
+import styles from "./CollectionRouteItem.module.css";
+import { withNavigationOrigin } from "../../../utils/navigation";
 
 export function CollectionRouteItem({
   item,
   sectionNumber,
   sectionId,
 }: {
-  item: CollectionItemView
-  sectionNumber: number
-  sectionId: string
+  item: CollectionItemView;
+  sectionNumber: number;
+  sectionId: string;
 }) {
-  const material = item.material
-  const location = useLocation()
-  const number = `${sectionNumber}.${item.position}`
-  const parentPath = `${location.pathname}${location.search}#${sectionId}`
-  const path = withNavigationOrigin(`/materials/${material.id}`, parentPath)
-  const externalArticle = item.formatLabel === 'Внешняя статья'
-  const sourceDocument = item.attributionLabel.startsWith('Источник:')
-  let previewKind: PreviewKind | undefined
+  const material = item.material;
+  const location = useLocation();
+  const number = `${sectionNumber}.${item.position}`;
+  const parentPath = `${location.pathname}${location.search}#${sectionId}`;
+  const path = withNavigationOrigin(`/materials/${material.id}`, parentPath);
+  const externalArticle = item.formatLabel === "Внешняя статья";
+  const sourceDocument = item.attributionLabel.startsWith("Источник:");
+  let previewKind: PreviewKind | undefined;
 
-  if (material.type !== 'video' && material.type !== 'article') {
-    previewKind = sourceDocument ? 'document' : 'pdf'
+  if (material.type !== "video" && material.type !== "article") {
+    previewKind = sourceDocument ? "document" : "pdf";
   }
 
   const duration = material.duration
-    ? `${Number(material.duration.split(':')[0])} мин`
-    : null
-  let lastLabel: string | null = 'PDF'
+    ? `${Number(material.duration.split(":")[0])} мин`
+    : null;
+  let lastLabel: string | null = "PDF";
 
-  if (material.type === 'video') {
-    lastLabel = duration
+  if (material.type === "video") {
+    lastLabel = duration;
   } else if (externalArticle) {
-    lastLabel = null
+    lastLabel = null;
   }
 
   const metadata = [item.formatLabel, item.attributionLabel, lastLabel]
     .filter(Boolean)
-    .join(' · ')
+    .join(" · ");
 
   return (
     <li className={styles.row}>
-      <span
-        className={styles.number}
-        aria-label={`Материал ${number}`}
-      >
+      <span className={styles.number} aria-label={`Материал ${number}`}>
         {number}
       </span>
       <Link
@@ -59,10 +56,7 @@ export function CollectionRouteItem({
       >
         {externalArticle ? (
           <span className={styles.external}>
-            <LinkIcon
-              size={31}
-              aria-hidden="true"
-            />
+            <LinkIcon size={31} aria-hidden="true" />
           </span>
         ) : (
           <MaterialPreview
@@ -79,5 +73,5 @@ export function CollectionRouteItem({
         <p>{metadata}</p>
       </article>
     </li>
-  )
+  );
 }

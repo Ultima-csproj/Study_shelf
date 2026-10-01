@@ -1,46 +1,43 @@
-import { Link, useLocation } from 'react-router-dom'
-import type { CourseMaterial } from '../../../types/material'
-import { MaterialPreview } from '../../common/MaterialPreview/MaterialPreview'
-import { Badge } from '../../common/Badge/Badge'
-import { SaveAction } from '../../common/SaveAction/SaveAction'
-import styles from './DisciplineMaterialItem.module.css'
-import { durationMinutes } from '../../../utils/format'
-import { locationPath, withNavigationOrigin } from '../../../utils/navigation'
-const date = new Intl.DateTimeFormat('ru-RU', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+import { Link, useLocation } from "react-router-dom";
+import type { CourseMaterial } from "../../../types/material";
+import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
+import { Badge } from "../../common/Badge/Badge";
+import { SaveAction } from "../../common/SaveAction/SaveAction";
+import styles from "./DisciplineMaterialItem.module.css";
+import { durationMinutes } from "../../../utils/format";
+import { locationPath, withNavigationOrigin } from "../../../utils/navigation";
+const date = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
 export function DisciplineMaterialItem({ item }: { item: CourseMaterial }) {
-  const location = useLocation()
+  const location = useLocation();
   const path = withNavigationOrigin(
     `/materials/${item.material.id}`,
     locationPath(location),
-  )
+  );
   const duration = item.material.duration
     ? durationMinutes(item.material.duration)
-    : null
-  const typeLabels = { book: 'Учебник', lab: 'Практика' }
-  let mobileType = item.formatLabel
+    : null;
+  const typeLabels = { book: "Учебник", lab: "Практика" };
+  let mobileType = item.formatLabel;
   if (item.previewKind) {
-    mobileType = 'PDF'
-  } else if (item.material.type === 'book' || item.material.type === 'lab') {
-    mobileType = typeLabels[item.material.type]
+    mobileType = "PDF";
+  } else if (item.material.type === "book" || item.material.type === "lab") {
+    mobileType = typeLabels[item.material.type];
   }
   const typeBadge =
-    item.material.type === 'video' ? (
+    item.material.type === "video" ? (
       <Badge type="video" />
     ) : (
       <span className={styles.mobileBadge}>{mobileType}</span>
-    )
-  const addedAt = date.format(new Date(item.addedAt)).replace(/\s?г\.$/, '')
+    );
+  const addedAt = date.format(new Date(item.addedAt)).replace(/\s?г\.$/, "");
   return (
     <li className={styles.item}>
-      <span
-        className={styles.number}
-        aria-label={`Материал ${item.number}`}
-      >
+      <span className={styles.number} aria-label={`Материал ${item.number}`}>
         {item.number}
       </span>
       <Link
@@ -60,13 +57,10 @@ export function DisciplineMaterialItem({ item }: { item: CourseMaterial }) {
           <Link to={path}>{item.title}</Link>
         </h3>
         <p className={styles.meta}>
-          {item.material.type !== 'video' && (
+          {item.material.type !== "video" && (
             <>
               <span className={styles.format}>{item.formatLabel}</span>
-              <span
-                className={styles.dot}
-                aria-hidden="true"
-              >
+              <span className={styles.dot} aria-hidden="true">
                 ·
               </span>
             </>
@@ -93,11 +87,8 @@ export function DisciplineMaterialItem({ item }: { item: CourseMaterial }) {
         </p>
       </article>
       <div className={styles.save}>
-        <SaveAction
-          id={item.material.id}
-          title={item.title}
-        />
+        <SaveAction id={item.material.id} title={item.title} />
       </div>
     </li>
-  )
+  );
 }

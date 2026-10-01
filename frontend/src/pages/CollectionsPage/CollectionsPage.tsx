@@ -1,60 +1,60 @@
-import { useMemo, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { InfoIcon } from '@phosphor-icons/react/dist/csr/Info'
-import { LockKeyIcon } from '@phosphor-icons/react/dist/csr/LockKey'
-import { XIcon } from '@phosphor-icons/react/dist/csr/X'
-import { SlidersHorizontalIcon } from '@phosphor-icons/react/dist/csr/SlidersHorizontal'
-import { CollectionFilters } from '../../components/collections/CollectionFilters/CollectionFilters'
-import { CollectionListItem } from '../../components/collections/CollectionListItem/CollectionListItem'
-import { SearchInput } from '../../components/common/SearchInput/SearchInput'
-import { Select } from '../../components/common/Select/Select'
-import { useCollections } from '../../hooks/useCollections'
-import { useViewer } from '../../hooks/useViewer'
-import type { CollectionRequest, CollectionSort } from '../../types/collection'
+import { useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
+import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
+import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { SlidersHorizontalIcon } from "@phosphor-icons/react/dist/csr/SlidersHorizontal";
+import { CollectionFilters } from "../../components/collections/CollectionFilters/CollectionFilters";
+import { CollectionListItem } from "../../components/collections/CollectionListItem/CollectionListItem";
+import { SearchInput } from "../../components/common/SearchInput/SearchInput";
+import { Select } from "../../components/common/Select/Select";
+import { useCollections } from "../../hooks/useCollections";
+import { useViewer } from "../../hooks/useViewer";
+import type { CollectionRequest, CollectionSort } from "../../types/collection";
 import {
   readCollectionParams,
   writeCollectionParams,
-} from '../../utils/collectionSearchParams'
-import styles from './CollectionsPage.module.css'
+} from "../../utils/collectionSearchParams";
+import styles from "./CollectionsPage.module.css";
 
 const sortOptions = [
-  { value: 'newest', label: 'Сначала новые' },
-  { value: 'oldest', label: 'Сначала старые' },
-  { value: 'title', label: 'По названию' },
-]
+  { value: "newest", label: "Сначала новые" },
+  { value: "oldest", label: "Сначала старые" },
+  { value: "title", label: "По названию" },
+];
 
 export function CollectionsPage() {
-  const [params, setParams] = useSearchParams()
-  const request = useMemo(() => readCollectionParams(params), [params])
-  const { result, loading, error, retry } = useCollections(request)
-  const { viewer } = useViewer()
-  const dialog = useRef<HTMLDialogElement>(null)
-  const disciplines = result?.disciplines ?? []
-  const courses = result?.courses ?? []
-  const items = result?.items ?? []
-  const guest = viewer.kind === 'guest'
+  const [params, setParams] = useSearchParams();
+  const request = useMemo(() => readCollectionParams(params), [params]);
+  const { result, loading, error, retry } = useCollections(request);
+  const { viewer } = useViewer();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const disciplines = result?.disciplines ?? [];
+  const courses = result?.courses ?? [];
+  const items = result?.items ?? [];
+  const guest = viewer.kind === "guest";
 
   const change = (next: CollectionRequest) => {
-    setParams(writeCollectionParams(next), { replace: true, flushSync: true })
-  }
+    setParams(writeCollectionParams(next), { replace: true, flushSync: true });
+  };
 
   const reset = () => {
-    change({ ...request, query: '', disciplineIds: [], courses: [] })
-  }
+    change({ ...request, query: "", disciplineIds: [], courses: [] });
+  };
 
   const removeDiscipline = (id: number) => {
     change({
       ...request,
       disciplineIds: request.disciplineIds.filter((value) => value !== id),
-    })
-  }
+    });
+  };
 
   const removeCourse = (course: number) => {
     change({
       ...request,
       courses: request.courses.filter((value) => value !== course),
-    })
-  }
+    });
+  };
 
   const filterPanel = (
     <CollectionFilters
@@ -64,22 +64,16 @@ export function CollectionsPage() {
       onChange={change}
       onReset={reset}
     />
-  )
+  );
 
   const resultsContent = loading ? (
-    <p
-      role="status"
-      className={styles.state}
-    >
+    <p role="status" className={styles.state}>
       Загружаем подборки…
     </p>
   ) : error ? (
     <div className={styles.state}>
       <p role="alert">{error}</p>
-      <button
-        type="button"
-        onClick={retry}
-      >
+      <button type="button" onClick={retry}>
         Повторить загрузку
       </button>
     </div>
@@ -87,36 +81,23 @@ export function CollectionsPage() {
     <div className={styles.state}>
       <h2>Подборки не найдены</h2>
       <p>Попробуйте другой запрос или сбросьте фильтры.</p>
-      <button
-        type="button"
-        onClick={reset}
-      >
+      <button type="button" onClick={reset}>
         Сбросить фильтры
       </button>
     </div>
   ) : (
-    <ul
-      className={styles.list}
-      aria-label="Публичные подборки"
-    >
+    <ul className={styles.list} aria-label="Публичные подборки">
       {items.map((collection) => (
-        <CollectionListItem
-          key={collection.id}
-          collection={collection}
-        />
+        <CollectionListItem key={collection.id} collection={collection} />
       ))}
     </ul>
-  )
+  );
 
   return (
     <>
       <div className={styles.layout}>
         <aside className={styles.sidebar}>{filterPanel}</aside>
-        <main
-          id="main-content"
-          className={styles.content}
-          tabIndex={-1}
-        >
+        <main id="main-content" className={styles.content} tabIndex={-1}>
           <div className={styles.heading}>
             <h1>Подборки</h1>
             <p>
@@ -136,17 +117,14 @@ export function CollectionsPage() {
               className={styles.filterButton}
               onClick={() => dialog.current?.showModal()}
             >
-              <SlidersHorizontalIcon
-                size={19}
-                aria-hidden="true"
-              />
+              <SlidersHorizontalIcon size={19} aria-hidden="true" />
               Фильтры
             </button>
             <div className={styles.chips}>
               {request.disciplineIds.map((id) => {
                 const name =
                   disciplines.find((discipline) => discipline.id === id)
-                    ?.name ?? `Дисциплина ${id}`
+                    ?.name ?? `Дисциплина ${id}`;
 
                 return (
                   <button
@@ -156,12 +134,9 @@ export function CollectionsPage() {
                     aria-label={`Убрать фильтр: ${name}`}
                   >
                     {name}
-                    <XIcon
-                      size={16}
-                      aria-hidden="true"
-                    />
+                    <XIcon size={16} aria-hidden="true" />
                   </button>
-                )
+                );
               })}
               {request.courses.map((course) => (
                 <button
@@ -171,10 +146,7 @@ export function CollectionsPage() {
                   aria-label={`Убрать фильтр: ${course} курс`}
                 >
                   {course} курс
-                  <XIcon
-                    size={16}
-                    aria-hidden="true"
-                  />
+                  <XIcon size={16} aria-hidden="true" />
                 </button>
               ))}
             </div>
@@ -190,18 +162,12 @@ export function CollectionsPage() {
           {resultsContent}
           <footer className={styles.footer}>
             <p>
-              <InfoIcon
-                size={23}
-                aria-hidden="true"
-              />
+              <InfoIcon size={23} aria-hidden="true" />
               Публичные подборки доступны без входа.
             </p>
             {guest && (
               <p>
-                <LockKeyIcon
-                  size={23}
-                  aria-hidden="true"
-                />
+                <LockKeyIcon size={23} aria-hidden="true" />
                 Чтобы сохранять подборки, войдите в аккаунт.
               </p>
             )}
@@ -214,7 +180,7 @@ export function CollectionsPage() {
         aria-label="Фильтры подборок"
         onClick={(event) => {
           if (event.target === event.currentTarget) {
-            dialog.current?.close()
+            dialog.current?.close();
           }
         }}
       >
@@ -224,10 +190,7 @@ export function CollectionsPage() {
           aria-label="Закрыть фильтры"
           onClick={() => dialog.current?.close()}
         >
-          <XIcon
-            size={23}
-            aria-hidden="true"
-          />
+          <XIcon size={23} aria-hidden="true" />
         </button>
         {filterPanel}
         <button
@@ -239,5 +202,5 @@ export function CollectionsPage() {
         </button>
       </dialog>
     </>
-  )
+  );
 }
