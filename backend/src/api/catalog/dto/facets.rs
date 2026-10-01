@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 
 use serde::Serialize;
-use study_storage_sqlite::catalog::{CatalogFacets, ValueFacet};
+
+use study_core::catalog::{CatalogFacets, ValueFacet};
 
 use super::references::{DisciplineFacetDto, TeacherFacetDto};
 
@@ -45,9 +46,13 @@ impl From<CatalogFacets> for CatalogFacetsDto {
 
         Self {
             types,
+
             disciplines: value.disciplines.into_iter().map(Into::into).collect(),
+
             teachers: value.teachers.into_iter().map(Into::into).collect(),
+
             courses: value.courses.into_iter().map(Into::into).collect(),
+
             years: value.years.into_iter().map(Into::into).collect(),
         }
     }

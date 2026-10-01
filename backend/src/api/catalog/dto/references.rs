@@ -1,5 +1,6 @@
 use serde::Serialize;
-use study_storage_sqlite::catalog::{DisciplineFacet, TeacherFacet};
+
+use study_core::catalog::{DisciplineFacet, DisciplineReference, TeacherFacet, TeacherReference};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,10 +10,10 @@ pub struct TeacherDto {
     short_name: String,
 }
 
-impl From<TeacherFacet> for TeacherDto {
-    fn from(value: TeacherFacet) -> Self {
+impl From<TeacherReference> for TeacherDto {
+    fn from(value: TeacherReference) -> Self {
         Self {
-            id: value.id,
+            id: value.id.0,
             name: value.name,
             short_name: value.short_name,
         }
@@ -35,17 +36,17 @@ pub struct DisciplineDto {
     teacher_id: i64,
 }
 
-impl From<DisciplineFacet> for DisciplineDto {
-    fn from(value: DisciplineFacet) -> Self {
+impl From<DisciplineReference> for DisciplineDto {
+    fn from(value: DisciplineReference) -> Self {
         Self {
-            id: value.id,
+            id: value.id.0,
             slug: value.slug,
             name: value.name,
             description: value.description,
             summary: value.summary,
             course: value.course,
             semester: value.semester,
-            teacher_id: value.teacher_id,
+            teacher_id: value.teacher_id.0,
         }
     }
 }
@@ -61,11 +62,9 @@ pub struct TeacherFacetDto {
 
 impl From<TeacherFacet> for TeacherFacetDto {
     fn from(value: TeacherFacet) -> Self {
-        let material_count = value.material_count;
-
         Self {
-            teacher: value.into(),
-            material_count,
+            teacher: value.teacher.into(),
+            material_count: value.material_count,
         }
     }
 }
@@ -81,11 +80,9 @@ pub struct DisciplineFacetDto {
 
 impl From<DisciplineFacet> for DisciplineFacetDto {
     fn from(value: DisciplineFacet) -> Self {
-        let material_count = value.material_count;
-
         Self {
-            discipline: value.into(),
-            material_count,
+            discipline: value.discipline.into(),
+            material_count: value.material_count,
         }
     }
 }

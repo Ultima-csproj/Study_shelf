@@ -1,44 +1,80 @@
 use anyhow::Result;
-use sqlx::SqlitePool;
+use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+
+use study_core::catalog::{DisciplineReference, TeacherReference};
+
 use study_core::ids::{DisciplineId, TeacherId};
 
-use super::{DisciplineFacet, TeacherFacet};
+use super::reference_row::{DisciplineRow, TeacherRow};
 
-pub(super) async fn teacher(pool: &SqlitePool, id: TeacherId) -> Result<Option<TeacherFacet>> {
-    let row = sqlx::query_as(
-        "SELECT t.*,
-            (
-                SELECT COUNT(*)
-                FROM materials m
-                WHERE m.teacher_id = t.id
-            ) AS material_count
-         FROM teachers t
-         WHERE t.id = ?",
-    )
-    .bind(id.0)
-    .fetch_optional(pool)
-    .await?;
+const IDS_PER_QUERY: usize = 500;
 
-    Ok(row)
+pub(super) async fn load_teachers(
+    pool: &SqlitePool,
+    ids: &[TeacherId],
+) -> Result<Vec<TeacherReference>> {
+    let mut result = Vec::new();
+
+    for chunk in ids.chunks(IDS_PER_QUERY) {
+        let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
+            "SELECT id, name, short_name
+             FROM teachers
+             WHERE id IN (",
+        );
+
+        {
+            let mut separated = builder.separated(", ");
+
+            for id in chunk {
+                separated.push_bind(id.0);
+            }
+
+            separated.push_unseparated(") ORDER BY id");
+        }
+
+        let rows: Vec<TeacherRow> = builder.build_query_as().fetch_all(pool).await?;
+
+        result.extend(rows.into_iter().map(TeacherReference::from));
+    }
+
+    Ok(result)
 }
 
-pub(super) async fn discipline(
+pub(super) async fn load_disciplines(
     pool: &SqlitePool,
-    id: DisciplineId,
-) -> Result<Option<DisciplineFacet>> {
-    let row = sqlx::query_as(
-        "SELECT d.*,
-            (
-                SELECT COUNT(*)
-                FROM materials m
-                WHERE m.discipline_id = d.id
-            ) AS material_count
-         FROM disciplines d
-         WHERE d.id = ?",
-    )
-    .bind(id.0)
-    .fetch_optional(pool)
-    .await?;
+    ids: &[DisciplineId],
+) -> Result<Vec<DisciplineReference>> {
+    let mut result = Vec::new();
 
-    Ok(row)
+    for chunk in ids.chunks(IDS_PER_QUERY) {
+        let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
+            "SELECT
+                id,
+                slug,
+                name,
+                description,
+                summary,
+                course,
+                semester,
+                teacher_id
+             FROM disciplines
+             WHERE id IN (",
+        );
+
+        {
+            let mut separated = builder.separated(", ");
+
+            for id in chunk {
+                separated.push_bind(id.0);
+            }
+
+            separated.push_unseparated(") ORDER BY id");
+        }
+
+        let rows: Vec<DisciplineRow> = builder.build_query_as().fetch_all(pool).await?;
+
+        result.extend(rows.into_iter().map(DisciplineReference::from));
+    }
+
+    Ok(result)
 }
