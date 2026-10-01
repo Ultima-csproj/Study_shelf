@@ -1,3 +1,5 @@
+import type { MaterialSource } from "../types/material";
+
 export type NavigationOrigin =
   | { kind: "catalog" | "collections" | "library"; path: string }
   | { kind: "discipline" | "collection"; path: string; id: string };
@@ -94,8 +96,23 @@ export function withNavigationOrigin(path: string, parentPath: string): string {
     return path;
   }
 
-  const params = new URLSearchParams({ from: origin.path });
-  return `${path}?${params.toString()}`;
+  const url = new URL(path, "https://study-shelf.local");
+  url.searchParams.set("from", origin.path);
+  return url.pathname + url.search + url.hash;
+}
+
+export function materialPath(id: number, source: MaterialSource): string {
+  const path = `/materials/${id}`;
+
+  if (source === "mock") {
+    return `${path}?source=mock`;
+  }
+
+  return path;
+}
+
+export function materialSource(search: string): MaterialSource {
+  return new URLSearchParams(search).get("source") === "mock" ? "mock" : "api";
 }
 
 export function collectionsForDiscipline(disciplineId: number): string {

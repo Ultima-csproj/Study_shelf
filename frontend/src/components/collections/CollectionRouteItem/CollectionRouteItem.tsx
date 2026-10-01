@@ -4,7 +4,7 @@ import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
 import type { CollectionItemView } from "../../../types/collection";
 import type { PreviewKind } from "../../../types/material";
 import styles from "./CollectionRouteItem.module.css";
-import { withNavigationOrigin } from "../../../utils/navigation";
+import { materialPath, withNavigationOrigin } from "../../../utils/navigation";
 
 export function CollectionRouteItem({
   item,
@@ -19,7 +19,10 @@ export function CollectionRouteItem({
   const location = useLocation();
   const number = `${sectionNumber}.${item.position}`;
   const parentPath = `${location.pathname}${location.search}#${sectionId}`;
-  const path = withNavigationOrigin(`/materials/${material.id}`, parentPath);
+  const path = withNavigationOrigin(
+    materialPath(material.id, material.source),
+    parentPath,
+  );
   const externalArticle = item.formatLabel === "Внешняя статья";
   const sourceDocument = item.attributionLabel.startsWith("Источник:");
   let previewKind: PreviewKind | undefined;

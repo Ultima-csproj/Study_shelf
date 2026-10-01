@@ -1,7 +1,7 @@
 import { collections } from "../data/collections";
 import { disciplines } from "../data/disciplines";
 import { routeMaterialSources } from "../data/collectionMaterials";
-import { getMaterial } from "./materials";
+import { getDemoMaterial } from "./materials";
 import type {
   Collection,
   CollectionDetail,
@@ -118,7 +118,7 @@ export async function getCollection(
       );
       const items: CollectionItemView[] = await Promise.all(
         orderedItems.map(async (item) => {
-          const material = await getMaterial(item.materialId, signal);
+          const material = await getDemoMaterial(item.materialId, signal);
 
           if (!material) {
             throw new Error(

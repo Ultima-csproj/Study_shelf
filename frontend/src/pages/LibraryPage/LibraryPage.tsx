@@ -6,10 +6,14 @@ import { useViewer } from "../../hooks/useViewer";
 import { CollectionListItem } from "../../components/collections/CollectionListItem/CollectionListItem";
 import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import styles from "./LibraryPage.module.css";
-import { locationPath, withNavigationOrigin } from "../../utils/navigation";
+import {
+  locationPath,
+  materialPath,
+  withNavigationOrigin,
+} from "../../utils/navigation";
 
 export function LibraryPage() {
-  const { viewer, savedMaterialIds, savedCollectionIds } = useViewer();
+  const { viewer, savedMaterials, savedCollectionIds } = useViewer();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const parentPath = locationPath(location);
@@ -17,9 +21,9 @@ export function LibraryPage() {
   const userId = viewer.kind === "authenticated" ? viewer.user.id : 0;
   const load = useCallback(
     (signal: AbortSignal) => {
-      return getLibrary(userId, savedMaterialIds, savedCollectionIds, signal);
+      return getLibrary(userId, savedMaterials, savedCollectionIds, signal);
     },
-    [userId, savedMaterialIds, savedCollectionIds],
+    [userId, savedMaterials, savedCollectionIds],
   );
   const { result, error, loading, retry } = useApiResource(
     load,
@@ -59,19 +63,23 @@ export function LibraryPage() {
         <ul className={styles.materials}>
           {materials.map((material) => {
             const path = withNavigationOrigin(
-              `/materials/${material.id}`,
+              materialPath(material.id, material.source),
               parentPath,
             );
 
             return (
-              <li key={material.id}>
+              <li key={`${material.source}:${material.id}`}>
                 <div>
                   <h3>
                     <Link to={path}>{material.title}</Link>
                   </h3>
                   <p>{material.discipline?.name}</p>
                 </div>
-                <SaveAction id={material.id} title={material.title} />
+                <SaveAction
+                  id={material.id}
+                  title={material.title}
+                  source={material.source}
+                />
               </li>
             );
           })}
@@ -129,7 +137,7 @@ export function LibraryPage() {
           aria-current={tab === "saved" ? "page" : undefined}
           onClick={() => changeTab("saved")}
         >
-          Сохранённое ({savedMaterialIds.length})
+          Сохранённое ({savedMaterials.length})
         </button>
         <button
           type="button"

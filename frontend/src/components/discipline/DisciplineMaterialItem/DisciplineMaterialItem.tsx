@@ -5,7 +5,11 @@ import { Badge } from "../../common/Badge/Badge";
 import { SaveAction } from "../../common/SaveAction/SaveAction";
 import styles from "./DisciplineMaterialItem.module.css";
 import { durationMinutes } from "../../../utils/format";
-import { locationPath, withNavigationOrigin } from "../../../utils/navigation";
+import {
+  locationPath,
+  materialPath,
+  withNavigationOrigin,
+} from "../../../utils/navigation";
 const date = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
   month: "short",
@@ -15,7 +19,7 @@ const date = new Intl.DateTimeFormat("ru-RU", {
 export function DisciplineMaterialItem({ item }: { item: CourseMaterial }) {
   const location = useLocation();
   const path = withNavigationOrigin(
-    `/materials/${item.material.id}`,
+    materialPath(item.material.id, "mock"),
     locationPath(location),
   );
   const duration = item.material.duration

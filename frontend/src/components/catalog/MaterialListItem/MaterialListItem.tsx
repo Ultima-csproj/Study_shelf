@@ -4,7 +4,11 @@ import type { CatalogMaterial } from "../../../types/material";
 import { Badge } from "../../common/Badge/Badge";
 import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
 import styles from "./MaterialListItem.module.css";
-import { locationPath, withNavigationOrigin } from "../../../utils/navigation";
+import {
+  locationPath,
+  materialPath,
+  withNavigationOrigin,
+} from "../../../utils/navigation";
 
 const dateFormatter = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
@@ -25,7 +29,7 @@ export function MaterialListItem({
   const { teacher, discipline } = material;
   const location = useLocation();
   const path = withNavigationOrigin(
-    `/materials/${material.id}`,
+    materialPath(material.id, material.source),
     locationPath(location),
   );
   return (

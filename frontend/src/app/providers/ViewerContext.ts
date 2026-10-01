@@ -1,12 +1,13 @@
 import { createContext } from "react";
 import type { User, Viewer } from "../../types/viewer";
+import type { MaterialReference } from "../../types/material";
 export interface ViewerContextValue {
   viewer: Viewer;
-  savedMaterialIds: number[];
+  savedMaterials: MaterialReference[];
   savedCollectionIds: number[];
   signInDemo: () => void;
   signOut: () => void;
-  toggleSaved: (id: number) => void;
+  toggleSaved: (material: MaterialReference) => void;
   toggleSavedCollection: (id: number) => void;
   updateUser: (user: User) => void;
 }

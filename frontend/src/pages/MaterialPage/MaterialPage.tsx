@@ -7,7 +7,7 @@ import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import common from "../InformationPage/InformationPage.module.css";
 import styles from "./MaterialPage.module.css";
 import { useCollection } from "../../hooks/useCollections";
-import { navigationOrigin } from "../../utils/navigation";
+import { materialSource, navigationOrigin } from "../../utils/navigation";
 import { materialNavigation } from "../../utils/materialNavigation";
 
 export function MaterialPage() {
@@ -17,7 +17,8 @@ export function MaterialPage() {
   const originCollectionId = origin?.kind === "collection" ? origin.id : null;
   const { result: originCollection, loading: originLoading } =
     useCollection(originCollectionId);
-  const { material, loading, error, retry } = useMaterial(materialId);
+  const source = materialSource(location.search);
+  const { material, loading, error, retry } = useMaterial(materialId, source);
   const navigation = materialNavigation(origin, material, originCollection);
   const contextLoading = originCollectionId !== null && originLoading;
 
@@ -81,7 +82,11 @@ export function MaterialPage() {
               Перейти к дисциплине: {discipline?.name}
             </Link>
           )}
-          <SaveAction id={material.id} title={material.title} />
+          <SaveAction
+            id={material.id}
+            title={material.title}
+            source={material.source}
+          />
         </div>
       </div>
       <div className={common.notice}>

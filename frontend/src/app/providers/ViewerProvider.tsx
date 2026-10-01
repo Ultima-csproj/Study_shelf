@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ViewerContext } from "./ViewerContext";
 import { demoUser } from "../../data/viewer";
 import type { User, Viewer } from "../../types/viewer";
+import type { MaterialReference } from "../../types/material";
+import { parseSavedMaterials } from "../../utils/savedMaterials";
 
 const viewerKey = "study-shelf-demo-viewer";
 const materialsKey = "study-shelf-demo-saved";
@@ -90,9 +92,20 @@ function initialViewer(): Viewer {
 
 export function ViewerProvider({ children }: { children: ReactNode }) {
   const [viewer, setViewer] = useState<Viewer>(initialViewer);
-  const [savedMaterialIds, setSavedMaterialIds] = useState<number[]>(() =>
-    initialSaved(materialsKey),
-  );
+  const [savedMaterials, setSavedMaterials] = useState<MaterialReference[]>(() => {
+    try {
+      if (sessionStorage.getItem(viewerKey) !== "authenticated") {
+        return [];
+      }
+
+      const stored: unknown = JSON.parse(
+        sessionStorage.getItem(materialsKey) ?? "[]",
+      );
+      return parseSavedMaterials(stored);
+    } catch {
+      return [];
+    }
+  });
   const [savedCollectionIds, setSavedCollectionIds] = useState<number[]>(() =>
     initialSaved(collectionsKey),
   );
@@ -102,7 +115,7 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
       if (viewer.kind === "authenticated") {
         sessionStorage.setItem(viewerKey, "authenticated");
         sessionStorage.setItem(profileKey, JSON.stringify(viewer.user));
-        sessionStorage.setItem(materialsKey, JSON.stringify(savedMaterialIds));
+        sessionStorage.setItem(materialsKey, JSON.stringify(savedMaterials));
         sessionStorage.setItem(
           collectionsKey,
           JSON.stringify(savedCollectionIds),
@@ -116,7 +129,7 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
     } catch {
       // Demo persistence is optional; the current UI state still works.
     }
-  }, [viewer, savedMaterialIds, savedCollectionIds]);
+  }, [viewer, savedMaterials, savedCollectionIds]);
 
   const signInDemo = () => {
     setViewer((current) => {
@@ -130,18 +143,24 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
 
   const signOut = () => {
     setViewer({ kind: "guest" });
-    setSavedMaterialIds([]);
+    setSavedMaterials([]);
     setSavedCollectionIds([]);
   };
 
-  const toggleSaved = (id: number) => {
+  const toggleSaved = (material: MaterialReference) => {
     if (viewer.kind === "authenticated") {
-      setSavedMaterialIds((ids) => {
-        if (ids.includes(id)) {
-          return ids.filter((value) => value !== id);
+      setSavedMaterials((items) => {
+        const saved = items.some((item) => {
+          return item.id === material.id && item.source === material.source;
+        });
+
+        if (saved) {
+          return items.filter((item) => {
+            return item.id !== material.id || item.source !== material.source;
+          });
         }
 
-        return [...ids, id];
+        return [...items, material];
       });
     }
   };
@@ -170,7 +189,7 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
 
   const value = {
     viewer,
-    savedMaterialIds,
+    savedMaterials,
     savedCollectionIds,
     signInDemo,
     signOut,

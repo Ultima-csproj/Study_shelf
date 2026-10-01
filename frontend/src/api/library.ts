@@ -1,7 +1,7 @@
 import { getCollections } from "./collections";
 import { getMaterial } from "./materials";
 import type { CollectionSummary } from "../types/collection";
-import type { CatalogMaterial } from "../types/material";
+import type { CatalogMaterial, MaterialReference } from "../types/material";
 
 export interface LibraryResponse {
   materials: CatalogMaterial[];
@@ -11,12 +11,16 @@ export interface LibraryResponse {
 
 export async function getLibrary(
   userId: number,
-  materialIds: number[],
+  savedMaterials: MaterialReference[],
   collectionIds: number[],
   signal?: AbortSignal,
 ): Promise<LibraryResponse> {
   const [materialResults, collectionResults] = await Promise.all([
-    Promise.all(materialIds.map((id) => getMaterial(id, signal))),
+    Promise.all(
+      savedMaterials.map((material) => {
+        return getMaterial(material.id, signal, material.source);
+      }),
+    ),
     getCollections(
       { query: "", disciplineIds: [], courses: [], sort: "newest" },
       signal,

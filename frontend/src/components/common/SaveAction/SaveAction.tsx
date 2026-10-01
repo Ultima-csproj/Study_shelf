@@ -2,6 +2,7 @@ import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
 import { BookmarkSimpleIcon } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useViewer } from "../../../hooks/useViewer";
+import type { MaterialSource } from "../../../types/material";
 import styles from "./SaveAction.module.css";
 export function SaveAction({
   id,
@@ -9,16 +10,18 @@ export function SaveAction({
   compact = false,
   kind = "material",
   outlined = false,
+  source = "mock",
 }: {
   id: number;
   title: string;
   compact?: boolean;
   kind?: "material" | "collection";
   outlined?: boolean;
+  source?: MaterialSource;
 }) {
   const {
     viewer,
-    savedMaterialIds,
+    savedMaterials,
     savedCollectionIds,
     toggleSaved,
     toggleSavedCollection,
@@ -27,9 +30,11 @@ export function SaveAction({
   const navigate = useNavigate();
   const guest = viewer.kind === "guest";
   const collection = kind === "collection";
-  const savedIds = collection ? savedCollectionIds : savedMaterialIds;
-  const toggle = collection ? toggleSavedCollection : toggleSaved;
-  const saved = savedIds.includes(id);
+  const saved = collection
+    ? savedCollectionIds.includes(id)
+    : savedMaterials.some((material) => {
+        return material.id === id && material.source === source;
+      });
   const Icon = guest ? LockKeyIcon : BookmarkSimpleIcon;
   const action = guest
     ? "Войти, чтобы сохранить"
@@ -53,7 +58,11 @@ export function SaveAction({
       navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
       return;
     }
-    toggle(id);
+    if (collection) {
+      toggleSavedCollection(id);
+    } else {
+      toggleSaved({ id, source });
+    }
   };
   return (
     <button

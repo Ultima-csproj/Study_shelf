@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { getMaterial } from "../api/materials";
-import type { CatalogMaterial } from "../types/material";
+import type { CatalogMaterial, MaterialSource } from "../types/material";
 
-export function useMaterial(id: string) {
+export function useMaterial(id: string, source: MaterialSource) {
   const [attempt, setAttempt] = useState(0);
-  const key = `${id}:${attempt}`;
+  const key = `${source}:${id}:${attempt}`;
   const [state, setState] = useState<{
     key: string;
     material: CatalogMaterial | null;
@@ -12,7 +12,7 @@ export function useMaterial(id: string) {
   }>({ key: "", material: null, error: null });
   useEffect(() => {
     const controller = new AbortController();
-    getMaterial(id, controller.signal)
+    getMaterial(id, controller.signal, source)
       .then((material) => {
         if (!controller.signal.aborted) {
           setState({ key, material, error: null });
@@ -31,7 +31,7 @@ export function useMaterial(id: string) {
         }
       });
     return () => controller.abort();
-  }, [id, key]);
+  }, [id, source, key]);
   return {
     material: state.key === key ? state.material : null,
     error: state.key === key ? state.error : null,

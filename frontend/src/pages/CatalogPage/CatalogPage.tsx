@@ -48,10 +48,13 @@ export function CatalogPage() {
   const changePage = (next: number) => {
     setParams(writeCatalogParams(filters, sort, next), { flushSync: true });
   };
-  const resultLabel =
-    loading && !result.total
-      ? "Загрузка материалов…"
-      : foundMaterials(result.total);
+  let resultLabel = foundMaterials(result.total);
+
+  if (error) {
+    resultLabel = "Материалы не загружены";
+  } else if (loading) {
+    resultLabel = "Загрузка материалов…";
+  }
   const filterPanel = (
     <CatalogFilters
       value={filters}

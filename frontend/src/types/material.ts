@@ -1,5 +1,11 @@
 export type MaterialType = "lecture" | "book" | "article" | "video" | "lab";
 export type CatalogSort = "newest" | "oldest" | "title";
+export type MaterialSource = "api" | "mock";
+
+export interface MaterialReference {
+  id: number;
+  source: MaterialSource;
+}
 
 export interface Material {
   id: number;
@@ -69,6 +75,7 @@ import type { Discipline } from "./discipline";
 import type { Teacher } from "./teacher";
 
 export interface CatalogMaterial extends Material {
+  source: MaterialSource;
   discipline: Discipline | null;
   teacher: Teacher | null;
 }
