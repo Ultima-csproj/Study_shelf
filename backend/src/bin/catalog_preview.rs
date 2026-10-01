@@ -1,15 +1,12 @@
-use std::path::PathBuf;
-
 use backend::catalog::CatalogService;
+use backend::config::Config;
 use study_core::catalog::{CatalogQuery, CatalogSort};
 use study_storage_sqlite::SqliteStorage;
 use study_storage_sqlite::catalog::SqliteCatalogRepository;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("data")
-        .join("study.sqlite3");
+    let db_path = Config::from_env()?.database_path;
     let storage = SqliteStorage::open(db_path).await?;
     let service = CatalogService::new(SqliteCatalogRepository::new(storage.pool().clone()));
     let query = CatalogQuery {

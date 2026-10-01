@@ -1,4 +1,5 @@
 mod facets;
+mod references;
 mod row;
 mod search;
 
@@ -8,7 +9,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::{QueryBuilder, Sqlite, SqlitePool};
 use study_core::catalog::{CatalogPage, CatalogQuery, Material, MaterialRepository};
-use study_core::ids::MaterialId;
+use study_core::ids::{DisciplineId, MaterialId, TeacherId};
 
 pub use facets::{CatalogFacets, DisciplineFacet, TeacherFacet, TypeFacet, ValueFacet};
 use row::MaterialRow;
@@ -69,4 +70,14 @@ async fn load_tags(pool: &SqlitePool, items: &mut [Material]) -> Result<()> {
         }
     }
     Ok(())
+}
+
+impl SqliteCatalogRepository {
+    pub async fn teacher(&self, id: TeacherId) -> Result<Option<TeacherFacet>> {
+        references::teacher(&self.pool, id).await
+    }
+
+    pub async fn discipline(&self, id: DisciplineId) -> Result<Option<DisciplineFacet>> {
+        references::discipline(&self.pool, id).await
+    }
 }

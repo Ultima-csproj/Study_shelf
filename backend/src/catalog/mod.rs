@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use study_core::catalog::{CatalogQuery, Material, MaterialRepository};
+use study_core::ids::MaterialId;
 use study_storage_sqlite::catalog::{
     CatalogFacets, DisciplineFacet, SqliteCatalogRepository, TeacherFacet,
 };
@@ -69,5 +70,29 @@ impl CatalogService {
             page_count: page.page_count,
             facets,
         })
+    }
+
+    pub async fn get_by_id(&self, id: MaterialId) -> Result<Option<CatalogItem>> {
+        let Some(material) = self.repository.get_by_id(id).await? else {
+            return Ok(None);
+        };
+
+        let discipline = self
+            .repository
+            .discipline(material.discipline_id)
+            .await?
+            .with_context(|| format!("discipline {} is missing", material.discipline_id.0))?;
+
+        let teacher = self
+            .repository
+            .teacher(material.teacher_id)
+            .await?
+            .with_context(|| format!("teacher {} is missing", material.teacher_id.0))?;
+
+        Ok(Some(CatalogItem {
+            material,
+            discipline,
+            teacher,
+        }))
     }
 }
