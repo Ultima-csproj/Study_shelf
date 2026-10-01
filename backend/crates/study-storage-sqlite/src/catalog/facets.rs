@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
-use anyhow::{Context, Result};
 use sqlx::{FromRow, SqlitePool};
+use study_core::error::{RepositoryError, RepositoryResult as Result};
 
 use study_core::catalog::{
     CatalogFacets, DisciplineFacet, MaterialType, TeacherFacet, TypeFacet, ValueFacet,
@@ -64,13 +64,15 @@ pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
          GROUP BY material_type",
     )
     .fetch_all(pool)
-    .await?;
+    .await
+    .map_err(crate::error::map_sqlx_error)?;
 
     let mut type_counts = HashMap::new();
 
     for row in type_rows {
-        MaterialType::from_db_value(&row.value)
-            .with_context(|| format!("unknown material type in facets: {}", row.value,))?;
+        MaterialType::from_db_value(&row.value).ok_or_else(|| {
+            RepositoryError::invalid_data(format!("unknown material type in facets: {}", row.value))
+        })?;
 
         type_counts.insert(row.value, row.material_count);
     }
@@ -97,7 +99,8 @@ pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
          ORDER BY d.id",
     )
     .fetch_all(pool)
-    .await?;
+    .await
+    .map_err(crate::error::map_sqlx_error)?;
 
     let teacher_rows: Vec<TeacherFacetRow> = sqlx::query_as(
         "SELECT t.*, COUNT(m.id) AS material_count
@@ -107,7 +110,8 @@ pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
          ORDER BY t.id",
     )
     .fetch_all(pool)
-    .await?;
+    .await
+    .map_err(crate::error::map_sqlx_error)?;
 
     let course_rows: Vec<NumberCountRow> = sqlx::query_as(
         "SELECT course AS value, COUNT(*) AS material_count
@@ -116,7 +120,8 @@ pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
          ORDER BY course",
     )
     .fetch_all(pool)
-    .await?;
+    .await
+    .map_err(crate::error::map_sqlx_error)?;
 
     let year_rows: Vec<NumberCountRow> = sqlx::query_as(
         "SELECT year AS value, COUNT(*) AS material_count
@@ -125,7 +130,8 @@ pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
          ORDER BY year DESC",
     )
     .fetch_all(pool)
-    .await?;
+    .await
+    .map_err(crate::error::map_sqlx_error)?;
 
     let mut course_counts: BTreeMap<i64, i64> = (1..=4).map(|value| (value, 0)).collect();
 

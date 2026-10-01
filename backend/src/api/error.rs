@@ -45,7 +45,7 @@ impl ApiError {
         }
     }
 
-    pub fn internal(error: anyhow::Error) -> Self {
+    pub fn internal(error: impl std::error::Error) -> Self {
         tracing::error!(
             error = ?error,
             "Не удалось обработать запрос"

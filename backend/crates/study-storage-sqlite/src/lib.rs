@@ -5,6 +5,7 @@ use sqlx::SqlitePool;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
 pub mod catalog;
+mod error;
 
 pub struct SqliteStorage {
     pool: SqlitePool,

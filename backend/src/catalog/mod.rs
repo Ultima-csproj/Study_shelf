@@ -1,14 +1,14 @@
+mod error;
 mod models;
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
-
 use study_core::catalog::{CatalogQuery, CatalogRepository, Material};
 
 use study_core::ids::{DisciplineId, MaterialId, TeacherId};
 
+pub use error::CatalogError;
 pub use models::{CatalogItem, CatalogView};
 
 pub struct CatalogService {
@@ -25,7 +25,7 @@ impl CatalogService {
         }
     }
 
-    pub async fn list(&self, query: CatalogQuery) -> Result<CatalogView> {
+    pub async fn list(&self, query: CatalogQuery) -> Result<CatalogView, CatalogError> {
         let page = self.repository.search(query).await?;
         let items = self.enrich(page.items).await?;
         let facets = self.repository.facets().await?;
@@ -39,7 +39,7 @@ impl CatalogService {
         })
     }
 
-    pub async fn get_by_id(&self, id: MaterialId) -> Result<Option<CatalogItem>> {
+    pub async fn get_by_id(&self, id: MaterialId) -> Result<Option<CatalogItem>, CatalogError> {
         let Some(material) = self.repository.get_by_id(id).await? else {
             return Ok(None);
         };
@@ -49,7 +49,7 @@ impl CatalogService {
         Ok(items.pop())
     }
 
-    async fn enrich(&self, materials: Vec<Material>) -> Result<Vec<CatalogItem>> {
+    async fn enrich(&self, materials: Vec<Material>) -> Result<Vec<CatalogItem>, CatalogError> {
         if materials.is_empty() {
             return Ok(Vec::new());
         }
@@ -87,12 +87,18 @@ impl CatalogService {
         for material in materials {
             let discipline = disciplines
                 .get(&material.discipline_id)
-                .with_context(|| format!("discipline {} is missing", material.discipline_id.0,))?
+                .ok_or(CatalogError::MissingDiscipline {
+                    material_id: material.id,
+                    discipline_id: material.discipline_id,
+                })?
                 .clone();
 
             let teacher = teachers
                 .get(&material.teacher_id)
-                .with_context(|| format!("teacher {} is missing", material.teacher_id.0,))?
+                .ok_or(CatalogError::MissingTeacher {
+                    material_id: material.id,
+                    teacher_id: material.teacher_id,
+                })?
                 .clone();
 
             items.push(CatalogItem {

@@ -1,8 +1,8 @@
-use anyhow::{Result, ensure};
 use sqlx::{QueryBuilder, Sqlite, SqlitePool};
 use study_core::catalog::{
     CatalogPage, CatalogQuery, CatalogSort, Material, normalize_search_text,
 };
+use study_core::error::{RepositoryError, RepositoryResult as Result};
 
 use super::{MaterialRow, load_tags};
 
@@ -19,9 +19,14 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
     let mut count_sql: QueryBuilder<Sqlite> =
         QueryBuilder::new("SELECT COUNT(*) FROM materials m WHERE 1 = 1");
     push_filters(&mut count_sql, &query);
-    let (total,): (i64,) = count_sql.build_query_as().fetch_one(pool).await?;
-    ensure!(total >= 0, "negative catalog count");
-    let total = total as u64;
+    let (total,): (i64,) = count_sql
+        .build_query_as()
+        .fetch_one(pool)
+        .await
+        .map_err(crate::error::map_sqlx_error)?;
+    let total = u64::try_from(total).map_err(|error| {
+        RepositoryError::invalid_data_with_source("negative catalog count", error)
+    })?;
     let page_count = ((total.saturating_add(u64::from(page_size) - 1) / u64::from(page_size))
         .max(1))
     .min(u64::from(u32::MAX)) as u32;
@@ -38,7 +43,11 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
     };
     items_sql.push(" LIMIT ").push_bind(i64::from(page_size));
     items_sql.push(" OFFSET ").push_bind(offset);
-    let rows: Vec<MaterialRow> = items_sql.build_query_as().fetch_all(pool).await?;
+    let rows: Vec<MaterialRow> = items_sql
+        .build_query_as()
+        .fetch_all(pool)
+        .await
+        .map_err(crate::error::map_sqlx_error)?;
     let mut items: Vec<Material> = rows
         .into_iter()
         .map(Material::try_from)

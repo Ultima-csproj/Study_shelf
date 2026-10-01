@@ -6,9 +6,9 @@ mod search;
 
 use std::collections::HashMap;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+use study_core::error::RepositoryResult as Result;
 
 use study_core::catalog::{
     CatalogFacets, CatalogPage, CatalogQuery, CatalogRepository, DisciplineReference, Material,
@@ -36,7 +36,8 @@ impl CatalogRepository for SqliteCatalogRepository {
         let row: Option<MaterialRow> = sqlx::query_as("SELECT * FROM materials WHERE id = ?")
             .bind(id.0)
             .fetch_optional(&self.pool)
-            .await?;
+            .await
+            .map_err(crate::error::map_sqlx_error)?;
 
         let Some(row) = row else {
             return Ok(None);
@@ -94,7 +95,11 @@ async fn load_tags(pool: &SqlitePool, items: &mut [Material]) -> Result<()> {
         separated.push_unseparated(") ORDER BY material_id, tag");
     }
 
-    let tags: Vec<(i64, String)> = builder.build_query_as().fetch_all(pool).await?;
+    let tags: Vec<(i64, String)> = builder
+        .build_query_as()
+        .fetch_all(pool)
+        .await
+        .map_err(crate::error::map_sqlx_error)?;
 
     for (id, tag) in tags {
         if let Some(&index) = positions.get(&id) {

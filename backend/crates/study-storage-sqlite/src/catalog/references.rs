@@ -1,5 +1,5 @@
-use anyhow::Result;
 use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+use study_core::error::RepositoryResult as Result;
 
 use study_core::catalog::{DisciplineReference, TeacherReference};
 
@@ -32,7 +32,11 @@ pub(super) async fn load_teachers(
             separated.push_unseparated(") ORDER BY id");
         }
 
-        let rows: Vec<TeacherRow> = builder.build_query_as().fetch_all(pool).await?;
+        let rows: Vec<TeacherRow> = builder
+            .build_query_as()
+            .fetch_all(pool)
+            .await
+            .map_err(crate::error::map_sqlx_error)?;
 
         result.extend(rows.into_iter().map(TeacherReference::from));
     }
@@ -71,7 +75,11 @@ pub(super) async fn load_disciplines(
             separated.push_unseparated(") ORDER BY id");
         }
 
-        let rows: Vec<DisciplineRow> = builder.build_query_as().fetch_all(pool).await?;
+        let rows: Vec<DisciplineRow> = builder
+            .build_query_as()
+            .fetch_all(pool)
+            .await
+            .map_err(crate::error::map_sqlx_error)?;
 
         result.extend(rows.into_iter().map(DisciplineReference::from));
     }
