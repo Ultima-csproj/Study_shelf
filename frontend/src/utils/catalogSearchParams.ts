@@ -2,8 +2,8 @@ import type {
   CatalogFilters,
   CatalogRequest,
   MaterialType,
-} from '../types/material'
-const types: MaterialType[] = ['lecture', 'book', 'article', 'video', 'lab']
+} from "../types/material";
+const types: MaterialType[] = ["lecture", "book", "article", "video", "lab"];
 const numbers = (params: URLSearchParams, key: string) => [
   ...new Set(
     params
@@ -11,57 +11,57 @@ const numbers = (params: URLSearchParams, key: string) => [
       .map(Number)
       .filter((value) => Number.isInteger(value) && value > 0),
   ),
-]
+];
 export function readCatalogParams(params: URLSearchParams): CatalogRequest {
-  const sort = params.get('sort')
-  const hasDisciplineSelection = params.has('all') || params.has('discipline')
+  const sort = params.get("sort");
+  const hasDisciplineSelection = params.has("all") || params.has("discipline");
   const disciplineIds = hasDisciplineSelection
-    ? numbers(params, 'discipline')
-    : [1]
+    ? numbers(params, "discipline")
+    : [1];
   return {
     filters: {
-      query: params.get('q') ?? '',
-      types: types.filter((type) => params.getAll('type').includes(type)),
+      query: params.get("q") ?? "",
+      types: types.filter((type) => params.getAll("type").includes(type)),
       disciplineIds,
-      teacherIds: numbers(params, 'teacher'),
-      courses: numbers(params, 'course'),
-      years: numbers(params, 'year'),
-      tags: [...new Set(params.getAll('tag'))],
+      teacherIds: numbers(params, "teacher"),
+      courses: numbers(params, "course"),
+      years: numbers(params, "year"),
+      tags: [...new Set(params.getAll("tag"))],
     },
-    sort: sort === 'oldest' || sort === 'title' ? sort : 'newest',
-    page: Math.max(1, Number.parseInt(params.get('page') ?? '1', 10) || 1),
+    sort: sort === "oldest" || sort === "title" ? sort : "newest",
+    page: Math.max(1, Number.parseInt(params.get("page") ?? "1", 10) || 1),
     pageSize: 5,
-  }
+  };
 }
 export function writeCatalogParams(
   filters: CatalogFilters,
-  sort: CatalogRequest['sort'],
+  sort: CatalogRequest["sort"],
   page = 1,
 ) {
-  const params = new URLSearchParams()
+  const params = new URLSearchParams();
   if (filters.query) {
-    params.set('q', filters.query)
+    params.set("q", filters.query);
   }
   if (!filters.disciplineIds.length) {
-    params.set('all', '1')
+    params.set("all", "1");
   }
   for (const [key, values] of [
-    ['type', filters.types],
-    ['discipline', filters.disciplineIds],
-    ['teacher', filters.teacherIds],
-    ['course', filters.courses],
-    ['year', filters.years],
-    ['tag', filters.tags],
+    ["type", filters.types],
+    ["discipline", filters.disciplineIds],
+    ["teacher", filters.teacherIds],
+    ["course", filters.courses],
+    ["year", filters.years],
+    ["tag", filters.tags],
   ] as const) {
     for (const value of values) {
-      params.append(key, String(value))
+      params.append(key, String(value));
     }
   }
-  if (sort !== 'newest') {
-    params.set('sort', sort)
+  if (sort !== "newest") {
+    params.set("sort", sort);
   }
   if (page > 1) {
-    params.set('page', String(page))
+    params.set("page", String(page));
   }
-  return params
+  return params;
 }

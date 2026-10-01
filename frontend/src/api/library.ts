@@ -1,12 +1,12 @@
-import { getCollections } from './collections'
-import { getMaterial } from './materials'
-import type { CollectionSummary } from '../types/collection'
-import type { CatalogMaterial } from '../types/material'
+import { getCollections } from "./collections";
+import { getMaterial } from "./materials";
+import type { CollectionSummary } from "../types/collection";
+import type { CatalogMaterial } from "../types/material";
 
 export interface LibraryResponse {
-  materials: CatalogMaterial[]
-  savedCollections: CollectionSummary[]
-  contributedCollections: CollectionSummary[]
+  materials: CatalogMaterial[];
+  savedCollections: CollectionSummary[];
+  contributedCollections: CollectionSummary[];
 }
 
 export async function getLibrary(
@@ -18,12 +18,12 @@ export async function getLibrary(
   const [materialResults, collectionResults] = await Promise.all([
     Promise.all(materialIds.map((id) => getMaterial(id, signal))),
     getCollections(
-      { query: '', disciplineIds: [], courses: [], sort: 'newest' },
+      { query: "", disciplineIds: [], courses: [], sort: "newest" },
       signal,
     ),
-  ])
+  ]);
 
-  signal?.throwIfAborted()
+  signal?.throwIfAborted();
 
   return {
     materials: materialResults.filter(
@@ -34,9 +34,9 @@ export async function getLibrary(
     ),
     contributedCollections: collectionResults.items.filter((collection) => {
       return collection.contributors.some((contributor) => {
-        const identity = contributor.identity
-        return identity.kind === 'user' && identity.userId === userId
-      })
+        const identity = contributor.identity;
+        return identity.kind === "user" && identity.userId === userId;
+      });
     }),
-  }
+  };
 }
