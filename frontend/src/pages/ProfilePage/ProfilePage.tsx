@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Link } from "react-router-dom";
 import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
@@ -8,6 +15,11 @@ import { updateProfile } from "../../api/profile";
 import { roleLabels } from "../../utils/viewerLabels";
 import type { ProfileInput, User } from "../../types/viewer";
 import styles from "./ProfilePage.module.css";
+
+interface ProfileContentProps {
+  user: User;
+  onSaved: (user: User) => void;
+}
 
 export function ProfilePage() {
   const { viewer, updateUser } = useViewer();
@@ -22,10 +34,7 @@ export function ProfilePage() {
 function ProfileContent({
   user,
   onSaved,
-}: {
-  user: User;
-  onSaved: (user: User) => void;
-}) {
+}: ProfileContentProps) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState<ProfileInput>({
     firstName: user.firstName,
@@ -41,10 +50,23 @@ function ProfileContent({
   const firstNameInput = useRef<HTMLInputElement>(null);
   const wasEditing = useRef(false);
   const student = user.role === "student";
-  const courseValue = input.course === null ? "" : String(input.course);
-  const courseLabel =
-    user.course === null ? "Не указан" : `${user.course} курс`;
-  const groupLabel = user.group || "Не указана";
+  let courseValue = "";
+
+  if (input.course !== null) {
+    courseValue = String(input.course);
+  }
+
+  let courseLabel = "Не указан";
+
+  if (user.course !== null) {
+    courseLabel = `${user.course} курс`;
+  }
+
+  let groupLabel = user.group;
+
+  if (!groupLabel) {
+    groupLabel = "Не указана";
+  }
 
   useEffect(() => {
     return () => {
@@ -80,6 +102,42 @@ function ProfileContent({
     setEditing(false);
   };
 
+  const handleFirstNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const firstName = event.target.value;
+
+    setInput((currentInput) => {
+      return { ...currentInput, firstName };
+    });
+  };
+
+  const handleLastNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const lastName = event.target.value;
+
+    setInput((currentInput) => {
+      return { ...currentInput, lastName };
+    });
+  };
+
+  const handleCourseChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    let course: number | null = null;
+
+    if (event.target.value) {
+      course = Number(event.target.value);
+    }
+
+    setInput((currentInput) => {
+      return { ...currentInput, course };
+    });
+  };
+
+  const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const group = event.target.value;
+
+    setInput((currentInput) => {
+      return { ...currentInput, group };
+    });
+  };
+
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -102,10 +160,12 @@ function ProfileContent({
       }
     } catch (reason: unknown) {
       if (!controller.signal.aborted) {
-        const message =
-          reason instanceof Error
-            ? reason.message
-            : "Не удалось сохранить профиль.";
+        let message = "Не удалось сохранить профиль.";
+
+        if (reason instanceof Error) {
+          message = reason.message;
+        }
+
         setError(message);
       }
     } finally {
@@ -115,96 +175,100 @@ function ProfileContent({
     }
   };
 
-  const profileFields = editing ? (
-    <form
-      onSubmit={save}
-      className={styles.form}
-      aria-label="Редактирование профиля"
-    >
+  let studentFields: ReactNode = null;
+
+  if (student) {
+    studentFields = (
       <section className={styles.section}>
-        <h2>Личная информация</h2>
-        <label htmlFor="profile-first-name">Имя</label>
+        <h2>Обучение</h2>
+        <label htmlFor="profile-course">Курс</label>
+        <select
+          id="profile-course"
+          value={courseValue}
+          onChange={handleCourseChange}
+        >
+          <option value="">Не указан</option>
+          {[1, 2, 3, 4, 5, 6].map((course) => (
+            <option key={course} value={course}>
+              {course} курс
+            </option>
+          ))}
+        </select>
+        <label htmlFor="profile-group">Группа</label>
         <input
-          ref={firstNameInput}
-          id="profile-first-name"
-          autoComplete="given-name"
-          required
-          maxLength={64}
-          value={input.firstName}
-          onChange={(event) =>
-            setInput({ ...input, firstName: event.target.value })
-          }
-        />
-        <label htmlFor="profile-last-name">Фамилия</label>
-        <input
-          id="profile-last-name"
-          autoComplete="family-name"
-          required
-          maxLength={64}
-          value={input.lastName}
-          onChange={(event) =>
-            setInput({ ...input, lastName: event.target.value })
-          }
+          id="profile-group"
+          maxLength={30}
+          value={input.group}
+          onChange={handleGroupChange}
         />
       </section>
-      {student && (
+    );
+  }
+
+  let errorMessage: ReactNode = null;
+
+  if (error) {
+    errorMessage = <p role="alert">{error}</p>;
+  }
+
+  let saveButtonLabel = "Сохранить изменения";
+
+  if (saving) {
+    saveButtonLabel = "Сохраняем…";
+  }
+
+  let profileFields: ReactNode;
+
+  if (editing) {
+    profileFields = (
+      <form
+        onSubmit={save}
+        className={styles.form}
+        aria-label="Редактирование профиля"
+      >
         <section className={styles.section}>
-          <h2>Обучение</h2>
-          <label htmlFor="profile-course">Курс</label>
-          <select
-            id="profile-course"
-            value={courseValue}
-            onChange={(event) => {
-              const course = event.target.value
-                ? Number(event.target.value)
-                : null;
-              setInput({ ...input, course });
-            }}
-          >
-            <option value="">Не указан</option>
-            {[1, 2, 3, 4, 5, 6].map((course) => (
-              <option key={course} value={course}>
-                {course} курс
-              </option>
-            ))}
-          </select>
-          <label htmlFor="profile-group">Группа</label>
+          <h2>Личная информация</h2>
+          <label htmlFor="profile-first-name">Имя</label>
           <input
-            id="profile-group"
-            maxLength={30}
-            value={input.group}
-            onChange={(event) =>
-              setInput({ ...input, group: event.target.value })
-            }
+            ref={firstNameInput}
+            id="profile-first-name"
+            autoComplete="given-name"
+            required
+            maxLength={64}
+            value={input.firstName}
+            onChange={handleFirstNameChange}
+          />
+          <label htmlFor="profile-last-name">Фамилия</label>
+          <input
+            id="profile-last-name"
+            autoComplete="family-name"
+            required
+            maxLength={64}
+            value={input.lastName}
+            onChange={handleLastNameChange}
           />
         </section>
-      )}
-      {error && <p role="alert">{error}</p>}
-      <div className={styles.actions}>
-        <button type="submit" className={styles.primary} disabled={saving}>
-          {saving ? "Сохраняем…" : "Сохранить изменения"}
-        </button>
-        <button
-          type="button"
-          className={styles.secondary}
-          onClick={cancelEditing}
-        >
-          Отмена
-        </button>
-      </div>
-    </form>
-  ) : (
-    <>
-      <section className={styles.section}>
-        <h2>Личная информация</h2>
-        <dl>
-          <dt>Имя</dt>
-          <dd>{user.firstName}</dd>
-          <dt>Фамилия</dt>
-          <dd>{user.lastName}</dd>
-        </dl>
-      </section>
-      {student && (
+        {studentFields}
+        {errorMessage}
+        <div className={styles.actions}>
+          <button type="submit" className={styles.primary} disabled={saving}>
+            {saveButtonLabel}
+          </button>
+          <button
+            type="button"
+            className={styles.secondary}
+            onClick={cancelEditing}
+          >
+            Отмена
+          </button>
+        </div>
+      </form>
+    );
+  } else {
+    let studentSummary: ReactNode = null;
+
+    if (student) {
+      studentSummary = (
         <section className={styles.section}>
           <h2>Обучение</h2>
           <dl>
@@ -214,9 +278,50 @@ function ProfileContent({
             <dd>{groupLabel}</dd>
           </dl>
         </section>
-      )}
-    </>
-  );
+      );
+    }
+
+    profileFields = (
+      <>
+        <section className={styles.section}>
+          <h2>Личная информация</h2>
+          <dl>
+            <dt>Имя</dt>
+            <dd>{user.firstName}</dd>
+            <dt>Фамилия</dt>
+            <dd>{user.lastName}</dd>
+          </dl>
+        </section>
+        {studentSummary}
+      </>
+    );
+  }
+
+  let editProfileButton: ReactNode = null;
+
+  if (!editing) {
+    editProfileButton = (
+      <button
+        ref={editButton}
+        type="button"
+        className={styles.primary}
+        onClick={startEditing}
+      >
+        <PencilSimpleIcon size={20} aria-hidden="true" />
+        Редактировать профиль
+      </button>
+    );
+  }
+
+  let profileNotice: ReactNode = null;
+
+  if (notice) {
+    profileNotice = (
+      <p role="status" className={styles.notice}>
+        {notice}
+      </p>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -230,17 +335,7 @@ function ProfileContent({
           <h1>Мой профиль</h1>
           <p>Личная информация и данные об обучении.</p>
         </div>
-        {!editing && (
-          <button
-            ref={editButton}
-            type="button"
-            className={styles.primary}
-            onClick={startEditing}
-          >
-            <PencilSimpleIcon size={20} aria-hidden="true" />
-            Редактировать профиль
-          </button>
-        )}
+        {editProfileButton}
       </div>
       <div className={styles.identity}>
         <span className={styles.avatar} aria-hidden="true">
@@ -252,11 +347,7 @@ function ProfileContent({
           <p className={styles.privacy}>Информация видна только вам.</p>
         </div>
       </div>
-      {notice && (
-        <p role="status" className={styles.notice}>
-          {notice}
-        </p>
-      )}
+      {profileNotice}
       {profileFields}
       <Link to="/settings" className={styles.settingsLink}>
         <ArrowSquareOutIcon size={20} aria-hidden="true" />

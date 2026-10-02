@@ -13,13 +13,25 @@ export function LoginPage() {
   const personalPage = ["/profile", "/library", "/settings"].includes(
     redirectPathname,
   );
-  const backPath = personalPage ? "/catalog" : redirect;
+  let backPath = redirect;
+
+  if (personalPage) {
+    backPath = "/catalog";
+  }
+
   const register = params.get("mode") === "register";
-  const title = register ? "Создать аккаунт" : "Войти";
-  const buttonLabel =
-    viewer.kind === "authenticated"
-      ? "Продолжить просмотр"
-      : "Войти в демо-аккаунт";
+  let title = "Войти";
+
+  if (register) {
+    title = "Создать аккаунт";
+  }
+
+  let buttonLabel = "Войти в демо-аккаунт";
+
+  if (viewer.kind === "authenticated") {
+    buttonLabel = "Продолжить просмотр";
+  }
+
   const enter = () => {
     signInDemo();
     navigate(redirect, { replace: true });

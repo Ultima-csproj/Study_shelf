@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useMaterial } from "../../hooks/useMaterial";
 import { MaterialPreview } from "../../components/common/MaterialPreview/MaterialPreview";
@@ -14,7 +14,12 @@ export function MaterialPage() {
   const { materialId = "" } = useParams();
   const location = useLocation();
   const origin = navigationOrigin(location.search);
-  const originCollectionId = origin?.kind === "collection" ? origin.id : null;
+  let originCollectionId: string | null = null;
+
+  if (origin?.kind === "collection") {
+    originCollectionId = origin.id;
+  }
+
   const { result: originCollection, loading: originLoading } =
     useCollection(originCollectionId);
   const source = materialSource(location.search);
@@ -29,6 +34,7 @@ export function MaterialPage() {
       </main>
     );
   }
+
   if (error) {
     return (
       <main id="main-content" className={common.page}>
@@ -42,6 +48,7 @@ export function MaterialPage() {
       </main>
     );
   }
+
   if (!material) {
     return (
       <main id="main-content" className={common.page}>
@@ -52,9 +59,30 @@ export function MaterialPage() {
       </main>
     );
   }
+
   const { discipline, teacher } = material;
-  const author = material.authorName ?? teacher?.name ?? "Автор не указан";
-  const disciplinePath = discipline ? `/disciplines/${discipline.slug}` : null;
+  let author = "Автор не указан";
+
+  if (teacher?.name !== undefined) {
+    author = teacher.name;
+  }
+
+  if (material.authorName !== null && material.authorName !== undefined) {
+    author = material.authorName;
+  }
+
+  let disciplineLink: ReactNode = null;
+
+  if (discipline) {
+    const disciplinePath = `/disciplines/${discipline.slug}`;
+
+    disciplineLink = (
+      <Link className={styles.disciplineLink} to={disciplinePath}>
+        Перейти к дисциплине: {discipline.name}
+      </Link>
+    );
+  }
+
   return (
     <main id="main-content" className={common.page}>
       <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
@@ -77,11 +105,7 @@ export function MaterialPage() {
           <p>
             {author} · {material.course} курс · {material.year}
           </p>
-          {disciplinePath && (
-            <Link className={styles.disciplineLink} to={disciplinePath}>
-              Перейти к дисциплине: {discipline?.name}
-            </Link>
-          )}
+          {disciplineLink}
           <SaveAction
             id={material.id}
             title={material.title}

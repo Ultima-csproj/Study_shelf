@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type MouseEvent, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
 import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
@@ -33,27 +33,68 @@ export function CollectionsPage() {
   const courses = result?.courses ?? [];
   const items = result?.items ?? [];
   const guest = viewer.kind === "guest";
+  const resultCount = result?.total ?? 0;
 
   const change = (next: CollectionRequest) => {
     setParams(writeCollectionParams(next), { replace: true, flushSync: true });
   };
 
   const reset = () => {
-    change({ ...request, query: "", disciplineIds: [], courses: [] });
+    const resetRequest: CollectionRequest = {
+      ...request,
+      query: "",
+      disciplineIds: [],
+      courses: [],
+    };
+
+    change(resetRequest);
   };
 
   const removeDiscipline = (id: number) => {
-    change({
+    const disciplineIds = request.disciplineIds.filter((value) => value !== id);
+    const nextRequest: CollectionRequest = {
       ...request,
-      disciplineIds: request.disciplineIds.filter((value) => value !== id),
-    });
+      disciplineIds,
+    };
+
+    change(nextRequest);
   };
 
   const removeCourse = (course: number) => {
-    change({
+    const courses = request.courses.filter((value) => value !== course);
+    const nextRequest: CollectionRequest = {
       ...request,
-      courses: request.courses.filter((value) => value !== course),
-    });
+      courses,
+    };
+
+    change(nextRequest);
+  };
+
+  const handleQueryChange = (query: string) => {
+    const nextRequest: CollectionRequest = { ...request, query };
+    change(nextRequest);
+  };
+
+  const handleSortChange = (sort: string) => {
+    const selectedSort = sort as CollectionSort;
+    const nextRequest: CollectionRequest = { ...request, sort: selectedSort };
+    change(nextRequest);
+  };
+
+  const handleOpenFilters = () => {
+    dialog.current?.showModal();
+  };
+
+  const handleCloseFilters = () => {
+    dialog.current?.close();
+  };
+
+  const handleBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
+    const clickedBackdrop = event.target === event.currentTarget;
+
+    if (clickedBackdrop) {
+      handleCloseFilters();
+    }
   };
 
   const filterPanel = (
@@ -66,32 +107,53 @@ export function CollectionsPage() {
     />
   );
 
-  const resultsContent = loading ? (
-    <p role="status" className={styles.state}>
-      Загружаем подборки…
-    </p>
-  ) : error ? (
-    <div className={styles.state}>
-      <p role="alert">{error}</p>
-      <button type="button" onClick={retry}>
-        Повторить загрузку
-      </button>
-    </div>
-  ) : items.length === 0 ? (
-    <div className={styles.state}>
-      <h2>Подборки не найдены</h2>
-      <p>Попробуйте другой запрос или сбросьте фильтры.</p>
-      <button type="button" onClick={reset}>
-        Сбросить фильтры
-      </button>
-    </div>
-  ) : (
-    <ul className={styles.list} aria-label="Публичные подборки">
-      {items.map((collection) => (
-        <CollectionListItem key={collection.id} collection={collection} />
-      ))}
-    </ul>
-  );
+  let resultsContent: ReactNode;
+
+  if (loading) {
+    resultsContent = (
+      <p role="status" className={styles.state}>
+        Загружаем подборки…
+      </p>
+    );
+  } else if (error) {
+    resultsContent = (
+      <div className={styles.state}>
+        <p role="alert">{error}</p>
+        <button type="button" onClick={retry}>
+          Повторить загрузку
+        </button>
+      </div>
+    );
+  } else if (items.length === 0) {
+    resultsContent = (
+      <div className={styles.state}>
+        <h2>Подборки не найдены</h2>
+        <p>Попробуйте другой запрос или сбросьте фильтры.</p>
+        <button type="button" onClick={reset}>
+          Сбросить фильтры
+        </button>
+      </div>
+    );
+  } else {
+    resultsContent = (
+      <ul className={styles.list} aria-label="Публичные подборки">
+        {items.map((collection) => (
+          <CollectionListItem key={collection.id} collection={collection} />
+        ))}
+      </ul>
+    );
+  }
+
+  let guestNotice: ReactNode = null;
+
+  if (guest) {
+    guestNotice = (
+      <p>
+        <LockKeyIcon size={23} aria-hidden="true" />
+        Чтобы сохранять подборки, войдите в аккаунт.
+      </p>
+    );
+  }
 
   return (
     <>
@@ -107,7 +169,7 @@ export function CollectionsPage() {
           </div>
           <SearchInput
             value={request.query}
-            onChange={(query) => change({ ...request, query })}
+            onChange={handleQueryChange}
             label="Поиск подборок"
             placeholder="Поиск по названию или теме"
           />
@@ -115,7 +177,7 @@ export function CollectionsPage() {
             <button
               type="button"
               className={styles.filterButton}
-              onClick={() => dialog.current?.showModal()}
+              onClick={handleOpenFilters}
             >
               <SlidersHorizontalIcon size={19} aria-hidden="true" />
               Фильтры
@@ -154,9 +216,7 @@ export function CollectionsPage() {
               value={request.sort}
               label="Сортировка подборок"
               options={sortOptions}
-              onChange={(sort) =>
-                change({ ...request, sort: sort as CollectionSort })
-              }
+              onChange={handleSortChange}
             />
           </div>
           {resultsContent}
@@ -165,12 +225,7 @@ export function CollectionsPage() {
               <InfoIcon size={23} aria-hidden="true" />
               Публичные подборки доступны без входа.
             </p>
-            {guest && (
-              <p>
-                <LockKeyIcon size={23} aria-hidden="true" />
-                Чтобы сохранять подборки, войдите в аккаунт.
-              </p>
-            )}
+            {guestNotice}
           </footer>
         </main>
       </div>
@@ -178,17 +233,13 @@ export function CollectionsPage() {
         ref={dialog}
         className={styles.dialog}
         aria-label="Фильтры подборок"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) {
-            dialog.current?.close();
-          }
-        }}
+        onClick={handleBackdropClick}
       >
         <button
           type="button"
           className={styles.close}
           aria-label="Закрыть фильтры"
-          onClick={() => dialog.current?.close()}
+          onClick={handleCloseFilters}
         >
           <XIcon size={23} aria-hidden="true" />
         </button>
@@ -196,9 +247,9 @@ export function CollectionsPage() {
         <button
           type="button"
           className={styles.results}
-          onClick={() => dialog.current?.close()}
+          onClick={handleCloseFilters}
         >
-          Показать подборки ({result?.total ?? 0})
+          Показать подборки ({resultCount})
         </button>
       </dialog>
     </>

@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import type { ReactNode } from "react";
 import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { useDiscipline } from "../../hooks/useDiscipline";
@@ -11,6 +12,7 @@ import styles from "./DisciplinePage.module.css";
 export function DisciplinePage() {
   const { disciplineId = "database" } = useParams();
   const { result, loading, error, retry } = useDiscipline(disciplineId);
+
   if (loading) {
     return (
       <main
@@ -23,6 +25,7 @@ export function DisciplinePage() {
       </main>
     );
   }
+
   if (error) {
     return (
       <main
@@ -39,7 +42,10 @@ export function DisciplinePage() {
       </main>
     );
   }
-  if (!result?.discipline) {
+
+  const discipline = result?.discipline;
+
+  if (!result || !discipline) {
     return (
       <main id="main-content" className={styles.state} tabIndex={-1}>
         <h1>Дисциплина не найдена</h1>
@@ -48,7 +54,8 @@ export function DisciplinePage() {
       </main>
     );
   }
-  const { discipline, navigation, sections } = result;
+
+  const { navigation, sections } = result;
   const menu = navigation.filter(
     (item, index) => index < 5 || item.id === discipline.id,
   );
@@ -56,6 +63,18 @@ export function DisciplinePage() {
     (total, section) => total + section.items.length,
     0,
   );
+  let emptyState: ReactNode = null;
+
+  if (count === 0) {
+    emptyState = (
+      <div className={styles.empty} role="status">
+        <h2>Материалы пока не добавлены</h2>
+        <p>Выберите другую дисциплину или посмотрите общий каталог.</p>
+        <Link to="/catalog?all=1">Открыть каталог</Link>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.layout}>
       <DisciplineSidebar disciplines={menu} selectedId={discipline.id} />
@@ -65,13 +84,7 @@ export function DisciplinePage() {
         {sections.map((section) => (
           <MaterialSection key={section.id} section={section} />
         ))}
-        {!count && (
-          <div className={styles.empty} role="status">
-            <h2>Материалы пока не добавлены</h2>
-            <p>Выберите другую дисциплину или посмотрите общий каталог.</p>
-            <Link to="/catalog?all=1">Открыть каталог</Link>
-          </div>
-        )}
+        {emptyState}
         <footer className={styles.footer}>
           <Link to="/collections">
             <LinkIcon size={21} aria-hidden="true" />

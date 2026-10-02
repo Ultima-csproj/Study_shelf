@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { getLibrary } from "../../api/library";
 import { useApiResource } from "../../hooks/useApiResource";
@@ -17,8 +17,18 @@ export function LibraryPage() {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const parentPath = locationPath(location);
-  const tab = params.get("tab") === "collections" ? "collections" : "saved";
-  const userId = viewer.kind === "authenticated" ? viewer.user.id : 0;
+  let tab: "saved" | "collections" = "saved";
+
+  if (params.get("tab") === "collections") {
+    tab = "collections";
+  }
+
+  let userId = 0;
+
+  if (viewer.kind === "authenticated") {
+    userId = viewer.user.id;
+  }
+
   const load = useCallback(
     (signal: AbortSignal) => {
       return getLibrary(userId, savedMaterials, savedCollectionIds, signal);
@@ -33,11 +43,19 @@ export function LibraryPage() {
   const savedCollections = result?.savedCollections ?? [];
   const contributedCollections = result?.contributedCollections ?? [];
 
-  const changeTab = (next: string) => {
+  const changeTab = (next: "saved" | "collections") => {
     setParams({ tab: next }, { replace: true, flushSync: true });
   };
 
-  let content;
+  const handleSavedTabClick = () => {
+    changeTab("saved");
+  };
+
+  const handleCollectionsTabClick = () => {
+    changeTab("collections");
+  };
+
+  let content: ReactNode;
 
   if (loading) {
     content = <p role="status">Загружаем библиотеку…</p>;
@@ -51,15 +69,21 @@ export function LibraryPage() {
       </div>
     );
   } else if (tab === "saved") {
+    let emptyMaterialsMessage: ReactNode = null;
+
+    if (materials.length === 0) {
+      emptyMaterialsMessage = (
+        <div className={styles.empty}>
+          <p>Здесь появятся материалы, которые вы сохраните.</p>
+          <Link to="/catalog">Найти материалы в каталоге →</Link>
+        </div>
+      );
+    }
+
     content = (
       <section aria-labelledby="saved-materials-heading">
         <h2 id="saved-materials-heading">Сохранённые материалы</h2>
-        {materials.length === 0 && (
-          <div className={styles.empty}>
-            <p>Здесь появятся материалы, которые вы сохраните.</p>
-            <Link to="/catalog">Найти материалы в каталоге →</Link>
-          </div>
-        )}
+        {emptyMaterialsMessage}
         <ul className={styles.materials}>
           {materials.map((material) => {
             const path = withNavigationOrigin(
@@ -87,42 +111,65 @@ export function LibraryPage() {
       </section>
     );
   } else {
+    let emptyCollectionsMessage: ReactNode = null;
+
+    if (savedCollections.length === 0) {
+      emptyCollectionsMessage = (
+        <div className={styles.empty}>
+          <p>Вы пока не сохранили ни одной подборки.</p>
+          <Link to="/collections">Посмотреть публичные подборки →</Link>
+        </div>
+      );
+    }
+
+    let contributionsSection: ReactNode = null;
+
+    if (contributedCollections.length > 0) {
+      contributionsSection = (
+        <section
+          className={styles.contributions}
+          aria-labelledby="contributed-collections-heading"
+        >
+          <h2 id="contributed-collections-heading">
+            Подборки с вашим участием
+          </h2>
+          <ul className={styles.collections}>
+            {contributedCollections.map((collection) => (
+              <CollectionListItem
+                key={collection.id}
+                collection={collection}
+              />
+            ))}
+          </ul>
+        </section>
+      );
+    }
+
     content = (
       <>
         <section aria-labelledby="saved-collections-heading">
           <h2 id="saved-collections-heading">Сохранённые подборки</h2>
-          {savedCollections.length === 0 && (
-            <div className={styles.empty}>
-              <p>Вы пока не сохранили ни одной подборки.</p>
-              <Link to="/collections">Посмотреть публичные подборки →</Link>
-            </div>
-          )}
+          {emptyCollectionsMessage}
           <ul className={styles.collections}>
             {savedCollections.map((collection) => (
               <CollectionListItem key={collection.id} collection={collection} />
             ))}
           </ul>
         </section>
-        {contributedCollections.length > 0 && (
-          <section
-            className={styles.contributions}
-            aria-labelledby="contributed-collections-heading"
-          >
-            <h2 id="contributed-collections-heading">
-              Подборки с вашим участием
-            </h2>
-            <ul className={styles.collections}>
-              {contributedCollections.map((collection) => (
-                <CollectionListItem
-                  key={collection.id}
-                  collection={collection}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        {contributionsSection}
       </>
     );
+  }
+
+  let savedTabCurrent: "page" | undefined = undefined;
+  let collectionsTabCurrent: "page" | undefined = undefined;
+
+  if (tab === "saved") {
+    savedTabCurrent = "page";
+  }
+
+  if (tab === "collections") {
+    collectionsTabCurrent = "page";
   }
 
   return (
@@ -134,15 +181,15 @@ export function LibraryPage() {
       <nav className={styles.tabs} aria-label="Разделы библиотеки">
         <button
           type="button"
-          aria-current={tab === "saved" ? "page" : undefined}
-          onClick={() => changeTab("saved")}
+          aria-current={savedTabCurrent}
+          onClick={handleSavedTabClick}
         >
           Сохранённое ({savedMaterials.length})
         </button>
         <button
           type="button"
-          aria-current={tab === "collections" ? "page" : undefined}
-          onClick={() => changeTab("collections")}
+          aria-current={collectionsTabCurrent}
+          onClick={handleCollectionsTabClick}
         >
           Подборки ({savedCollectionIds.length})
         </button>
