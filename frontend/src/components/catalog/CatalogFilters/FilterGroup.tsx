@@ -1,19 +1,24 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
 import styles from "./CatalogFilters.module.css";
 
-export function FilterGroup({
-  title,
-  children,
-}: {
+interface FilterGroupProps {
   title: string;
   children: ReactNode;
-}) {
+}
+
+export function FilterGroup({ title, children }: FilterGroupProps) {
   const [open, setOpen] = useState(true);
+
+  const handleToggle = (event: SyntheticEvent<HTMLDetailsElement>) => {
+    const isOpen = event.currentTarget.open;
+    setOpen(isOpen);
+  };
+
   return (
     <details
       open={open}
-      onToggle={(event) => setOpen(event.currentTarget.open)}
+      onToggle={handleToggle}
       className={styles.group}
     >
       <summary>

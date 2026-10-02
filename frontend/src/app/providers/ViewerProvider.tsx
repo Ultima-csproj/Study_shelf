@@ -10,6 +10,10 @@ const materialsKey = "study-shelf-demo-saved";
 const collectionsKey = "study-shelf-demo-collections";
 const profileKey = "study-shelf-demo-profile";
 
+interface ViewerProviderProps {
+  children: ReactNode;
+}
+
 function initialSaved(storageKey: string): number[] {
   try {
     if (sessionStorage.getItem(viewerKey) !== "authenticated") {
@@ -90,7 +94,7 @@ function initialViewer(): Viewer {
   return { kind: "guest" };
 }
 
-export function ViewerProvider({ children }: { children: ReactNode }) {
+export function ViewerProvider({ children }: ViewerProviderProps) {
   const [viewer, setViewer] = useState<Viewer>(initialViewer);
   const [savedMaterials, setSavedMaterials] = useState<MaterialReference[]>(() => {
     try {

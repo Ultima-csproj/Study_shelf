@@ -31,9 +31,7 @@ export function PersonalLayout() {
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) => {
-                return isActive ? styles.selected : "";
-              }}
+              className={({ isActive }) => getNavigationLinkClassName(isActive)}
             >
               <Icon size={25} aria-hidden="true" />
               {label}
@@ -46,4 +44,12 @@ export function PersonalLayout() {
       </main>
     </div>
   );
+}
+
+function getNavigationLinkClassName(isActive: boolean): string {
+  if (isActive) {
+    return styles.selected;
+  }
+
+  return "";
 }

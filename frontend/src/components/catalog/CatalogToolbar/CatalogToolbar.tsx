@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { XIcon } from "@phosphor-icons/react/dist/csr/X";
 import { FunnelIcon } from "@phosphor-icons/react/dist/csr/Funnel";
 import { materialTypeLabels } from "../../../utils/materialLabels";
@@ -9,6 +10,12 @@ import type {
 import { Button } from "../../common/Button/Button";
 import { Select } from "../../common/Select/Select";
 import styles from "./CatalogToolbar.module.css";
+
+interface FilterChip {
+  key: string;
+  label: string;
+  remove: () => void;
+}
 
 interface CatalogToolbarProps {
   filters: CatalogFilters;
@@ -29,62 +36,126 @@ export function CatalogToolbar({
   onOpenFilters,
 }: CatalogToolbarProps) {
   const { disciplines, teachers } = facets;
-  const chips = [
-    ...filters.types.map((type) => ({
+  const chips: FilterChip[] = [];
+
+  for (const type of filters.types) {
+    const chip: FilterChip = {
       key: `type-${type}`,
       label: materialTypeLabels[type],
-      remove: () =>
-        onFiltersChange({
-          ...filters,
-          types: filters.types.filter((item) => item !== type),
-        }),
-    })),
-    ...filters.disciplineIds.map((id) => ({
+      remove: () => {
+        const types = filters.types.filter((item) => item !== type);
+        const nextFilters = { ...filters, types };
+        onFiltersChange(nextFilters);
+      },
+    };
+
+    chips.push(chip);
+  }
+
+  for (const id of filters.disciplineIds) {
+    const discipline = disciplines.find((item) => item.id === id);
+    const label = discipline?.name ?? String(id);
+    const chip: FilterChip = {
       key: `discipline-${id}`,
-      label: disciplines.find((item) => item.id === id)?.name ?? String(id),
-      remove: () =>
-        onFiltersChange({
-          ...filters,
-          disciplineIds: filters.disciplineIds.filter((item) => item !== id),
-        }),
-    })),
-    ...filters.teacherIds.map((id) => ({
+      label,
+      remove: () => {
+        const disciplineIds = filters.disciplineIds.filter(
+          (item) => item !== id,
+        );
+        const nextFilters = { ...filters, disciplineIds };
+        onFiltersChange(nextFilters);
+      },
+    };
+
+    chips.push(chip);
+  }
+
+  for (const id of filters.teacherIds) {
+    const teacher = teachers.find((item) => item.id === id);
+    const label = teacher?.shortName ?? String(id);
+    const chip: FilterChip = {
       key: `teacher-${id}`,
-      label: teachers.find((item) => item.id === id)?.shortName ?? String(id),
-      remove: () =>
-        onFiltersChange({
-          ...filters,
-          teacherIds: filters.teacherIds.filter((item) => item !== id),
-        }),
-    })),
-    ...filters.courses.map((course) => ({
+      label,
+      remove: () => {
+        const teacherIds = filters.teacherIds.filter((item) => item !== id);
+        const nextFilters = { ...filters, teacherIds };
+        onFiltersChange(nextFilters);
+      },
+    };
+
+    chips.push(chip);
+  }
+
+  for (const course of filters.courses) {
+    const chip: FilterChip = {
       key: `course-${course}`,
       label: `${course} курс`,
-      remove: () =>
-        onFiltersChange({
-          ...filters,
-          courses: filters.courses.filter((item) => item !== course),
-        }),
-    })),
-    ...filters.years.map((year) => ({
+      remove: () => {
+        const courses = filters.courses.filter((item) => item !== course);
+        const nextFilters = { ...filters, courses };
+        onFiltersChange(nextFilters);
+      },
+    };
+
+    chips.push(chip);
+  }
+
+  for (const year of filters.years) {
+    const chip: FilterChip = {
       key: `year-${year}`,
       label: String(year),
-      remove: () =>
-        onFiltersChange({
-          ...filters,
-          years: filters.years.filter((item) => item !== year),
-        }),
-    })),
-    ...filters.tags.map((tag) => ({
+      remove: () => {
+        const years = filters.years.filter((item) => item !== year);
+        const nextFilters = { ...filters, years };
+        onFiltersChange(nextFilters);
+      },
+    };
+
+    chips.push(chip);
+  }
+
+  for (const tag of filters.tags) {
+    const chip: FilterChip = {
       key: `tag-${tag}`,
       label: tag,
-      remove: () =>
-        onFiltersChange({
-          ...filters,
-          tags: filters.tags.filter((item) => item !== tag),
-        }),
-    })),
+      remove: () => {
+        const tags = filters.tags.filter((item) => item !== tag);
+        const nextFilters = { ...filters, tags };
+        onFiltersChange(nextFilters);
+      },
+    };
+
+    chips.push(chip);
+  }
+
+  const hasActiveFilters = chips.length > 0 || Boolean(filters.query);
+  let filterButtonLabel = "Фильтры";
+
+  if (chips.length > 0) {
+    filterButtonLabel = `Фильтры (${chips.length})`;
+  }
+
+  const sortOptions = [
+    { value: "newest", label: "Сначала новые" },
+    { value: "oldest", label: "Сначала старые" },
+    { value: "title", label: "По названию" },
   ];
+
+  const handleSortChange = (value: string) => {
+    const nextSort = value as CatalogSort;
+    onSortChange(nextSort);
+  };
+
+  let resetButton: ReactNode = null;
+
+  if (hasActiveFilters) {
+    resetButton = (
+      <Button onClick={onReset} className={styles.reset}>
+        Сбросить фильтры
+      </Button>
+    );
+  }
+
   return (
     <div className={styles.toolbar}>
       <Button
@@ -93,7 +164,7 @@ export function CatalogToolbar({
         onClick={onOpenFilters}
       >
         <FunnelIcon size={16} aria-hidden="true" />
-        Фильтры{chips.length ? ` (${chips.length})` : ""}
+        {filterButtonLabel}
       </Button>
       <div className={styles.chips} aria-label="Выбранные фильтры">
         {chips.map((chip) => (
@@ -108,23 +179,15 @@ export function CatalogToolbar({
             <XIcon size={13} aria-hidden="true" />
           </button>
         ))}
-        {(chips.length > 0 || filters.query) && (
-          <Button onClick={onReset} className={styles.reset}>
-            Сбросить фильтры
-          </Button>
-        )}
+        {resetButton}
       </div>
       <div className={styles.sort}>
         <span aria-hidden="true">Сортировка:</span>
         <Select
           label="Сортировка материалов"
           value={sort}
-          onChange={(value) => onSortChange(value as CatalogSort)}
-          options={[
-            { value: "newest", label: "Сначала новые" },
-            { value: "oldest", label: "Сначала старые" },
-            { value: "title", label: "По названию" },
-          ]}
+          onChange={handleSortChange}
+          options={sortOptions}
         />
       </div>
     </div>

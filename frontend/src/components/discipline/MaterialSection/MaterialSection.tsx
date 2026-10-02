@@ -1,20 +1,29 @@
 import type { MaterialSectionData } from "../../../types/material";
 import { DisciplineMaterialItem } from "../DisciplineMaterialItem/DisciplineMaterialItem";
 import styles from "./MaterialSection.module.css";
-export function MaterialSection({ section }: { section: MaterialSectionData }) {
+
+interface MaterialSectionProps {
+  section: MaterialSectionData;
+}
+
+export function MaterialSection({ section }: MaterialSectionProps) {
   if (!section.items.length) {
     return null;
   }
+
+  const headingId = `section-${section.id}`;
+  const compactDescription = section.mobileDescription ?? section.description;
+
   return (
     <section
       className={styles.section}
-      aria-labelledby={`section-${section.id}`}
+      aria-labelledby={headingId}
     >
-      <h2 id={`section-${section.id}`}>{section.title}</h2>
+      <h2 id={headingId}>{section.title}</h2>
       <p className={styles.description}>
         <span className={styles.fullDescription}>{section.description}</span>
         <span className={styles.mobileDescription}>
-          {section.mobileDescription ?? section.description}
+          {compactDescription}
         </span>
       </p>
       <ol>

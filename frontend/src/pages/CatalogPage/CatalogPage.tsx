@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type MouseEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { XIcon } from "@phosphor-icons/react/dist/csr/X";
 import { PageContainer } from "../../components/layout/PageContainer/PageContainer";
@@ -30,24 +30,58 @@ export function CatalogPage() {
       flushSync: true,
     });
   };
-  const reset = () => changeFilters({ ...emptyFilters });
-  const changeQuery = (query: string) => changeFilters({ ...filters, query });
-  const changeTag = (tag: string) =>
-    changeFilters({
-      ...filters,
-      tags: filters.tags.includes(tag)
-        ? filters.tags.filter((item) => item !== tag)
-        : [...filters.tags, tag],
-    });
+
+  const reset = () => {
+    const resetFilters = { ...emptyFilters };
+    changeFilters(resetFilters);
+  };
+
+  const changeQuery = (query: string) => {
+    const nextFilters = { ...filters, query };
+    changeFilters(nextFilters);
+  };
+
+  const changeTag = (tag: string) => {
+    let tags: string[];
+    const isSelected = filters.tags.includes(tag);
+
+    if (isSelected) {
+      tags = filters.tags.filter((item) => item !== tag);
+    } else {
+      tags = [...filters.tags, tag];
+    }
+
+    const nextFilters = { ...filters, tags };
+    changeFilters(nextFilters);
+  };
+
   const changeSort = (next: typeof sort) => {
     setParams(writeCatalogParams(filters, next), {
       replace: true,
       flushSync: true,
     });
   };
+
   const changePage = (next: number) => {
     setParams(writeCatalogParams(filters, sort, next), { flushSync: true });
   };
+
+  const handleOpenFilters = () => {
+    dialog.current?.showModal();
+  };
+
+  const handleCloseFilters = () => {
+    dialog.current?.close();
+  };
+
+  const handleDialogBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
+    const clickedBackdrop = event.target === event.currentTarget;
+
+    if (clickedBackdrop) {
+      handleCloseFilters();
+    }
+  };
+
   let resultLabel = foundMaterials(result.total);
 
   if (error) {
@@ -57,12 +91,13 @@ export function CatalogPage() {
   }
   const filterPanel = (
     <CatalogFilters
-      value={filters}
+      filters={filters}
       facets={result.facets}
       onChange={changeFilters}
       onReset={reset}
     />
   );
+
   return (
     <>
       <PageContainer>
@@ -81,7 +116,7 @@ export function CatalogPage() {
               onFiltersChange={changeFilters}
               onReset={reset}
               onSortChange={changeSort}
-              onOpenFilters={() => dialog.current?.showModal()}
+              onOpenFilters={handleOpenFilters}
             />
             <MaterialList
               materials={result.items}
@@ -106,17 +141,13 @@ export function CatalogPage() {
         ref={dialog}
         className={styles.filterDialog}
         aria-label="Фильтры каталога"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) {
-            dialog.current?.close();
-          }
-        }}
+        onClick={handleDialogBackdropClick}
       >
         <div className={styles.dialogHead}>
           <span>Фильтры каталога</span>
           <button
             type="button"
-            onClick={() => dialog.current?.close()}
+            onClick={handleCloseFilters}
             aria-label="Закрыть фильтры"
           >
             <XIcon size={20} aria-hidden="true" />
@@ -126,7 +157,7 @@ export function CatalogPage() {
         <Button
           variant="secondary"
           className={styles.showResults}
-          onClick={() => dialog.current?.close()}
+          onClick={handleCloseFilters}
         >
           Показать материалы ({result.total})
         </Button>

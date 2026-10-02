@@ -1,12 +1,11 @@
 import { SearchInput } from "../../common/SearchInput/SearchInput";
 
-export function CatalogSearch({
-  value,
-  onChange,
-}: {
+interface CatalogSearchProps {
   value: string;
   onChange: (value: string) => void;
-}) {
+}
+
+export function CatalogSearch({ value, onChange }: CatalogSearchProps) {
   return (
     <SearchInput
       value={value}

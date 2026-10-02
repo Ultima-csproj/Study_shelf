@@ -1,5 +1,6 @@
 import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
 import { Link, useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
 import type { CatalogMaterial } from "../../../types/material";
 import { Badge } from "../../common/Badge/Badge";
 import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
@@ -32,6 +33,24 @@ export function MaterialListItem({
     materialPath(material.id, material.source),
     locationPath(location),
   );
+  const formattedDate = dateFormatter
+    .format(new Date(material.createdAt))
+    .replace(/\s?г\.$/, "");
+  const disciplineSlug = discipline?.slug ?? material.disciplineId;
+  const disciplinePath = `/disciplines/${disciplineSlug}`;
+  let desktopDuration: ReactNode = null;
+  let mobileDuration: ReactNode = null;
+
+  if (material.duration && !material.preview) {
+    desktopDuration = <span>{material.duration}</span>;
+  }
+
+  if (material.duration && material.preview) {
+    mobileDuration = (
+      <span className={styles.mobileDuration}>{material.duration}</span>
+    );
+  }
+
   return (
     <li className={styles.item}>
       <Link to={path} aria-label={`Открыть материал: ${material.title}`}>
@@ -44,10 +63,7 @@ export function MaterialListItem({
             <Link to={path}>{material.title}</Link>
           </h2>
           <time dateTime={material.createdAt} className={styles.date}>
-            {material.dateLabel}{" "}
-            {dateFormatter
-              .format(new Date(material.createdAt))
-              .replace(/\s?г\.$/, "")}
+            {material.dateLabel} {formattedDate}
           </time>
         </div>
         <div className={styles.meta}>
@@ -55,18 +71,11 @@ export function MaterialListItem({
             <UserIcon size={15} aria-hidden="true" />
             {teacher?.shortName}
           </span>
-          <Link
-            className={styles.discipline}
-            to={`/disciplines/${discipline?.slug ?? material.disciplineId}`}
-          >
+          <Link className={styles.discipline} to={disciplinePath}>
             {discipline?.name}
           </Link>
-          {!material.preview && material.duration && (
-            <span>{material.duration}</span>
-          )}
-          {material.preview && material.duration && (
-            <span className={styles.mobileDuration}>{material.duration}</span>
-          )}
+          {desktopDuration}
+          {mobileDuration}
         </div>
         <p className={styles.description}>{material.description}</p>
         <div className={styles.tags} aria-label="Теги материала">

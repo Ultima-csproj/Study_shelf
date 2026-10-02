@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { BooksIcon } from "@phosphor-icons/react/dist/csr/Books";
 import { ListIcon } from "@phosphor-icons/react/dist/csr/List";
@@ -25,9 +25,49 @@ export function Header({ query, onQueryChange }: HeaderProps) {
   const catalogSelected = selectedSection === "catalog";
   const disciplinesSelected = selectedSection === "disciplines";
   const collectionsSelected = selectedSection === "collections";
-  const catalogClassName = catalogSelected ? styles.active : "";
-  const disciplinesClassName = disciplinesSelected ? styles.active : "";
-  const collectionsClassName = collectionsSelected ? styles.active : "";
+  let catalogClassName = "";
+  let disciplinesClassName = "";
+  let collectionsClassName = "";
+  let catalogCurrent: "location" | undefined = undefined;
+  let disciplinesCurrent: "location" | undefined = undefined;
+  let collectionsCurrent: "location" | undefined = undefined;
+
+  if (catalogSelected) {
+    catalogClassName = styles.active;
+    catalogCurrent = "location";
+  }
+
+  if (disciplinesSelected) {
+    disciplinesClassName = styles.active;
+    disciplinesCurrent = "location";
+  }
+
+  if (collectionsSelected) {
+    collectionsClassName = styles.active;
+    collectionsCurrent = "location";
+  }
+
+  let accountContent: ReactNode;
+
+  if (viewer.kind === "guest") {
+    accountContent = (
+      <NavLink to={login} className={styles.login}>
+        Войти
+      </NavLink>
+    );
+  } else {
+    accountContent = <AccountMenu />;
+  }
+
+  const handleOpenMenu = () => {
+    menu.current?.showModal();
+    setMenuOpen(true);
+  };
+
+  const handleMenuClose = () => {
+    setMenuOpen(false);
+  };
+
   return (
     <>
       <a href="#main-content" className="skip-link">
@@ -47,21 +87,21 @@ export function Header({ query, onQueryChange }: HeaderProps) {
             <Link
               to="/catalog"
               className={catalogClassName}
-              aria-current={catalogSelected ? "location" : undefined}
+              aria-current={catalogCurrent}
             >
               Каталог
             </Link>
             <Link
               to="/disciplines"
               className={disciplinesClassName}
-              aria-current={disciplinesSelected ? "location" : undefined}
+              aria-current={disciplinesCurrent}
             >
               Дисциплины
             </Link>
             <Link
               to="/collections"
               className={collectionsClassName}
-              aria-current={collectionsSelected ? "location" : undefined}
+              aria-current={collectionsCurrent}
             >
               Подборки
             </Link>
@@ -77,13 +117,7 @@ export function Header({ query, onQueryChange }: HeaderProps) {
           </div>
           <ThemeToggle />
           <div className={styles.account}>
-            {viewer.kind === "guest" ? (
-              <NavLink to={login} className={styles.login}>
-                Войти
-              </NavLink>
-            ) : (
-              <AccountMenu />
-            )}
+            {accountContent}
           </div>
           <button
             type="button"
@@ -91,16 +125,13 @@ export function Header({ query, onQueryChange }: HeaderProps) {
             aria-label="Открыть меню"
             aria-expanded={menuOpen}
             aria-haspopup="dialog"
-            onClick={() => {
-              menu.current?.showModal();
-              setMenuOpen(true);
-            }}
+            onClick={handleOpenMenu}
           >
             <ListIcon size={25} aria-hidden="true" />
           </button>
         </div>
       </header>
-      <MobileMenu dialogRef={menu} onClose={() => setMenuOpen(false)} />
+      <MobileMenu dialogRef={menu} onClose={handleMenuClose} />
     </>
   );
 }

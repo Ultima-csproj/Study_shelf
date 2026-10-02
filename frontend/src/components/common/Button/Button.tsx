@@ -7,13 +7,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({
   variant = "text",
   className = "",
-  ...props
+  type = "button",
+  disabled,
+  onClick,
+  children,
+  ...htmlAttributes
 }: ButtonProps) {
+  const buttonClassName = `${styles.button} ${styles[variant]} ${className}`;
+
   return (
     <button
-      type="button"
-      className={`${styles.button} ${styles[variant]} ${className}`}
-      {...props}
-    />
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
+      className={buttonClassName}
+      {...htmlAttributes}
+    >
+      {children}
+    </button>
   );
 }

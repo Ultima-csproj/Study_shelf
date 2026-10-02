@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ChangeEvent, type ReactNode } from "react";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { XIcon } from "@phosphor-icons/react/dist/csr/X";
 import styles from "./SearchInput.module.css";
@@ -18,7 +18,36 @@ export function SearchInput({
   compact = false,
 }: SearchInputProps) {
   const id = useId();
-  const className = `${styles.field} ${compact ? styles.compact : ""}`;
+  let className = styles.field;
+
+  if (compact) {
+    className = `${styles.field} ${styles.compact}`;
+  }
+
+  const handleClear = () => {
+    onChange("");
+  };
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+    onChange(nextValue);
+  };
+
+  let clearButton: ReactNode = null;
+
+  if (value) {
+    clearButton = (
+      <button
+        type="button"
+        className={styles.clear}
+        onClick={handleClear}
+        aria-label={`Очистить: ${label}`}
+      >
+        <XIcon size={16} aria-hidden="true" />
+      </button>
+    );
+  }
+
   return (
     <div className={className}>
       <label className="visually-hidden" htmlFor={id}>
@@ -33,20 +62,11 @@ export function SearchInput({
         id={id}
         type="search"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={handleInputChange}
         placeholder={placeholder}
         autoComplete="off"
       />
-      {value && (
-        <button
-          type="button"
-          className={styles.clear}
-          onClick={() => onChange("")}
-          aria-label={`Очистить: ${label}`}
-        >
-          <XIcon size={16} aria-hidden="true" />
-        </button>
-      )}
+      {clearButton}
     </div>
   );
 }

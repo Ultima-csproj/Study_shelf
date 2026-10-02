@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { BookBookmarkIcon } from "@phosphor-icons/react/dist/csr/BookBookmark";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
@@ -13,11 +14,11 @@ import {
   withNavigationOrigin,
 } from "../../../utils/navigation";
 
-export function CollectionListItem({
-  collection,
-}: {
+interface CollectionListItemProps {
   collection: CollectionSummary;
-}) {
+}
+
+export function CollectionListItem({ collection }: CollectionListItemProps) {
   const location = useLocation();
   const path = withNavigationOrigin(
     `/collections/${collection.slug}`,
@@ -25,14 +26,47 @@ export function CollectionListItem({
   );
   const names = compilerNames(collection.contributors);
   const count = collectionMaterialCount(collection.materialCount);
-  const course =
-    collection.course === null ? null : `${collection.course} курс`;
-  const metadata = [course, collection.estimatedTime]
-    .filter(Boolean)
-    .join(" · ");
-  const disciplinePath = collection.discipline
-    ? collectionsForDiscipline(collection.discipline.id)
-    : null;
+  let courseLabel: string | null = null;
+
+  if (collection.course !== null) {
+    courseLabel = `${collection.course} курс`;
+  }
+
+  const metadataParts: string[] = [];
+
+  if (courseLabel) {
+    metadataParts.push(courseLabel);
+  }
+
+  if (collection.estimatedTime) {
+    metadataParts.push(collection.estimatedTime);
+  }
+
+  const metadata = metadataParts.join(" · ");
+  let disciplinePath: string | null = null;
+
+  if (collection.discipline) {
+    disciplinePath = collectionsForDiscipline(collection.discipline.id);
+  }
+
+  let disciplineLink: ReactNode = null;
+
+  if (disciplinePath && collection.discipline) {
+    disciplineLink = (
+      <>
+        {" · "}
+        <Link to={disciplinePath} title="Подборки по этой дисциплине">
+          {collection.discipline.name}
+        </Link>
+      </>
+    );
+  }
+
+  let metadataText = "";
+
+  if (metadata) {
+    metadataText = ` · ${metadata}`;
+  }
 
   return (
     <li className={styles.row}>
@@ -52,15 +86,8 @@ export function CollectionListItem({
         <p className={styles.contributors}>Составили: {names}</p>
         <p className={styles.metadata}>
           {count}
-          {disciplinePath && (
-            <>
-              {" · "}
-              <Link to={disciplinePath} title="Подборки по этой дисциплине">
-                {collection.discipline?.name}
-              </Link>
-            </>
-          )}
-          {metadata && ` · ${metadata}`}
+          {disciplineLink}
+          {metadataText}
         </p>
       </article>
       <Link

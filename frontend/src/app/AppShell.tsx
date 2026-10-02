@@ -5,7 +5,11 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
-  const query = location.pathname === "/catalog" ? (params.get("q") ?? "") : "";
+  let query = "";
+
+  if (location.pathname === "/catalog") {
+    query = params.get("q") ?? "";
+  }
   const titles: Record<string, string> = {
     catalog: "Каталог материалов",
     disciplines: "Дисциплины",
@@ -17,14 +21,18 @@ export function AppShell() {
     settings: "Настройки",
   };
   const pageTitle = titles[location.pathname.split("/")[1]] ?? "Учебная полка";
+
   useEffect(() => {
     document.title = `${pageTitle} — Учебная полка`;
   }, [pageTitle]);
+
   const onQueryChange = (value: string) => {
-    const next =
-      location.pathname === "/catalog"
-        ? new URLSearchParams(location.search)
-        : new URLSearchParams();
+    let next = new URLSearchParams();
+
+    if (location.pathname === "/catalog") {
+      next = new URLSearchParams(location.search);
+    }
+
     if (location.pathname !== "/catalog") {
       next.set("all", "1");
     }

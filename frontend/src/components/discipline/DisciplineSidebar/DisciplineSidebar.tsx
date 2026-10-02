@@ -1,21 +1,30 @@
 import { Link } from "react-router-dom";
 import type { DisciplineSummary } from "../../../types/discipline";
 import styles from "./DisciplineSidebar.module.css";
+
+interface DisciplineSidebarProps {
+  disciplines: DisciplineSummary[];
+  selectedId: number;
+}
+
 export function DisciplineSidebar({
   disciplines,
   selectedId,
-}: {
-  disciplines: DisciplineSummary[];
-  selectedId: number;
-}) {
+}: DisciplineSidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <nav aria-label="Дисциплины">
         <h2>Дисциплины</h2>
         {disciplines.map((discipline) => {
           const selected = discipline.id === selectedId;
-          const className = selected ? styles.selected : "";
-          const currentPage = selected ? "page" : undefined;
+          let className = "";
+          let currentPage: "page" | undefined = undefined;
+
+          if (selected) {
+            className = styles.selected;
+            currentPage = "page";
+          }
+
           return (
             <Link
               key={discipline.id}
