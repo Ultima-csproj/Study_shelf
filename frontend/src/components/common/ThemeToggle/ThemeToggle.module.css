@@ -3,11 +3,14 @@
   align-items: center;
   gap: 4px;
   padding: 2px 3px 2px 7px;
-  border: 1px solid var(--color-border);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  border: 1px solid var(--theme-toggle-border);
+  background: var(--theme-toggle-bg);
+  color: var(--theme-toggle-icon);
   border-radius: 20px;
   flex-shrink: 0;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 .track {
   display: block;
@@ -15,19 +18,20 @@
   height: 26px;
   padding: 3px;
   border-radius: 14px;
-  background: var(--color-primary);
+  background: var(--theme-toggle-border);
 }
 .thumb {
   display: block;
   width: 20px;
   height: 20px;
-  background: #fff;
+  background: var(--theme-toggle-thumb);
   border-radius: 50%;
+  box-shadow: 0 1px 2px var(--theme-toggle-shadow);
   transition: transform 120ms ease;
 }
 .light .thumb {
   transform: translateX(11px);
 }
 .control:hover {
-  border-color: var(--color-primary);
+  background: var(--theme-toggle-hover);
 }

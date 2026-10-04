@@ -1,56 +1,108 @@
 :root {
   color-scheme: light;
+
   --color-bg: #ffffff;
   --color-surface: #ffffff;
-  --color-text: #10203d;
-  --color-text-secondary: #65728a;
-  --color-border: #dfe5ed;
-  --color-control-border: #8290a5;
-  --color-primary: #1677e8;
-  --color-primary-text: #0869d1;
+
+  /* Основной текст */
+  --color-text: #111827;
+
+  --color-text-secondary: #566176;
+
+  --color-border: #d7dce3;
+  --color-control-border: #8b95a5;
+
+  --color-primary: #3b82f6;
+  --color-primary-text: #2563eb;
   --color-on-primary: #ffffff;
-  --color-primary-hover: #0863c9;
-  --color-primary-soft: #eaf3ff;
-  --color-tag: #f0f3f7;
-  --color-tag-text: #5c6c83;
+  --color-primary-hover: #2563eb;
+  --color-primary-soft: #e8f1ff;
+
+  /* Теги */
+  --color-tag: #eef0f3;
+  --color-tag-text: #566176;
+
   --color-field: #ffffff;
-  --color-subtle: #f8fafc;
-  --color-hover: #f7faff;
-  --color-video: #c91c42;
-  --color-video-soft: #ffe9ee;
-  --color-document: #cb2440;
-  --color-document-soft: #fff3f5;
-  --color-article: #6e3bcc;
-  --color-article-soft: #f0eaff;
-  --color-overlay: #10203d66;
+  --color-subtle: #f6f7f8;
+  --color-hover: #f3f4f6;
+
+  --color-video: #d9465f;
+  --color-video-soft: #fdecef;
+
+  --color-document: #d9465f;
+  --color-document-soft: #fdecef;
+
+  --color-article: #7c5ce6;
+  --color-article-soft: #f0ecff;
+
+  --color-overlay: #00000066;
+
   --color-preview-text: #ffffff;
   --color-preview-border: #ffffffc0;
-  --color-preview-play: #10203da3;
-  --color-preview-duration: #10203dbf;
+  --color-preview-play: #00000099;
+  --color-preview-duration: #000000bf;
+
+  --theme-toggle-bg: #f1f3f5;
+  --theme-toggle-border: #d7dce3;
+  --theme-toggle-thumb: #ffffff;
+  --theme-toggle-icon: #3b82f6;
+  --theme-toggle-hover: #e9edf2;
+  --theme-toggle-shadow: #00000024;
 }
+
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-bg: #10141b;
-  --color-surface: #171c24;
-  --color-text: #edf2fa;
-  --color-text-secondary: #9ba8ba;
-  --color-border: #2b3442;
-  --color-control-border: #71819a;
-  --color-primary: #4b9cff;
-  --color-primary-text: #4b9cff;
-  --color-on-primary: #10141b;
-  --color-primary-hover: #7cb6ff;
-  --color-primary-soft: #1d304a;
-  --color-tag: #242d3a;
-  --color-tag-text: #9ba8ba;
-  --color-field: #171c24;
-  --color-subtle: #141a23;
-  --color-hover: #1a2230;
-  --color-video: #ff91aa;
-  --color-video-soft: #3d2330;
-  --color-document: #ff91aa;
-  --color-document-soft: #35232b;
-  --color-article: #bc9bff;
-  --color-article-soft: #302644;
+
+  /* Основные поверхности */
+  --color-bg: #101112;
+  --color-surface: #171819;
+
+  /* Текст */
+  --color-text: #f2f2f2;
+  --color-text-secondary: #989ca3;
+
+  /* Границы */
+  --color-border: #303236;
+  --color-control-border: #62666d;
+
+  /* Единственный основной цвет */
+  --color-primary: #4397f7;
+  --color-primary-text: #4397f7;
+  --color-on-primary: #ffffff;
+  --color-primary-hover: #62a9fa;
+  --color-primary-soft: #1d3550;
+
+  /* Теги */
+  --color-tag: #27292c;
+  --color-tag-text: #a1a5ab;
+
+  /* Поля и дополнительные поверхности */
+  --color-field: #181a1d;
+  --color-subtle: #141516;
+  --color-hover: #202225;
+
+  /* Типы материалов */
+  --color-video: #ef6b7c;
+  --color-video-soft: #382126;
+
+  --color-document: #ef6b7c;
+  --color-document-soft: #382126;
+
+  --color-article: #a98cf5;
+  --color-article-soft: #302943;
+
+  /* Preview */
   --color-overlay: #000000aa;
+
+  --color-preview-text: #ffffff;
+  --color-preview-border: #ffffffa0;
+  --color-preview-play: #00000099;
+  --color-preview-duration: #000000bf;
+
+  --theme-toggle-bg: #202225;
+  --theme-toggle-border: #34373b;
+  --theme-toggle-thumb: #f2f2f2;
+  --theme-toggle-icon: #4397f7;
+  --theme-toggle-hover: #282a2e;
+  --theme-toggle-shadow: #00000066;
 }
