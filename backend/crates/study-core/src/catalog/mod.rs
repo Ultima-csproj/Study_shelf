@@ -8,9 +8,9 @@ mod text;
 
 pub use facets::{CatalogFacets, DisciplineFacet, TeacherFacet, TypeFacet, ValueFacet};
 
-pub use material::{Material, MaterialType};
+pub use material::{EducationalPlacement, MaterialSummary, MaterialType};
 pub use page::CatalogPage;
-pub use query::{CatalogQuery, CatalogSort};
+pub use query::{CatalogQuery, CatalogQueryError, CatalogSort};
 
 pub use references::{DisciplineReference, TeacherReference};
 

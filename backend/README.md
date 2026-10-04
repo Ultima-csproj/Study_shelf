@@ -1,62 +1,96 @@
-# Локальный backend
+# Локальный Rust/Axum backend — PostgreSQL
 
-Запуск из папки `backend`:
+Активный workspace: backend, study-core, study-storage-postgres. PostgreSQL 18 запускается Docker Compose, Rust и Vite работают на Windows. SQLite-адаптер сохранён в archive/backend-sqlite и не входит в сборку.
 
-```powershell
-cargo run
-```
+## Первый запуск
 
-Сервер слушает `http://127.0.0.1:3000`, открывает `backend/data/study.sqlite3` и применяет миграции. Данные автоматически не добавляются.
+В корне проекта нужен игнорируемый .env с POSTGRES_PASSWORD и DATABASE_URL. Во время настройки файл уже создан; не заменяйте его другим паролем для существующего volume.
 
-## Данные и просмотр
+Для нового окружения задайте собственный пароль вместо PLACEHOLDER:
 
-```powershell
+~~~dotenv
+POSTGRES_PASSWORD=PLACEHOLDER
+DATABASE_URL=postgres://study_dev:PLACEHOLDER@127.0.0.1:5433/study_dev
+~~~
+
+При специальных символах пароль в DATABASE_URL должен быть URL-encoded. Пример дополнительных настроек находится в backend/.env.example. Секреты в Git не добавляются.
+
+Из корня проекта:
+
+~~~powershell
+docker compose up -d postgres
+docker compose ps
+~~~
+
+Из backend:
+
+~~~powershell
 cargo run --bin seed
-cargo run --bin catalog_preview -- транзакции
-```
+cargo run --bin backend
+~~~
 
-## Настройки
+Обычный запуск backend применяет migrations, но не добавляет демоданные. Seed запускается явно. .env загружается dotenvy из текущей папки или родительской; существующие переменные окружения имеют приоритет.
 
-Все три команды используют одинаковую конфигурацию. Переменные задаются в PowerShell перед запуском:
+База: study_dev, роль: study_dev, адрес: 127.0.0.1:5433. Данные хранятся в named volume study_postgres. docker compose stop останавливает БД без удаления данных. Для остановки не требуется удалять volume.
 
-```powershell
-$env:BIND_ADDRESS = "127.0.0.1:3000"
-$env:DATABASE_PATH = "data/study.sqlite3"
-$env:RUST_LOG = "backend=info,tower_http=debug"
-cargo run
-```
+## Команды
 
-- `BIND_ADDRESS`: адрес TCP listener, по умолчанию `127.0.0.1:3000`.
-- `DATABASE_PATH`: абсолютный путь или путь относительно папки `backend`; по умолчанию `data/study.sqlite3`.
-- `RUST_LOG`: фильтр логирования сервера.
+~~~powershell
+cargo run --bin seed
+cargo run --bin catalog_preview
+cargo run --bin catalog_preview -- "транзакции"
+cargo run --bin rebuild_search
+~~~
 
-`.env` автоматически не загружается. Относительный путь базы не зависит от папки запуска команды.
+- seed: 840 вымышленных материалов, 3 учреждения, 8 пользователей, 11 contributors, 7 дисциплин. Уже существующие fixture_key пропускаются; публикации и отозванные права не перезаписываются.
+- catalog_preview: первая публичная страница, необязательный текст поиска одним аргументом.
+- rebuild_search: явная пересборка производного поискового индекса. На время операции блокирует записи materials; не запускается автоматически.
 
-## HTTP
+Не все 840 материалов доступны публично: seed содержит Private и неопубликованные Draft. Часть публикаций имеет новую редакцию Draft, которая не меняет публичную карточку.
 
-- `GET /api/health`: проверка ответа HTTP-процесса.
-- `GET /api/catalog`: каталог; параметры `q`, повторяемые `type`, `discipline`, `teacher`, `course`, `year`, `tag`, одиночные `sort`, `page`, `pageSize`.
-- `GET /api/materials/{id}`: материал со связанными преподавателем и дисциплиной.
+## Конфигурация
 
-Ошибки имеют форму `{ "error": { "code": "...", "message": "..." } }`. Некорректный запрос возвращает `400`, отсутствующий материал — `404`, неподдерживаемый метод — `405`. Недоступность хранилища возвращает `503` с кодом `service_unavailable`; повреждённые данные и неожиданные внутренние ошибки — `500` с кодом `internal_error`. Подробная причина сохраняется в серверном логе.
+| Переменная | Значение |
+| --- | --- |
+| DATABASE_URL | Обязательная PostgreSQL URL |
+| BIND_ADDRESS | По умолчанию 127.0.0.1:3000 |
+| DATABASE_MAX_CONNECTIONS | По умолчанию 10, диапазон 1..100 |
+| DATABASE_ACQUIRE_TIMEOUT_SECONDS | По умолчанию 5, диапазон 1..60 |
+| RUST_LOG | Фильтр логов сервера |
 
-```powershell
-Invoke-RestMethod "http://127.0.0.1:3000/api/catalog?type=book&type=video&pageSize=5"
-Invoke-RestMethod "http://127.0.0.1:3000/api/materials/1001"
-```
+Соединения используют UTC, statement_timeout=15s, lock_timeout=5s. DATABASE_PATH больше не используется. SQLite fallback и импорт старого файла отсутствуют.
 
-Vite запускается из `frontend` командой `npm run dev` на `http://127.0.0.1:5173` и проксирует `/api` на backend. При изменении порта backend нужно согласованно изменить `target` в `frontend/vite.config.ts`.
+## HTTP и frontend
 
-Каталог и страницы материалов каталога используют `fetch` через этот proxy. Для проверки откройте `http://127.0.0.1:5173/catalog?all=1`: текущий seed содержит 420 материалов. Поиск, фильтры, сортировка и страницы выполняются в SQLite.
+Внутренние write-команды имеют ограниченный retry всей транзакции для PostgreSQL 40001/40P01: максимум три попытки, паузы 25/50 мс. Business conflict, сетевой отказ и неизвестный результат COMMIT не повторяются. Публичных write endpoints и HTTP-idempotency пока нет.
 
-Дисциплины и подборки пока используют демонстрационные данные. Их ссылки содержат `source=mock`, чтобы совпадающие ID не открывали другой материал из SQLite. Локальные сохранения учитывают ID и источник; серверная авторизация и сохранение ещё не реализованы.
+- GET /api/health — ответ HTTP-процесса, без отдельного запроса readiness к БД.
+- GET /api/catalog — query q; повторяемые type, discipline, teacher, course, year, tag; sort, page, pageSize.
+- GET /api/materials/{id} — текущая публичная публикация.
 
-## Проверки
+DTO включает publishedRevisionId, credits с ролями и snapshot имени, tags, placements, nullable sourceYear/preview/durationSeconds/fileSizeBytes, publishedAt и firstPublishedAt. Материал может быть самостоятельным, без placement.
 
-```powershell
+teacher в query обозначает ответственного пользователя учебного размещения. Этот пользователь не становится автором материала автоматически. Несколько учебных фильтров должны совпадать в одном размещении.
+
+pageSize=1..100; пустой результат имеет pageCount=0. Страница вне диапазона возвращает пустые items без изменения запрошенного page. Facets считаются по всему публичному каталогу.
+
+400 — неверный запрос; 404 — отсутствие публичного материала; 405 — неподдерживаемый метод; 503 — недоступность/временный отказ хранения; 500 — некорректные сохранённые данные или неожиданная ошибка. Ответ: { "error": { "code": "...", "message": "..." } }.
+
+Из frontend запустите npm run dev, откройте http://127.0.0.1:5173/catalog?all=1. Vite проксирует /api на 127.0.0.1:3000. Дисциплины/подборки ещё используют отдельные demo-данные до этапа 11.
+
+## Проверки сборки
+
+~~~powershell
 cargo check --workspace
-cargo test --workspace
+cargo clippy --workspace --bins --lib -- -D warnings
 cargo fmt --all --check
-```
+~~~
 
-HTTP-тесты применяют реальные миграции к отдельной SQLite в памяти и не изменяют локальную базу.
+В этой реализации автоматические тесты не добавлялись и не запускались. Старые SQLite HTTP-тесты находятся в архиве; они не проверяют новую PostgreSQL-модель. Конкурентные команды, повторный seed, rollback и браузерные сценарии требуют отдельного запроса на проверку.
+
+## Документация
+
+Подробные решения сохранены локально:
+- .codex/docs/backend-storage-stage.md — объём этапа 10 и следующий этап.
+- .codex/docs/backend-function-semantics.md — функции, входы/результаты, ошибки, блокировки и аллокации.
+- .codex/docs/backend-postgres-contract.md — текущий HTTP-контракт.

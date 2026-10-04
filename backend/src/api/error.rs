@@ -8,8 +8,18 @@ use crate::catalog::CatalogError;
 
 pub struct ApiError {
     status: StatusCode,
-    code: &'static str,
+    code: ApiErrorCode,
     message: String,
+}
+
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum ApiErrorCode {
+    BadRequest,
+    NotFound,
+    MethodNotAllowed,
+    InternalError,
+    ServiceUnavailable,
 }
 
 #[derive(Serialize)]
@@ -19,7 +29,7 @@ struct ErrorResponse {
 
 #[derive(Serialize)]
 struct ErrorDetail {
-    code: &'static str,
+    code: ApiErrorCode,
     message: String,
 }
 
@@ -27,7 +37,7 @@ impl ApiError {
     pub fn bad_request(message: impl Into<String>) -> Self {
         Self {
             status: StatusCode::BAD_REQUEST,
-            code: "bad_request",
+            code: ApiErrorCode::BadRequest,
             message: message.into(),
         }
     }
@@ -35,7 +45,7 @@ impl ApiError {
     pub fn not_found(message: impl Into<String>) -> Self {
         Self {
             status: StatusCode::NOT_FOUND,
-            code: "not_found",
+            code: ApiErrorCode::NotFound,
             message: message.into(),
         }
     }
@@ -43,7 +53,7 @@ impl ApiError {
     pub fn method_not_allowed() -> Self {
         Self {
             status: StatusCode::METHOD_NOT_ALLOWED,
-            code: "method_not_allowed",
+            code: ApiErrorCode::MethodNotAllowed,
             message: "Этот HTTP-метод не поддерживается".to_owned(),
         }
     }
@@ -56,7 +66,7 @@ impl ApiError {
 
         Self {
             status: StatusCode::INTERNAL_SERVER_ERROR,
-            code: "internal_error",
+            code: ApiErrorCode::InternalError,
             message: "Не удалось обработать запрос".to_owned(),
         }
     }
@@ -66,7 +76,7 @@ impl ApiError {
 
         Self {
             status: StatusCode::SERVICE_UNAVAILABLE,
-            code: "service_unavailable",
+            code: ApiErrorCode::ServiceUnavailable,
             message: "Хранилище временно недоступно. Попробуйте позже".to_owned(),
         }
     }
@@ -76,14 +86,16 @@ impl From<CatalogError> for ApiError {
     fn from(error: CatalogError) -> Self {
         match &error {
             CatalogError::Storage(storage) => match storage.kind() {
-                RepositoryErrorKind::Unavailable => Self::unavailable(error),
+                RepositoryErrorKind::Unavailable | RepositoryErrorKind::Retryable => {
+                    Self::unavailable(error)
+                }
+                RepositoryErrorKind::InvalidQuery => {
+                    Self::bad_request("Некорректный запрос каталога")
+                }
                 RepositoryErrorKind::InvalidData | RepositoryErrorKind::Unexpected => {
                     Self::internal(error)
                 }
             },
-            CatalogError::MissingDiscipline { .. } | CatalogError::MissingTeacher { .. } => {
-                Self::internal(error)
-            }
         }
     }
 }

@@ -1,5 +1,6 @@
 use crate::ids::{DisciplineId, TeacherId};
 
+/// Public identity of the responsible user in an educational placement.
 #[derive(Debug, Clone)]
 pub struct TeacherReference {
     pub id: TeacherId,
@@ -12,9 +13,4 @@ pub struct DisciplineReference {
     pub id: DisciplineId,
     pub slug: String,
     pub name: String,
-    pub description: String,
-    pub summary: Option<String>,
-    pub course: i64,
-    pub semester: i64,
-    pub teacher_id: TeacherId,
 }

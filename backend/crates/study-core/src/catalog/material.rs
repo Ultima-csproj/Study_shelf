@@ -1,4 +1,7 @@
-use crate::ids::{DisciplineId, MaterialId, TeacherId};
+use super::{DisciplineReference, TeacherReference};
+use crate::ids::{MaterialId, MaterialRevisionId};
+use crate::material::{RevisionCredit, RevisionMetadata};
+use std::time::SystemTime;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MaterialType {
@@ -19,7 +22,6 @@ impl MaterialType {
             Self::Lab => "lab",
         }
     }
-
     pub fn from_db_value(value: &str) -> Option<Self> {
         match value {
             "lecture" => Some(Self::Lecture),
@@ -32,25 +34,25 @@ impl MaterialType {
     }
 }
 
+/// Complete public read projection. It contains no draft or ownership claims.
 #[derive(Debug, Clone)]
-pub struct Material {
+pub struct MaterialSummary {
     pub id: MaterialId,
+    pub published_revision_id: MaterialRevisionId,
     pub title: String,
     pub description: String,
     pub material_type: MaterialType,
-
-    pub discipline_id: DisciplineId,
-    pub teacher_id: TeacherId,
-
     pub tags: Vec<String>,
-    pub course: u8,
-    pub year: i32,
+    pub credits: Vec<RevisionCredit>,
+    pub placements: Vec<EducationalPlacement>,
+    pub metadata: RevisionMetadata,
+    pub first_published_at: SystemTime,
+    pub published_at: SystemTime,
+}
 
-    pub created_at: String,
-    pub updated_at: Option<String>,
-
-    pub author_name: Option<String>,
-    pub preview_url: Option<String>,
-    pub duration_seconds: Option<u32>,
-    pub file_size_bytes: Option<i64>,
+#[derive(Debug, Clone)]
+pub struct EducationalPlacement {
+    pub discipline: DisciplineReference,
+    pub responsible: Option<TeacherReference>,
+    pub course: Option<u8>,
 }

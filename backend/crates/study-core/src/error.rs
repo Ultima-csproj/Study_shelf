@@ -7,7 +7,9 @@ pub type RepositoryResult<T> = Result<T, RepositoryError>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepositoryErrorKind {
+    InvalidQuery,
     Unavailable,
+    Retryable,
     InvalidData,
     Unexpected,
 }
@@ -20,6 +22,20 @@ pub struct RepositoryError {
 }
 
 impl RepositoryError {
+    pub fn invalid_query(source: crate::catalog::CatalogQueryError) -> Self {
+        Self::with_source(
+            RepositoryErrorKind::InvalidQuery,
+            "invalid catalog query",
+            source,
+        )
+    }
+    pub fn retryable(source: impl Error + Send + Sync + 'static) -> Self {
+        Self::with_source(
+            RepositoryErrorKind::Retryable,
+            "transaction must be retried",
+            source,
+        )
+    }
     pub fn unavailable(source: impl Error + Send + Sync + 'static) -> Self {
         Self::with_source(
             RepositoryErrorKind::Unavailable,

@@ -1,9 +1,7 @@
 pub struct DisciplineSeed {
-    pub id: i64,
     pub slug: &'static str,
     pub name: &'static str,
     pub course: i64,
-    pub semester: i64,
     pub teacher_id: i64,
     pub topics: &'static [(&'static str, &'static str)],
 }
@@ -19,11 +17,9 @@ pub const TEACHERS: [(i64, &str, &str); 6] = [
 
 pub const DISCIPLINES: [DisciplineSeed; 7] = [
     DisciplineSeed {
-        id: 1,
         slug: "database",
         name: "Базы данных",
         course: 3,
-        semester: 5,
         teacher_id: 1,
         topics: &[
             ("Реляционная модель", "Модели данных"),
@@ -41,11 +37,9 @@ pub const DISCIPLINES: [DisciplineSeed; 7] = [
         ],
     },
     DisciplineSeed {
-        id: 2,
         slug: "networks",
         name: "Компьютерные сети",
         course: 3,
-        semester: 5,
         teacher_id: 3,
         topics: &[
             ("Модель OSI", "OSI"),
@@ -63,11 +57,9 @@ pub const DISCIPLINES: [DisciplineSeed; 7] = [
         ],
     },
     DisciplineSeed {
-        id: 3,
         slug: "web",
         name: "Web-разработка",
         course: 2,
-        semester: 4,
         teacher_id: 4,
         topics: &[
             ("Семантический HTML", "HTML"),
@@ -85,11 +77,9 @@ pub const DISCIPLINES: [DisciplineSeed; 7] = [
         ],
     },
     DisciplineSeed {
-        id: 4,
         slug: "algorithms",
         name: "Алгоритмы и структуры данных",
         course: 2,
-        semester: 3,
         teacher_id: 2,
         topics: &[
             ("Оценка сложности", "Сложность"),
@@ -107,11 +97,9 @@ pub const DISCIPLINES: [DisciplineSeed; 7] = [
         ],
     },
     DisciplineSeed {
-        id: 5,
         slug: "operating-systems",
         name: "Операционные системы",
         course: 3,
-        semester: 5,
         teacher_id: 6,
         topics: &[
             ("Архитектура операционной системы", "Архитектура"),
@@ -129,11 +117,9 @@ pub const DISCIPLINES: [DisciplineSeed; 7] = [
         ],
     },
     DisciplineSeed {
-        id: 6,
         slug: "oop",
         name: "Объектно-ориентированное программирование",
         course: 1,
-        semester: 2,
         teacher_id: 5,
         topics: &[
             ("Классы и объекты", "ООП"),
@@ -151,11 +137,9 @@ pub const DISCIPLINES: [DisciplineSeed; 7] = [
         ],
     },
     DisciplineSeed {
-        id: 7,
         slug: "software-engineering",
         name: "Программная инженерия",
         course: 3,
-        semester: 6,
         teacher_id: 2,
         topics: &[
             ("Сбор требований", "Требования"),

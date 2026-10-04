@@ -3,8 +3,8 @@ use backend::api;
 use backend::api::state::AppState;
 use backend::catalog::CatalogService;
 use backend::config::Config;
-use study_storage_sqlite::SqliteStorage;
-use study_storage_sqlite::catalog::SqliteCatalogRepository;
+use study_storage_postgres::PostgresStorage;
+use study_storage_postgres::catalog::PostgresCatalogRepository;
 use tokio::net::TcpListener;
 use tracing_subscriber::EnvFilter;
 
@@ -17,11 +17,16 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::from_env()?;
 
-    let storage = SqliteStorage::open(&config.database_path).await?;
+    let storage = PostgresStorage::open(
+        &config.database_url,
+        config.max_connections,
+        config.acquire_timeout,
+    )
+    .await?;
 
     let pool = storage.pool().clone();
 
-    let repository = SqliteCatalogRepository::new(pool.clone());
+    let repository = PostgresCatalogRepository::new(pool.clone());
 
     let service = CatalogService::new(repository);
     let state = AppState::new(service);
@@ -33,7 +38,6 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!(
         address = %listener.local_addr()?,
-        database = %config.database_path.display(),
         "HTTP-сервер запущен"
     );
 
