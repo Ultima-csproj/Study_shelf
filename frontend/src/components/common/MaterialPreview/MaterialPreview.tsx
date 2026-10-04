@@ -6,7 +6,8 @@ import { BookOpenIcon } from "@phosphor-icons/react/dist/csr/BookOpen";
 import { VideoCameraIcon } from "@phosphor-icons/react/dist/csr/VideoCamera";
 import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
 import type { ReactNode } from "react";
-import type { Material, PreviewKind } from "../../../types/material";
+import type { MaterialType, PreviewKind } from "../../../types/material";
+import { formatDuration } from "../../../utils/materialLabels";
 import styles from "./MaterialPreview.module.css";
 const materialIcons = {
   lecture: FileTextIcon,
@@ -22,7 +23,7 @@ const previewIcons = {
 };
 
 interface MaterialPreviewProps {
-  material: Material;
+  material: { type: MaterialType; preview?: string | null; duration?: string; durationSeconds?: number | null };
   variant?: "catalog" | "course" | "collection";
   kind?: PreviewKind;
 }
@@ -32,6 +33,8 @@ export function MaterialPreview({
   variant = "catalog",
   kind,
 }: MaterialPreviewProps) {
+  const duration = material.duration ?? formatDuration(material.durationSeconds);
+  const imageSource = material.preview ?? undefined;
   let Icon = materialIcons[material.type];
 
   if (kind) {
@@ -86,9 +89,9 @@ export function MaterialPreview({
   if (material.type === "video") {
     let durationLabel: ReactNode = null;
 
-    if (material.duration) {
+    if (duration) {
       durationLabel = (
-        <span className={styles.duration}>{material.duration}</span>
+        <span className={styles.duration}>{duration}</span>
       );
     }
 
@@ -108,7 +111,7 @@ export function MaterialPreview({
     previewContent = (
       <div className={imageClassName}>
         <img
-          src={material.preview}
+          src={imageSource}
           alt=""
           width={imageWidth}
           height={imageHeight}

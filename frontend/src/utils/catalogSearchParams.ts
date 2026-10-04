@@ -14,10 +14,7 @@ const numbers = (params: URLSearchParams, key: string) => [
 ];
 export function readCatalogParams(params: URLSearchParams): CatalogRequest {
   const sort = params.get("sort");
-  const hasDisciplineSelection = params.has("all") || params.has("discipline");
-  const disciplineIds = hasDisciplineSelection
-    ? numbers(params, "discipline")
-    : [1];
+  const disciplineIds = numbers(params, "discipline");
   return {
     filters: {
       query: params.get("q") ?? "",

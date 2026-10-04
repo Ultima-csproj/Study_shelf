@@ -1,9 +1,10 @@
 import bookCover from "../assets/covers/database-book.webp";
 import articleCover from "../assets/covers/database-article.webp";
 import videoCover from "../assets/covers/transactions-video.webp";
-import type { Material, MaterialType } from "../types/material";
+import type { MaterialType } from "../types/material";
+import type { DemoMaterial } from "../types/demoMaterial";
 
-const featured: Material[] = [
+const featured: DemoMaterial[] = [
   {
     id: 1,
     title: "Базы данных. Теория и практика",
@@ -396,9 +397,9 @@ const seeds: Seed[] = [
   ],
 ];
 
-export const materials: Material[] = [
+export const materials: DemoMaterial[] = [
   ...featured,
-  ...seeds.map((seed, index): Material => {
+  ...seeds.map((seed, index): DemoMaterial => {
     const [title, type, disciplineId, teacherId, tags, description] = seed;
     const year = index < 23 ? (index < 13 ? 2026 : 2025) : 2026 - (index % 4);
     return {

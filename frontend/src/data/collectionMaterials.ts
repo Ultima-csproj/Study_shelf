@@ -1,5 +1,6 @@
 import videoCover from "../assets/covers/transactions-video.webp";
-import type { Material, MaterialType } from "../types/material";
+import type { MaterialType } from "../types/material";
+import type { DemoMaterial } from "../types/demoMaterial";
 
 interface RouteMaterialSeed {
   id: number;
@@ -108,7 +109,7 @@ export const routeMaterialSources = new Set(
   seeds.filter((seed) => seed.source).map((seed) => seed.id),
 );
 
-export const collectionMaterials: Material[] = seeds.map((seed) => {
+export const collectionMaterials: DemoMaterial[] = seeds.map((seed) => {
   const video = seed.type === "video";
 
   return {

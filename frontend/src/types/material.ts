@@ -1,33 +1,65 @@
+import type { DemoMaterial } from "./demoMaterial";
+
 export type MaterialType = "lecture" | "book" | "article" | "video" | "lab";
 export type CatalogSort = "newest" | "oldest" | "title";
 export type MaterialSource = "api" | "mock";
+export type ContributorRole = "author" | "co_author" | "editor" | "translator" | "lecturer" | "reviewer";
 
 export interface MaterialReference {
   id: number;
   source: MaterialSource;
 }
-
-export interface Material {
+export interface MaterialCredit {
+  contributorId: number;
+  displayName: string;
+  role: ContributorRole;
+}
+export interface EducationalDiscipline {
   id: number;
+  slug: string;
+  name: string;
+}
+export interface ResponsiblePerson {
+  id: number;
+  name: string;
+  shortName: string;
+}
+export interface EducationalPlacement {
+  discipline: EducationalDiscipline;
+  responsible: ResponsiblePerson | null;
+  course: number | null;
+}
+export interface MaterialSummary {
+  id: number;
+  publishedRevisionId: number;
   title: string;
   description: string;
   type: MaterialType;
-  disciplineId: number;
-  teacherId: number;
   tags: string[];
-  year: number;
-  course: number;
-  createdAt: string;
-  dateLabel: "Добавлено" | "Обновлено";
-  preview?: string;
-  duration?: string;
-  fileSize?: string;
-  authorName?: string;
+  credits: MaterialCredit[];
+  placements: EducationalPlacement[];
+  sourceYear: number | null;
+  publishedAt: string;
+  firstPublishedAt: string;
+  preview: string | null;
+  durationSeconds: number | null;
+  fileSizeBytes: number | null;
+}
+export interface MaterialDetail extends MaterialSummary {
+  // File/body access is introduced in its own backend stage.
+}
+export interface CreditView extends Omit<MaterialCredit, "contributorId"> {
+  contributorId: number | null;
+}
+export interface CatalogMaterial extends Omit<MaterialSummary, "credits" | "publishedRevisionId"> {
+  source: MaterialSource;
+  publishedRevisionId: number | null;
+  credits: CreditView[];
 }
 
 export type PreviewKind = "presentation" | "document" | "pdf";
 export interface CourseMaterial {
-  material: Material;
+  material: DemoMaterial;
   number: number;
   title: string;
   description: string;
@@ -46,7 +78,6 @@ export interface MaterialSectionData {
   mobileDescription?: string;
   items: CourseMaterial[];
 }
-
 export interface CatalogFilters {
   query: string;
   types: MaterialType[];
@@ -56,14 +87,12 @@ export interface CatalogFilters {
   years: number[];
   tags: string[];
 }
-
 export interface CatalogRequest {
   filters: CatalogFilters;
   sort: CatalogSort;
   page: number;
   pageSize: number;
 }
-
 export interface CatalogResponse {
   items: CatalogMaterial[];
   total: number;
@@ -71,18 +100,10 @@ export interface CatalogResponse {
   pageCount: number;
   facets: CatalogFacets;
 }
-import type { Discipline } from "./discipline";
-import type { Teacher } from "./teacher";
-
-export interface CatalogMaterial extends Material {
-  source: MaterialSource;
-  discipline: Discipline | null;
-  teacher: Teacher | null;
-}
 export interface CatalogFacets {
   types: Partial<Record<MaterialType, number>>;
-  disciplines: (Discipline & { materialCount: number })[];
-  teachers: (Teacher & { materialCount: number })[];
+  disciplines: (EducationalDiscipline & { materialCount: number })[];
+  teachers: (ResponsiblePerson & { materialCount: number })[];
   courses: { value: number; materialCount: number }[];
   years: { value: number; materialCount: number }[];
 }

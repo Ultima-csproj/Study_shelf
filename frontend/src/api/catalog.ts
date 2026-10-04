@@ -1,12 +1,12 @@
 import type {
-  CatalogMaterial,
+  MaterialSummary,
   CatalogRequest,
   CatalogResponse,
 } from "../types/material";
 import { getJson } from "./http";
 
 type CatalogHttpResponse = Omit<CatalogResponse, "items"> & {
-  items: Omit<CatalogMaterial, "source">[];
+  items: MaterialSummary[];
 };
 
 export async function getCatalog(

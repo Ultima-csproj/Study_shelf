@@ -40,9 +40,8 @@ export function CollectionRouteItem({
 
   let durationLabel: string | null = null;
 
-  if (material.duration) {
-    const durationParts = material.duration.split(":");
-    const minutes = Number(durationParts[0]);
+  if (material.durationSeconds !== null) {
+    const minutes = Math.ceil(material.durationSeconds / 60);
     durationLabel = `${minutes} мин`;
   }
 

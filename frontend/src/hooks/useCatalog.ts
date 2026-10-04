@@ -21,7 +21,7 @@ export function useCatalog(request: CatalogRequest) {
     items: [],
     total: 0,
     page: 1,
-    pageCount: 1,
+    pageCount: 0,
     facets: {
       types: {},
       disciplines: [],

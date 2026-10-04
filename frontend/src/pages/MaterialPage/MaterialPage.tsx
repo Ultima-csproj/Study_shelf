@@ -1,4 +1,5 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment } from "react";
+import { authorLabel, contributorRoles, exactPublication, publicationLabel } from "../../utils/materialLabels";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useMaterial } from "../../hooks/useMaterial";
 import { MaterialPreview } from "../../components/common/MaterialPreview/MaterialPreview";
@@ -60,28 +61,33 @@ export function MaterialPage() {
     );
   }
 
-  const { discipline, teacher } = material;
-  let author = "Автор не указан";
-
-  if (teacher?.name !== undefined) {
-    author = teacher.name;
+  const author = authorLabel(material.credits);
+  const metadataParts = [author];
+  if (material.sourceYear !== null) {
+    metadataParts.push("Год источника: " + material.sourceYear);
   }
-
-  if (material.authorName !== null && material.authorName !== undefined) {
-    author = material.authorName;
-  }
-
-  let disciplineLink: ReactNode = null;
-
-  if (discipline) {
-    const disciplinePath = `/disciplines/${discipline.slug}`;
-
-    disciplineLink = (
-      <Link className={styles.disciplineLink} to={disciplinePath}>
-        Перейти к дисциплине: {discipline.name}
-      </Link>
+  const metadata = metadataParts.join(" · ");
+  const dateLabel = publicationLabel(material.firstPublishedAt, material.publishedAt);
+  const publishedDate = exactPublication(material.publishedAt);
+  const placements = material.placements.map((placement) => {
+    const discipline = placement.discipline;
+    let courseLabel = "";
+    if (placement.course !== null) {
+      courseLabel = " · " + placement.course + " курс";
+    }
+    let responsibleLabel = "";
+    if (placement.responsible) {
+      responsibleLabel = " · Ответственный: " + placement.responsible.name;
+    }
+    return (
+      <p key={discipline.id}>
+        <Link className={styles.disciplineLink} to={"/disciplines/" + discipline.slug}>
+          {discipline.name}
+        </Link>
+        {courseLabel}{responsibleLabel}
+      </p>
     );
-  }
+  });
 
   return (
     <main id="main-content" className={common.page}>
@@ -103,9 +109,10 @@ export function MaterialPage() {
           <Badge type={material.type} />
           <h1>{material.title}</h1>
           <p>
-            {author} · {material.course} курс · {material.year}
+            {metadata}
           </p>
-          {disciplineLink}
+          <time dateTime={material.publishedAt}>{dateLabel}: {publishedDate}</time>
+          {placements}
           <SaveAction
             id={material.id}
             title={material.title}
@@ -116,6 +123,14 @@ export function MaterialPage() {
       <div className={common.notice}>
         <h2>О материале</h2>
         <p>{material.description}</p>
+        <h2>Участники материала</h2>
+        <ul>
+          {material.credits.map((credit) => (
+            <li key={String(credit.contributorId) + ":" + credit.role}>
+              {contributorRoles[credit.role]}: {credit.displayName}
+            </li>
+          ))}
+        </ul>
         <p className={styles.availability}>
           Файл материала пока не подключён. Здесь доступна публичная информация
           о нём.

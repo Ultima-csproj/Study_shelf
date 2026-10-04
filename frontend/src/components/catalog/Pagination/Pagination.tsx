@@ -52,8 +52,12 @@ export function Pagination({
     return null;
   }
 
-  const firstVisibleItem = (page - 1) * pageSize + 1;
+  const firstVisibleItem = Math.min((page - 1) * pageSize + 1, total);
   const lastVisibleItem = Math.min(page * pageSize, total);
+  let summary = `Показаны ${firstVisibleItem}–${lastVisibleItem} из ${total} материалов`;
+  if (page > pageCount) {
+    summary = `На странице ${page} материалов нет. Всего: ${total}`;
+  }
   const visiblePages = pageNumbers(page, pageCount);
   const pageItems: ReactNode[] = [];
 
@@ -92,12 +96,12 @@ export function Pagination({
   return (
     <div className={styles.footer}>
       <p>
-        Показаны {firstVisibleItem}–{lastVisibleItem} из {total} материалов
+        {summary}
       </p>
       <nav aria-label="Страницы каталога" className={styles.pages}>
         <button
           type="button"
-          onClick={() => onChange(page - 1)}
+          onClick={() => onChange(Math.min(page - 1, pageCount))}
           disabled={page === 1}
           aria-label="Предыдущая страница"
         >
@@ -107,7 +111,7 @@ export function Pagination({
         <button
           type="button"
           onClick={() => onChange(page + 1)}
-          disabled={page === pageCount}
+          disabled={page >= pageCount}
           aria-label="Следующая страница"
         >
           <CaretRightIcon size={14} aria-hidden="true" />

@@ -2,6 +2,7 @@ import { collections } from "../data/collections";
 import { disciplines } from "../data/disciplines";
 import { routeMaterialSources } from "../data/collectionMaterials";
 import { getDemoMaterial } from "./materials";
+import { authorLabel } from "../utils/materialLabels";
 import type {
   Collection,
   CollectionDetail,
@@ -127,8 +128,7 @@ export async function getCollection(
           }
 
           const source = routeMaterialSources.has(material.id);
-          const name =
-            material.authorName ?? material.teacher?.shortName ?? "Не указан";
+          const name = authorLabel(material.credits);
           const attributionLabel = `${source ? "Источник" : "Автор"}: ${name}`;
           let formatLabel = "Документ";
 

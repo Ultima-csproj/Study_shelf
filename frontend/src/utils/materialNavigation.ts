@@ -42,7 +42,13 @@ export function materialNavigation(
     };
   }
 
-  const discipline = material?.discipline;
+  const discipline = material?.placements.find((placement) => {
+    return (
+      origin?.kind === "discipline" &&
+      (origin.id === placement.discipline.slug ||
+        origin.id === String(placement.discipline.id))
+    );
+  })?.discipline;
   const sameDiscipline =
     origin?.kind === "discipline" &&
     discipline &&

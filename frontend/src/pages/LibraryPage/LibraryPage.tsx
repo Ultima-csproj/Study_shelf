@@ -97,7 +97,7 @@ export function LibraryPage() {
                   <h3>
                     <Link to={path}>{material.title}</Link>
                   </h3>
-                  <p>{material.discipline?.name}</p>
+                  <p>{material.placements.map((placement) => placement.discipline.name).join(" · ")}</p>
                 </div>
                 <SaveAction
                   id={material.id}
