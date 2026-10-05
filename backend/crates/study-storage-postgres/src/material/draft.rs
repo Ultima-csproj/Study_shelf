@@ -43,7 +43,14 @@ impl PostgresMaterialRepository {
                 let id = MaterialRevisionId(
                     next_id(
                         &mut tx,
-                        "SELECT nextval(pg_get_serial_sequence('material_revisions','id'))",
+                        r#"
+                            SELECT nextval(
+                                pg_get_serial_sequence(
+                                    'material_revisions',
+                                    'id'
+                                )
+                            )
+                        "#,
                     )
                     .await?,
                 );

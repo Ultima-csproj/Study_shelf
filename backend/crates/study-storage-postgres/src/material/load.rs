@@ -51,9 +51,18 @@ pub(super) async fn revision(
     lock: bool,
 ) -> RepositoryResult<Option<super::StoredRevision>> {
     let sql = if lock {
-        "SELECT * FROM material_revisions WHERE id=$1 FOR UPDATE"
+        r#"
+            SELECT *
+            FROM material_revisions
+            WHERE id = $1
+            FOR UPDATE
+        "#
     } else {
-        "SELECT * FROM material_revisions WHERE id=$1"
+        r#"
+            SELECT *
+            FROM material_revisions
+            WHERE id = $1
+        "#
     };
     let Some(row) = sqlx::query_as::<_, RevisionRow>(sql)
         .bind(id.0)
@@ -66,7 +75,12 @@ pub(super) async fn revision(
     let mut tags = Vec::new();
     {
         let mut rows = sqlx::query_scalar::<_, String>(
-            "SELECT tag FROM revision_tags WHERE revision_id=$1 ORDER BY position",
+            r#"
+                SELECT tag
+                FROM revision_tags
+                WHERE revision_id = $1
+                ORDER BY position
+            "#,
         )
         .bind(id.0)
         .fetch(&mut *conn);
@@ -78,7 +92,10 @@ pub(super) async fn revision(
     {
         let mut rows = sqlx::query_as::<_, (i64, String, String)>(
             r#"
-                SELECT contributor_id, display_name, role
+                SELECT
+                    contributor_id,
+                    display_name,
+                    role
                 FROM revision_credits
                 WHERE revision_id = $1
                 ORDER BY position
@@ -97,7 +114,12 @@ pub(super) async fn revision(
     let mut editors = Vec::new();
     {
         let mut rows = sqlx::query_scalar::<_, i64>(
-            "SELECT user_id FROM revision_editors WHERE revision_id=$1 ORDER BY user_id",
+            r#"
+                SELECT user_id
+                FROM revision_editors
+                WHERE revision_id = $1
+                ORDER BY user_id
+            "#,
         )
         .bind(id.0)
         .fetch(&mut *conn);

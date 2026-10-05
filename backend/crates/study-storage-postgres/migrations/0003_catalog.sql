@@ -18,7 +18,21 @@ CREATE TABLE material_search (
  FOREIGN KEY (material_id,revision_id) REFERENCES material_revisions(material_id,id)
 );
 CREATE VIEW public_materials AS
- SELECT m.id,r.id AS published_revision_id,r.title,r.description,r.material_type,
- r.source_year,r.preview_url,r.duration_seconds,r.file_size_bytes,m.first_published_at,r.published_at
- FROM materials m JOIN material_revisions r ON r.id = m.published_revision_id AND r.material_id = m.id
- WHERE m.visibility = 'public' AND r.state = 'published';
+ SELECT
+  m.id,
+  r.id AS published_revision_id,
+  r.title,
+  r.description,
+  r.material_type,
+  r.source_year,
+  r.preview_url,
+  r.duration_seconds,
+  r.file_size_bytes,
+  m.first_published_at,
+  r.published_at
+ FROM materials m
+ JOIN material_revisions r
+  ON r.id = m.published_revision_id
+  AND r.material_id = m.id
+ WHERE m.visibility = 'public'
+  AND r.state = 'published';

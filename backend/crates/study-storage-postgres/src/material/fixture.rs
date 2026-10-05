@@ -54,17 +54,28 @@ impl PostgresMaterialRepository {
             .as_deref()
             .ok_or(MaterialWriteError::InvalidFixture)?;
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-        sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))")
-            .bind(key)
-            .execute(&mut *tx)
-            .await
-            .map_err(map_sqlx_error)?;
-        let existing =
-            sqlx::query_scalar::<_, i64>("SELECT id FROM materials WHERE fixture_key=$1")
-                .bind(key)
-                .fetch_optional(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
+        sqlx::query(
+            r#"
+                SELECT pg_advisory_xact_lock(
+                    hashtextextended($1, 0)
+                )
+            "#,
+        )
+        .bind(key)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx_error)?;
+        let existing = sqlx::query_scalar::<_, i64>(
+            r#"
+                    SELECT id
+                    FROM materials
+                    WHERE fixture_key = $1
+                "#,
+        )
+        .bind(key)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx_error)?;
         if existing.is_some() {
             tx.commit().await.map_err(map_sqlx_error)?;
             return Ok(None);
@@ -163,7 +174,14 @@ impl PostgresMaterialRepository {
                 let id = MaterialRevisionId(
                     next_id(
                         &mut tx,
-                        "SELECT nextval(pg_get_serial_sequence('material_revisions','id'))",
+                        r#"
+                            SELECT nextval(
+                                pg_get_serial_sequence(
+                                    'material_revisions',
+                                    'id'
+                                )
+                            )
+                        "#,
                     )
                     .await?,
                 );

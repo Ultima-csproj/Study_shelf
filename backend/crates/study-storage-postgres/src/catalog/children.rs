@@ -37,7 +37,9 @@ pub(super) async fn populate(
     {
         let mut rows = sqlx::query_as::<_, (i64, String)>(
             r#"
-                SELECT p.id, t.tag
+                SELECT
+                    p.id,
+                    t.tag
                 FROM materials AS p
                 JOIN revision_tags AS t
                     ON t.revision_id = p.published_revision_id
@@ -57,7 +59,11 @@ pub(super) async fn populate(
     {
         let mut rows = sqlx::query_as::<_, (i64, i64, String, String)>(
             r#"
-                SELECT p.id, c.contributor_id, c.display_name, c.role
+                SELECT
+                    p.id,
+                    c.contributor_id,
+                    c.display_name,
+                    c.role
                 FROM materials AS p
                 JOIN revision_credits AS c
                     ON c.revision_id = p.published_revision_id

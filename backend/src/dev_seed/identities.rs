@@ -48,10 +48,16 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         let id = match id {
             Some(id) => id,
             None => {
-                sqlx::query_scalar("SELECT id FROM institutions WHERE fixture_key=$1")
-                    .bind(&key)
-                    .fetch_one(&mut *tx)
-                    .await?
+                sqlx::query_scalar(
+                    r#"
+                        SELECT id
+                        FROM institutions
+                        WHERE fixture_key = $1
+                    "#,
+                )
+                .bind(&key)
+                .fetch_one(&mut *tx)
+                .await?
             }
         };
         institutions.push(InstitutionId(id));
@@ -83,10 +89,16 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         let id = match inserted {
             Some(id) => id,
             None => {
-                sqlx::query_scalar("SELECT id FROM users WHERE fixture_key=$1")
-                    .bind(&key)
-                    .fetch_one(&mut *tx)
-                    .await?
+                sqlx::query_scalar(
+                    r#"
+                        SELECT id
+                        FROM users
+                        WHERE fixture_key = $1
+                    "#,
+                )
+                .bind(&key)
+                .fetch_one(&mut *tx)
+                .await?
             }
         };
         if inserted.is_some() && index == 6 {
@@ -218,10 +230,16 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         let id = match inserted {
             Some(id) => id,
             None => {
-                sqlx::query_scalar("SELECT id FROM disciplines WHERE fixture_key=$1")
-                    .bind(&key)
-                    .fetch_one(&mut *tx)
-                    .await?
+                sqlx::query_scalar(
+                    r#"
+                        SELECT id
+                        FROM disciplines
+                        WHERE fixture_key = $1
+                    "#,
+                )
+                .bind(&key)
+                .fetch_one(&mut *tx)
+                .await?
             }
         };
         disciplines.push(DisciplineId(id));
@@ -270,10 +288,16 @@ async fn contributor(
     let id = match inserted {
         Some(id) => id,
         None => {
-            sqlx::query_scalar("SELECT id FROM contributors WHERE fixture_key=$1")
-                .bind(key)
-                .fetch_one(conn)
-                .await?
+            sqlx::query_scalar(
+                r#"
+                    SELECT id
+                    FROM contributors
+                    WHERE fixture_key = $1
+                "#,
+            )
+            .bind(key)
+            .fetch_one(conn)
+            .await?
         }
     };
     Ok(ContributorId(id))

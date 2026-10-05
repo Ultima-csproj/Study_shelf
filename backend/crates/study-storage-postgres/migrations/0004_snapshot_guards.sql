@@ -5,7 +5,11 @@ BEGIN
  IF TG_OP = 'UPDATE' AND NEW.revision_id <> OLD.revision_id THEN
   RAISE EXCEPTION 'cannot move revision content' USING ERRCODE = '23514';
  END IF;
- SELECT state INTO parent_state FROM material_revisions WHERE id = parent_id FOR UPDATE;
+  SELECT state
+  INTO parent_state
+  FROM material_revisions
+  WHERE id = parent_id
+  FOR UPDATE;
  IF parent_state IS DISTINCT FROM 'draft' THEN
   RAISE EXCEPTION 'revision content is frozen' USING ERRCODE = '23514';
  END IF;
@@ -39,8 +43,18 @@ CREATE TRIGGER revision_snapshot_guard BEFORE UPDATE OR DELETE ON material_revis
 
 CREATE FUNCTION check_publication_pointer() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
- IF EXISTS (SELECT 1 FROM materials m JOIN material_revisions r ON r.id = m.published_revision_id
- WHERE m.id = NEW.id AND (r.state <> 'published' OR r.published_at < m.first_published_at OR r.created_at < m.created_at)) THEN
+  IF EXISTS (
+   SELECT 1
+   FROM materials m
+   JOIN material_revisions r
+    ON r.id = m.published_revision_id
+   WHERE m.id = NEW.id
+    AND (
+     r.state <> 'published'
+     OR r.published_at < m.first_published_at
+     OR r.created_at < m.created_at
+    )
+  ) THEN
   RAISE EXCEPTION 'invalid published revision pointer' USING ERRCODE = '23514';
  END IF;
  RETURN NULL;

@@ -72,12 +72,17 @@ impl CatalogRepository for PostgresCatalogRepository {
             ));
         }
         let mut tx = crate::connection::read_snapshot(&self.pool).await?;
-        let row =
-            sqlx::query_as::<_, row::SummaryRow>("SELECT * FROM public_materials WHERE id=$1")
-                .bind(id.0)
-                .fetch_optional(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
+        let row = sqlx::query_as::<_, row::SummaryRow>(
+            r#"
+                    SELECT *
+                    FROM public_materials
+                    WHERE id = $1
+                "#,
+        )
+        .bind(id.0)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx_error)?;
         let mut items = Vec::with_capacity(1);
         if let Some(row) = row {
             items.push(row.into_summary()?);

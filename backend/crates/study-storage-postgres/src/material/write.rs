@@ -153,7 +153,14 @@ pub(super) async fn create_in(
     let id = MaterialId(
         next_id(
             &mut *conn,
-            "SELECT nextval(pg_get_serial_sequence('materials','id'))",
+            r#"
+                SELECT nextval(
+                    pg_get_serial_sequence(
+                        'materials',
+                        'id'
+                    )
+                )
+            "#,
         )
         .await?,
     );
@@ -189,7 +196,14 @@ pub(super) async fn create_in(
     let revision_id = MaterialRevisionId(
         next_id(
             &mut *conn,
-            "SELECT nextval(pg_get_serial_sequence('material_revisions','id'))",
+            r#"
+                SELECT nextval(
+                    pg_get_serial_sequence(
+                        'material_revisions',
+                        'id'
+                    )
+                )
+            "#,
         )
         .await?,
     );

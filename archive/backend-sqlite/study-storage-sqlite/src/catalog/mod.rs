@@ -33,11 +33,17 @@ impl SqliteCatalogRepository {
 #[async_trait]
 impl CatalogRepository for SqliteCatalogRepository {
     async fn get_by_id(&self, id: MaterialId) -> Result<Option<Material>> {
-        let row: Option<MaterialRow> = sqlx::query_as("SELECT * FROM materials WHERE id = ?")
-            .bind(id.0)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(crate::error::map_sqlx_error)?;
+        let row: Option<MaterialRow> = sqlx::query_as(
+            r#"
+                SELECT *
+                FROM materials
+                WHERE id = ?
+            "#,
+        )
+        .bind(id.0)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(crate::error::map_sqlx_error)?;
 
         let Some(row) = row else {
             return Ok(None);
@@ -80,7 +86,9 @@ async fn load_tags(pool: &SqlitePool, items: &mut [Material]) -> Result<()> {
         .collect();
 
     let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
-        "SELECT material_id, tag
+        "SELECT
+             material_id,
+             tag
          FROM material_tags
          WHERE material_id IN (",
     );

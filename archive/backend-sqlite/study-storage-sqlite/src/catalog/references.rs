@@ -17,7 +17,10 @@ pub(super) async fn load_teachers(
 
     for chunk in ids.chunks(IDS_PER_QUERY) {
         let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
-            "SELECT id, name, short_name
+            "SELECT
+                 id,
+                 name,
+                 short_name
              FROM teachers
              WHERE id IN (",
         );

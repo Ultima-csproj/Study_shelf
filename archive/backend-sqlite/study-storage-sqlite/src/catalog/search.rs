@@ -16,8 +16,13 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
         query.page_size.min(MAX_PAGE_SIZE)
     };
 
-    let mut count_sql: QueryBuilder<Sqlite> =
-        QueryBuilder::new("SELECT COUNT(*) FROM materials m WHERE 1 = 1");
+    let mut count_sql: QueryBuilder<Sqlite> = QueryBuilder::new(
+        r#"
+            SELECT COUNT(*)
+            FROM materials m
+            WHERE 1 = 1
+        "#,
+    );
     push_filters(&mut count_sql, &query);
     let (total,): (i64,) = count_sql
         .build_query_as()
@@ -33,8 +38,13 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
     let page = query.page.max(1).min(page_count);
     let offset = i64::from(page - 1) * i64::from(page_size);
 
-    let mut items_sql: QueryBuilder<Sqlite> =
-        QueryBuilder::new("SELECT m.* FROM materials m WHERE 1 = 1");
+    let mut items_sql: QueryBuilder<Sqlite> = QueryBuilder::new(
+        r#"
+            SELECT m.*
+            FROM materials m
+            WHERE 1 = 1
+        "#,
+    );
     push_filters(&mut items_sql, &query);
     match query.sort {
         CatalogSort::Newest => items_sql.push(" ORDER BY m.created_at DESC, m.id ASC"),
@@ -96,7 +106,16 @@ fn push_filters(builder: &mut QueryBuilder<Sqlite>, query: &CatalogQuery) {
     push_values(builder, "m.year", query.years.iter().copied());
 
     for tag in &query.tags {
-        builder.push(" AND EXISTS (SELECT 1 FROM material_tags mt WHERE mt.material_id = m.id AND mt.tag = ")
+        builder
+            .push(
+                r#"
+                    AND EXISTS (
+                        SELECT 1
+                        FROM material_tags mt
+                        WHERE mt.material_id = m.id
+                            AND mt.tag =
+                "#,
+            )
             .push_bind(tag.clone())
             .push(")");
     }
