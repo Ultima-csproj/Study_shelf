@@ -25,14 +25,16 @@ impl PostgresMaterialRepository {
         let Some(row) = sqlx::query_as::<_, ActionRow>(
             r#"
                 SELECT
-                    reviewer_id,
-                    revision_id,
-                    decision,
-                    reason,
-                    reviewed_at,
-                    was_self_review
-                FROM moderation_actions
-                WHERE revision_id = $1
+                  reviewer_id,
+                  revision_id,
+                  decision,
+                  reason,
+                  reviewed_at,
+                  was_self_review
+                FROM
+                  moderation_actions
+                WHERE
+                  revision_id = $1
             "#,
         )
         .bind(id.0)

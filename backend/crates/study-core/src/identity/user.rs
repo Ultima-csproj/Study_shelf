@@ -9,6 +9,9 @@ pub enum UserState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlatformPermission {
     ModeratePublicMaterials,
+    ManageAccounts,
+    ManageInstitutions,
+    ManagePlatformPermissions,
 }
 
 /// Account data and permissions loaded by the application, never claims from a request.

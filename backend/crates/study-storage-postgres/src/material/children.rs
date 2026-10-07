@@ -11,7 +11,8 @@ pub(super) async fn insert_draft(
     let meta = &content.metadata;
     sqlx::query(
         r#"
-            INSERT INTO material_revisions (
+            INSERT INTO
+              material_revisions (
                 id,
                 material_id,
                 base_revision_id,
@@ -26,11 +27,24 @@ pub(super) async fn insert_draft(
                 preview_url,
                 duration_seconds,
                 file_size_bytes
-            )
-            VALUES (
-                $1, $2, $3, $4, $5, $6, 'draft',
-                $7, $8, $9, $10, $11, $12, $13
-            )
+              )
+            VALUES
+              (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                'draft',
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13
+              )
         "#,
     )
     .bind(revision.id().0)
@@ -58,9 +72,21 @@ pub(super) async fn save_children(
 ) -> Result<(), MaterialWriteError> {
     let id = revision.id().0;
     for sql in [
-        "DELETE FROM revision_tags WHERE revision_id=$1",
-        "DELETE FROM revision_credits WHERE revision_id=$1",
-        "DELETE FROM revision_editors WHERE revision_id=$1",
+        r#"
+            DELETE FROM revision_tags
+            WHERE
+              revision_id = $1
+        "#,
+        r#"
+            DELETE FROM revision_credits
+            WHERE
+              revision_id = $1
+        "#,
+        r#"
+            DELETE FROM revision_editors
+            WHERE
+              revision_id = $1
+        "#,
     ] {
         sqlx::query(sql)
             .bind(id)
@@ -71,12 +97,9 @@ pub(super) async fn save_children(
     if !revision.content().tags.is_empty() {
         let mut query = QueryBuilder::<Postgres>::new(
             r#"
-                INSERT INTO revision_tags (
-                    revision_id,
-                    tag,
-                    position
-                )
-                "#,
+                INSERT INTO
+                  revision_tags (revision_id, tag, position)
+            "#,
         );
         query.push_values(
             revision.content().tags.iter().enumerate(),
@@ -93,14 +116,15 @@ pub(super) async fn save_children(
     if !revision.content().credits.is_empty() {
         let mut query = QueryBuilder::<Postgres>::new(
             r#"
-                INSERT INTO revision_credits (
+                INSERT INTO
+                  revision_credits (
                     revision_id,
                     contributor_id,
                     display_name,
                     role,
                     position
-                )
-                "#,
+                  )
+            "#,
         );
         query.push_values(
             revision.content().credits.iter().enumerate(),
@@ -121,11 +145,9 @@ pub(super) async fn save_children(
     if !revision.changed_by().is_empty() {
         let mut query = QueryBuilder::<Postgres>::new(
             r#"
-                INSERT INTO revision_editors (
-                    revision_id,
-                    user_id
-                )
-                "#,
+                INSERT INTO
+                  revision_editors (revision_id, user_id)
+            "#,
         );
         query.push_values(revision.changed_by(), |mut row, user| {
             row.push_bind(id).push_bind(user.0);

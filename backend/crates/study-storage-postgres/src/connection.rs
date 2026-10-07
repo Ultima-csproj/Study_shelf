@@ -60,9 +60,15 @@ pub(crate) async fn read_snapshot(
     pool: &PgPool,
 ) -> study_core::error::RepositoryResult<Transaction<'_, Postgres>> {
     let mut tx = pool.begin().await.map_err(crate::error::map_sqlx_error)?;
-    sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
-        .execute(&mut *tx)
-        .await
-        .map_err(crate::error::map_sqlx_error)?;
+    sqlx::query(
+        r#"
+                        SET TRANSACTION
+                          ISOLATION LEVEL REPEATABLE READ
+                          READ ONLY
+                        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(crate::error::map_sqlx_error)?;
     Ok(tx)
 }

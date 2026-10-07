@@ -66,41 +66,53 @@ const FILTER: &str = include_str!("sql/filter.sql");
 static COUNT: LazyLock<String> = LazyLock::new(|| {
     format!(
         r#"
-            SELECT count(*)
-            {FILTER}
+            SELECT
+              count(*) {FILTER}
         "#
     )
 });
 static NEWEST: LazyLock<String> = LazyLock::new(|| {
     format!(
         r#"
-            SELECT p.*
-            {FILTER}
-            ORDER BY p.published_at DESC, p.id
-            LIMIT $8
-            OFFSET $9
+            SELECT
+              p.* {FILTER}
+            ORDER BY
+              p.published_at DESC,
+              p.id
+            LIMIT
+              $8
+            OFFSET
+              $9
         "#
     )
 });
 static OLDEST: LazyLock<String> = LazyLock::new(|| {
     format!(
         r#"
-            SELECT p.*
-            {FILTER}
-            ORDER BY p.published_at, p.id
-            LIMIT $8
-            OFFSET $9
+            SELECT
+              p.* {FILTER}
+            ORDER BY
+              p.published_at,
+              p.id
+            LIMIT
+              $8
+            OFFSET
+              $9
         "#
     )
 });
 static TITLE: LazyLock<String> = LazyLock::new(|| {
     format!(
         r#"
-            SELECT p.*
-            {FILTER}
-            ORDER BY s.sort_title NULLS LAST, p.id
-            LIMIT $8
-            OFFSET $9
+            SELECT
+              p.* {FILTER}
+            ORDER BY
+              s.sort_title NULLS LAST,
+              p.id
+            LIMIT
+              $8
+            OFFSET
+              $9
         "#
     )
 });

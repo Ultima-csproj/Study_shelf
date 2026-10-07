@@ -7,11 +7,12 @@ use study_core::catalog::{
     DisciplineReference, EducationalPlacement, MaterialSummary, TeacherReference,
 };
 use study_core::error::RepositoryResult;
-use study_core::ids::{ContributorId, DisciplineId, TeacherId};
+use study_core::ids::{ContributorId, DisciplineId, PlacementId, TeacherId};
 use study_core::material::RevisionCredit;
 
 #[derive(FromRow)]
 struct PlacementRow {
+    placement_id: i64,
     material_id: i64,
     discipline_id: i64,
     slug: String,
@@ -21,7 +22,7 @@ struct PlacementRow {
     course: Option<i16>,
 }
 
-pub(super) async fn populate(
+pub(crate) async fn populate(
     conn: &mut PgConnection,
     items: &mut [MaterialSummary],
 ) -> RepositoryResult<()> {
@@ -38,13 +39,16 @@ pub(super) async fn populate(
         let mut rows = sqlx::query_as::<_, (i64, String)>(
             r#"
                 SELECT
-                    p.id,
-                    t.tag
-                FROM materials AS p
-                JOIN revision_tags AS t
-                    ON t.revision_id = p.published_revision_id
-                WHERE p.id = ANY($1)
-                ORDER BY p.id, t.position
+                  p.id,
+                  t.tag
+                FROM
+                  materials AS p
+                  JOIN revision_tags AS t ON t.revision_id = p.published_revision_id
+                WHERE
+                  p.id = ANY ($1)
+                ORDER BY
+                  p.id,
+                  t.position
             "#,
         )
         .bind(&ids)
@@ -60,15 +64,18 @@ pub(super) async fn populate(
         let mut rows = sqlx::query_as::<_, (i64, i64, String, String)>(
             r#"
                 SELECT
-                    p.id,
-                    c.contributor_id,
-                    c.display_name,
-                    c.role
-                FROM materials AS p
-                JOIN revision_credits AS c
-                    ON c.revision_id = p.published_revision_id
-                WHERE p.id = ANY($1)
-                ORDER BY p.id, c.position
+                  p.id,
+                  c.contributor_id,
+                  c.display_name,
+                  c.role
+                FROM
+                  materials AS p
+                  JOIN revision_credits AS c ON c.revision_id = p.published_revision_id
+                WHERE
+                  p.id = ANY ($1)
+                ORDER BY
+                  p.id,
+                  c.position
             "#,
         )
         .bind(&ids)
@@ -90,20 +97,24 @@ pub(super) async fn populate(
         let mut rows = sqlx::query_as::<_, PlacementRow>(
             r#"
                 SELECT
-                    p.material_id,
-                    d.id AS discipline_id,
-                    d.slug,
-                    d.name,
-                    p.responsible_user_id,
-                    u.display_name AS responsible_name,
-                    p.course
-                FROM discipline_placements AS p
-                JOIN disciplines AS d
-                    ON d.id = p.discipline_id
-                LEFT JOIN users AS u
-                    ON u.id = p.responsible_user_id
-                WHERE p.material_id = ANY($1)
-                ORDER BY p.material_id, d.id
+                  p.id AS placement_id,
+                  p.material_id,
+                  d.id AS discipline_id,
+                  d.slug,
+                  d.name,
+                  p.responsible_user_id,
+                  u.display_name AS responsible_name,
+                  p.course
+                FROM
+                  discipline_placements AS p
+                  JOIN disciplines AS d ON d.id = p.discipline_id
+                  LEFT JOIN users AS u ON u.id = p.responsible_user_id
+                WHERE
+                  p.material_id = ANY ($1)
+                ORDER BY
+                  p.material_id,
+                  d.id,
+                  p.id
             "#,
         )
         .bind(&ids)
@@ -128,6 +139,7 @@ pub(super) async fn populate(
                 )
             })?;
             items[index].placements.push(EducationalPlacement {
+                id: PlacementId(row.placement_id),
                 discipline: DisciplineReference {
                     id: DisciplineId(row.discipline_id),
                     slug: row.slug,

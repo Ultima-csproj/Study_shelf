@@ -26,25 +26,28 @@ impl PostgresCatalogRepository {
                 let mut rows = sqlx::query_as::<_, SummaryRow>(
                     r#"
                         SELECT
-                            m.id,
-                            m.published_revision_id,
-                            m.first_published_at,
-                            r.title,
-                            r.description,
-                            r.material_type,
-                            r.source_year,
-                            r.preview_url,
-                            r.duration_seconds,
-                            r.file_size_bytes,
-                            r.published_at
-                        FROM materials AS m
-                        JOIN material_revisions AS r
-                            ON r.id = m.published_revision_id
-                            AND r.material_id = m.id
-                        WHERE r.state = 'published'
-                            AND m.id > $1
-                        ORDER BY m.id
-                        LIMIT $2
+                          m.id,
+                          m.published_revision_id,
+                          m.first_published_at,
+                          r.title,
+                          r.description,
+                          r.material_type,
+                          r.source_year,
+                          r.preview_url,
+                          r.duration_seconds,
+                          r.file_size_bytes,
+                          r.published_at
+                        FROM
+                          materials AS m
+                          JOIN material_revisions AS r ON r.id = m.published_revision_id
+                          AND r.material_id = m.id
+                        WHERE
+                          r.state = 'published'
+                          AND m.id > $1
+                        ORDER BY
+                          m.id
+                        LIMIT
+                          $2
                     "#,
                 )
                 .bind(cursor)

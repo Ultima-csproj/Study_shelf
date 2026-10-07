@@ -50,17 +50,23 @@ pub(super) async fn load(
     let row = sqlx::query_as::<_, UserRow>(
         r#"
             SELECT
-                u.id,
-                u.display_name,
-                u.state,
-                ARRAY(
-                    SELECT permission
-                    FROM user_platform_permissions
-                    WHERE user_id = u.id
-                ) AS permissions
-            FROM users AS u
-            WHERE u.id = $1
-            FOR SHARE OF u
+              u.id,
+              u.display_name,
+              u.state,
+              ARRAY(
+                SELECT
+                  permission
+                FROM
+                  user_platform_permissions
+                WHERE
+                  user_id = u.id
+              ) AS permissions
+            FROM
+              users AS u
+            WHERE
+              u.id = $1
+            FOR SHARE OF
+              u
         "#,
     )
     .bind(user_id.0)
@@ -78,6 +84,9 @@ pub(super) async fn load(
         .into_iter()
         .map(|value| match value.as_str() {
             "moderate_public_materials" => Ok(PlatformPermission::ModeratePublicMaterials),
+            "manage_accounts" => Ok(PlatformPermission::ManageAccounts),
+            "manage_institutions" => Ok(PlatformPermission::ManageInstitutions),
+            "manage_platform_permissions" => Ok(PlatformPermission::ManagePlatformPermissions),
             _ => Err(unknown("platform permission", &value)),
         })
         .collect::<Result<_, _>>()?;
@@ -92,23 +101,32 @@ pub(super) async fn load(
         let row = sqlx::query_as::<_, MembershipRow>(
             r#"
                 SELECT
-                    m.state,
-                    ARRAY(
-                        SELECT role
-                        FROM membership_academic_roles
-                        WHERE user_id = m.user_id
-                            AND institution_id = m.institution_id
-                    ) AS roles,
-                    ARRAY(
-                        SELECT permission
-                        FROM membership_permissions
-                        WHERE user_id = m.user_id
-                            AND institution_id = m.institution_id
-                    ) AS permissions
-                FROM institution_memberships AS m
-                WHERE m.user_id = $1
-                    AND m.institution_id = $2
-                FOR SHARE OF m
+                  m.state,
+                  ARRAY(
+                    SELECT
+                      role
+                    FROM
+                      membership_academic_roles
+                    WHERE
+                      user_id = m.user_id
+                      AND institution_id = m.institution_id
+                  ) AS roles,
+                  ARRAY(
+                    SELECT
+                      permission
+                    FROM
+                      membership_permissions
+                    WHERE
+                      user_id = m.user_id
+                      AND institution_id = m.institution_id
+                  ) AS permissions
+                FROM
+                  institution_memberships AS m
+                WHERE
+                  m.user_id = $1
+                  AND m.institution_id = $2
+                FOR SHARE OF
+                  m
             "#,
         )
         .bind(user_id.0)
@@ -158,17 +176,23 @@ pub(super) async fn load(
         let row = sqlx::query_as::<_, CollaboratorRow>(
             r#"
                 SELECT
-                    c.active,
-                    ARRAY(
-                        SELECT permission
-                        FROM collaborator_permissions
-                        WHERE user_id = c.user_id
-                            AND material_id = c.material_id
-                    ) AS permissions
-                FROM material_collaborators AS c
-                WHERE c.user_id = $1
-                    AND c.material_id = $2
-                FOR SHARE OF c
+                  c.active,
+                  ARRAY(
+                    SELECT
+                      permission
+                    FROM
+                      collaborator_permissions
+                    WHERE
+                      user_id = c.user_id
+                      AND material_id = c.material_id
+                  ) AS permissions
+                FROM
+                  material_collaborators AS c
+                WHERE
+                  c.user_id = $1
+                  AND c.material_id = $2
+                FOR SHARE OF
+                  c
             "#,
         )
         .bind(user_id.0)

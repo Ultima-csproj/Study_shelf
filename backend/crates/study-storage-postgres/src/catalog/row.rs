@@ -7,7 +7,7 @@ use study_core::material::RevisionMetadata;
 use time::OffsetDateTime;
 
 #[derive(FromRow)]
-pub(super) struct SummaryRow {
+pub(crate) struct SummaryRow {
     id: i64,
     published_revision_id: i64,
     title: String,

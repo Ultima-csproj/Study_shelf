@@ -1,5 +1,5 @@
 use super::{DisciplineReference, TeacherReference};
-use crate::ids::{MaterialId, MaterialRevisionId};
+use crate::ids::{MaterialId, MaterialRevisionId, PlacementId};
 use crate::material::{RevisionCredit, RevisionMetadata};
 use std::time::SystemTime;
 
@@ -52,6 +52,7 @@ pub struct MaterialSummary {
 
 #[derive(Debug, Clone)]
 pub struct EducationalPlacement {
+    pub id: PlacementId,
     pub discipline: DisciplineReference,
     pub responsible: Option<TeacherReference>,
     pub course: Option<u8>,

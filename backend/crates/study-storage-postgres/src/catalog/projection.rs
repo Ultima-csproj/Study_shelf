@@ -41,18 +41,15 @@ pub(crate) async fn upsert(
     }
     sqlx::query(
         r#"
-            INSERT INTO material_search (
-                material_id,
-                revision_id,
-                search_text,
-                sort_title
-            )
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO
+              material_search (material_id, revision_id, search_text, sort_title)
+            VALUES
+              ($1, $2, $3, $4)
             ON CONFLICT (material_id) DO UPDATE
             SET
-                revision_id = EXCLUDED.revision_id,
-                search_text = EXCLUDED.search_text,
-                sort_title = EXCLUDED.sort_title
+              revision_id = EXCLUDED.revision_id,
+              search_text = EXCLUDED.search_text,
+              sort_title = EXCLUDED.sort_title
         "#,
     )
     .bind(document.material_id.0)

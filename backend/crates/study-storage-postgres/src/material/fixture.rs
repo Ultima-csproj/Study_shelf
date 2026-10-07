@@ -56,9 +56,8 @@ impl PostgresMaterialRepository {
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
         sqlx::query(
             r#"
-                SELECT pg_advisory_xact_lock(
-                    hashtextextended($1, 0)
-                )
+                SELECT
+                  pg_advisory_xact_lock(hashtextextended ($1, 0))
             "#,
         )
         .bind(key)
@@ -67,10 +66,13 @@ impl PostgresMaterialRepository {
         .map_err(map_sqlx_error)?;
         let existing = sqlx::query_scalar::<_, i64>(
             r#"
-                    SELECT id
-                    FROM materials
-                    WHERE fixture_key = $1
-                "#,
+                SELECT
+                  id
+                FROM
+                  materials
+                WHERE
+                  fixture_key = $1
+            "#,
         )
         .bind(key)
         .fetch_optional(&mut *tx)
@@ -95,18 +97,24 @@ impl PostgresMaterialRepository {
                 let member = sqlx::query_as::<_, Member>(
                     r#"
                         SELECT
-                            m.state,
-                            EXISTS (
-                                SELECT 1
-                                FROM membership_academic_roles AS a
-                                WHERE a.user_id = m.user_id
-                                    AND a.institution_id = m.institution_id
-                                    AND a.role = 'teacher'
-                            ) AS teacher
-                        FROM institution_memberships AS m
-                        WHERE m.user_id = $1
-                            AND m.institution_id = $2
-                        FOR SHARE OF m
+                          m.state,
+                          EXISTS (
+                            SELECT
+                              1
+                            FROM
+                              membership_academic_roles AS a
+                            WHERE
+                              a.user_id = m.user_id
+                              AND a.institution_id = m.institution_id
+                              AND a.role = 'teacher'
+                          ) AS teacher
+                        FROM
+                          institution_memberships AS m
+                        WHERE
+                          m.user_id = $1
+                          AND m.institution_id = $2
+                        FOR SHARE OF
+                          m
                     "#,
                 )
                 .bind(user.0)
@@ -120,14 +128,16 @@ impl PostgresMaterialRepository {
             }
             sqlx::query(
                 r#"
-                    INSERT INTO discipline_placements (
+                    INSERT INTO
+                      discipline_placements (
                         material_id,
                         discipline_id,
                         institution_id,
                         responsible_user_id,
                         course
-                    )
-                    VALUES ($1, $2, $3, $4, $5)
+                      )
+                    VALUES
+                      ($1, $2, $3, $4, $5)
                 "#,
             )
             .bind(material.id().0)
@@ -175,12 +185,10 @@ impl PostgresMaterialRepository {
                     next_id(
                         &mut tx,
                         r#"
-                            SELECT nextval(
-                                pg_get_serial_sequence(
-                                    'material_revisions',
-                                    'id'
-                                )
-                            )
+                            SELECT
+                              nextval(
+                                pg_get_serial_sequence('material_revisions', 'id')
+                              )
                         "#,
                     )
                     .await?,
@@ -221,11 +229,19 @@ impl PostgresMaterialRepository {
                 )
                 .await?;
                 material.set_visibility(&actor.actor(), target_visibility)?;
-                sqlx::query("UPDATE materials SET visibility='private' WHERE id=$1")
-                    .bind(material.id().0)
-                    .execute(&mut *tx)
-                    .await
-                    .map_err(map_sqlx_error)?;
+                sqlx::query(
+                    r#"
+                    UPDATE materials
+                    SET
+                      visibility = 'private'
+                    WHERE
+                      id = $1
+                "#,
+                )
+                .bind(material.id().0)
+                .execute(&mut *tx)
+                .await
+                .map_err(map_sqlx_error)?;
             }
         }
         tx.commit().await.map_err(map_sqlx_error)?;

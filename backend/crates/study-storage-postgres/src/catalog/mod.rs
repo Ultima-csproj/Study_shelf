@@ -1,9 +1,10 @@
-mod children;
+pub(crate) mod batch;
+pub(crate) mod children;
 mod facets;
 pub(crate) mod projection;
 mod query;
 mod rebuild;
-mod row;
+pub(crate) mod row;
 
 use crate::error::map_sqlx_error;
 use async_trait::async_trait;
@@ -74,10 +75,13 @@ impl CatalogRepository for PostgresCatalogRepository {
         let mut tx = crate::connection::read_snapshot(&self.pool).await?;
         let row = sqlx::query_as::<_, row::SummaryRow>(
             r#"
-                    SELECT *
-                    FROM public_materials
-                    WHERE id = $1
-                "#,
+                SELECT
+                  *
+                FROM
+                  public_materials
+                WHERE
+                  id = $1
+            "#,
         )
         .bind(id.0)
         .fetch_optional(&mut *tx)

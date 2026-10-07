@@ -114,12 +114,20 @@ impl PostgresMaterialRepository {
             let actor =
                 access::load(&mut tx, user, Some(id), owner_institution(material.owner())).await?;
             material.set_visibility(&actor.actor(), visibility)?;
-            sqlx::query("UPDATE materials SET visibility=$1 WHERE id=$2")
-                .bind(mapping::visibility_name(visibility))
-                .bind(id.0)
-                .execute(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query(
+                r#"
+                UPDATE materials
+                SET
+                  visibility = $1
+                WHERE
+                  id = $2
+            "#,
+            )
+            .bind(mapping::visibility_name(visibility))
+            .bind(id.0)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx_error)?;
             tx.commit().await.map_err(map_sqlx_error)?;
             Ok(())
         })
@@ -154,12 +162,8 @@ pub(super) async fn create_in(
         next_id(
             &mut *conn,
             r#"
-                SELECT nextval(
-                    pg_get_serial_sequence(
-                        'materials',
-                        'id'
-                    )
-                )
+                SELECT
+                  nextval(pg_get_serial_sequence('materials', 'id'))
             "#,
         )
         .await?,
@@ -171,7 +175,8 @@ pub(super) async fn create_in(
     };
     sqlx::query(
         r#"
-            INSERT INTO materials (
+            INSERT INTO
+              materials (
                 id,
                 fixture_key,
                 owner_user_id,
@@ -179,8 +184,9 @@ pub(super) async fn create_in(
                 created_by_user_id,
                 created_at,
                 visibility
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+              )
+            VALUES
+              ($1, $2, $3, $4, $5, $6, $7)
         "#,
     )
     .bind(id.0)
@@ -197,12 +203,10 @@ pub(super) async fn create_in(
         next_id(
             &mut *conn,
             r#"
-                SELECT nextval(
-                    pg_get_serial_sequence(
-                        'material_revisions',
-                        'id'
-                    )
-                )
+                SELECT
+                  nextval(
+                    pg_get_serial_sequence('material_revisions', 'id')
+                  )
             "#,
         )
         .await?,

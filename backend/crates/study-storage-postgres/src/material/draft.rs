@@ -44,12 +44,10 @@ impl PostgresMaterialRepository {
                     next_id(
                         &mut tx,
                         r#"
-                            SELECT nextval(
-                                pg_get_serial_sequence(
-                                    'material_revisions',
-                                    'id'
-                                )
-                            )
+                            SELECT
+                              nextval(
+                                pg_get_serial_sequence('material_revisions', 'id')
+                              )
                         "#,
                     )
                     .await?,
@@ -110,21 +108,22 @@ impl PostgresMaterialRepository {
                 let meta = &content.metadata;
                 let result = sqlx::query(
                     r#"
-                UPDATE material_revisions
-                SET
-                    title = $1,
-                    description = $2,
-                    material_type = $3,
-                    source_year = $4,
-                    preview_url = $5,
-                    duration_seconds = $6,
-                    file_size_bytes = $7,
-                    updated_at = $8,
-                    edit_version = edit_version + 1
-                WHERE id = $9
-                    AND state = 'draft'
-                    AND edit_version = $10
-            "#,
+                        UPDATE material_revisions
+                        SET
+                          title = $1,
+                          description = $2,
+                          material_type = $3,
+                          source_year = $4,
+                          preview_url = $5,
+                          duration_seconds = $6,
+                          file_size_bytes = $7,
+                          updated_at = $8,
+                          edit_version = edit_version + 1
+                        WHERE
+                          id = $9
+                          AND state = 'draft'
+                          AND edit_version = $10
+                    "#,
                 )
                 .bind(&content.title)
                 .bind(&content.description)
@@ -198,12 +197,13 @@ pub(super) async fn submit_in(
         r#"
             UPDATE material_revisions
             SET
-                state = 'pending_moderation',
-                submitted_by_user_id = $1,
-                submitted_at = $2,
-                updated_at = $2
-            WHERE id = $3
-                AND state = 'draft'
+              state = 'pending_moderation',
+              submitted_by_user_id = $1,
+              submitted_at = $2,
+              updated_at = $2
+            WHERE
+              id = $3
+              AND state = 'draft'
         "#,
     )
     .bind(user.0)

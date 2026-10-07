@@ -22,10 +22,10 @@ pub struct RepositoryError {
 }
 
 impl RepositoryError {
-    pub fn invalid_query(source: crate::catalog::CatalogQueryError) -> Self {
+    pub fn invalid_query(source: impl Error + Send + Sync + 'static) -> Self {
         Self::with_source(
             RepositoryErrorKind::InvalidQuery,
-            "invalid catalog query",
+            "invalid repository query",
             source,
         )
     }

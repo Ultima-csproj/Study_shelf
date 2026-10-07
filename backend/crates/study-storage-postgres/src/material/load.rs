@@ -15,25 +15,28 @@ pub(super) async fn material(
     let sql = if lock {
         r#"
             SELECT
-                m.*,
-                r.published_at,
-                r.state AS published_state
-            FROM materials AS m
-            LEFT JOIN material_revisions AS r
-                ON r.id = m.published_revision_id
-            WHERE m.id = $1
-            FOR UPDATE OF m
+              m.*,
+              r.published_at,
+              r.state AS published_state
+            FROM
+              materials AS m
+              LEFT JOIN material_revisions AS r ON r.id = m.published_revision_id
+            WHERE
+              m.id = $1
+            FOR UPDATE OF
+              m
         "#
     } else {
         r#"
             SELECT
-                m.*,
-                r.published_at,
-                r.state AS published_state
-            FROM materials AS m
-            LEFT JOIN material_revisions AS r
-                ON r.id = m.published_revision_id
-            WHERE m.id = $1
+              m.*,
+              r.published_at,
+              r.state AS published_state
+            FROM
+              materials AS m
+              LEFT JOIN material_revisions AS r ON r.id = m.published_revision_id
+            WHERE
+              m.id = $1
         "#
     };
     sqlx::query_as::<_, MaterialRow>(sql)
@@ -52,16 +55,22 @@ pub(super) async fn revision(
 ) -> RepositoryResult<Option<super::StoredRevision>> {
     let sql = if lock {
         r#"
-            SELECT *
-            FROM material_revisions
-            WHERE id = $1
+            SELECT
+              *
+            FROM
+              material_revisions
+            WHERE
+              id = $1
             FOR UPDATE
         "#
     } else {
         r#"
-            SELECT *
-            FROM material_revisions
-            WHERE id = $1
+            SELECT
+              *
+            FROM
+              material_revisions
+            WHERE
+              id = $1
         "#
     };
     let Some(row) = sqlx::query_as::<_, RevisionRow>(sql)
@@ -76,10 +85,14 @@ pub(super) async fn revision(
     {
         let mut rows = sqlx::query_scalar::<_, String>(
             r#"
-                SELECT tag
-                FROM revision_tags
-                WHERE revision_id = $1
-                ORDER BY position
+                SELECT
+                  tag
+                FROM
+                  revision_tags
+                WHERE
+                  revision_id = $1
+                ORDER BY
+                  position
             "#,
         )
         .bind(id.0)
@@ -93,12 +106,15 @@ pub(super) async fn revision(
         let mut rows = sqlx::query_as::<_, (i64, String, String)>(
             r#"
                 SELECT
-                    contributor_id,
-                    display_name,
-                    role
-                FROM revision_credits
-                WHERE revision_id = $1
-                ORDER BY position
+                  contributor_id,
+                  display_name,
+                  role
+                FROM
+                  revision_credits
+                WHERE
+                  revision_id = $1
+                ORDER BY
+                  position
             "#,
         )
         .bind(id.0)
@@ -115,10 +131,14 @@ pub(super) async fn revision(
     {
         let mut rows = sqlx::query_scalar::<_, i64>(
             r#"
-                SELECT user_id
-                FROM revision_editors
-                WHERE revision_id = $1
-                ORDER BY user_id
+                SELECT
+                  user_id
+                FROM
+                  revision_editors
+                WHERE
+                  revision_id = $1
+                ORDER BY
+                  user_id
             "#,
         )
         .bind(id.0)

@@ -56,13 +56,14 @@ impl PostgresMaterialRepository {
                 let action = material.reject_revision(&actor.actor(), &mut revision, reason, at)?;
                 sqlx::query(
                     r#"
-                UPDATE material_revisions
-                SET
-                    state = 'rejected',
-                    updated_at = $1
-                WHERE id = $2
-                    AND state = 'pending_moderation'
-            "#,
+                        UPDATE material_revisions
+                        SET
+                          state = 'rejected',
+                          updated_at = $1
+                        WHERE
+                          id = $2
+                          AND state = 'pending_moderation'
+                    "#,
                 )
                 .bind(study_core::timestamp::to_utc(at)?)
                 .bind(id.0)
@@ -87,15 +88,17 @@ async fn save_action(
     };
     sqlx::query(
         r#"
-            INSERT INTO moderation_actions (
+            INSERT INTO
+              moderation_actions (
                 revision_id,
                 reviewer_id,
                 decision,
                 reason,
                 reviewed_at,
                 was_self_review
-            )
-            VALUES ($1, $2, $3, $4, $5, $6)
+              )
+            VALUES
+              ($1, $2, $3, $4, $5, $6)
         "#,
     )
     .bind(action.revision_id().0)
@@ -139,11 +142,12 @@ pub(super) async fn approve_in(
         r#"
             UPDATE material_revisions
             SET
-                state = 'published',
-                published_at = $1,
-                updated_at = $1
-            WHERE id = $2
-                AND state = 'pending_moderation'
+              state = 'published',
+              published_at = $1,
+              updated_at = $1
+            WHERE
+              id = $2
+              AND state = 'pending_moderation'
         "#,
     )
     .bind(utc)
@@ -155,10 +159,11 @@ pub(super) async fn approve_in(
         r#"
             UPDATE materials
             SET
-                published_revision_id = $1,
-                first_published_at = COALESCE(first_published_at, $2)
-            WHERE id = $3
-                AND published_revision_id IS NOT DISTINCT FROM $4
+              published_revision_id = $1,
+              first_published_at = COALESCE(first_published_at, $2)
+            WHERE
+              id = $3
+              AND published_revision_id IS NOT DISTINCT FROM $4
         "#,
     )
     .bind(id.0)

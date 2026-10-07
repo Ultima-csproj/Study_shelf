@@ -1,4 +1,4 @@
-CREATE FUNCTION guard_revision_child() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE FUNCTION guard_revision_child () RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE parent_id BIGINT; parent_state TEXT;
 BEGIN
  IF TG_OP = 'DELETE' THEN parent_id := OLD.revision_id; ELSE parent_id := NEW.revision_id; END IF;
@@ -15,11 +15,20 @@ BEGIN
  END IF;
  IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
 END $$;
-CREATE TRIGGER revision_credits_guard BEFORE INSERT OR UPDATE OR DELETE ON revision_credits FOR EACH ROW EXECUTE FUNCTION guard_revision_child();
-CREATE TRIGGER revision_tags_guard BEFORE INSERT OR UPDATE OR DELETE ON revision_tags FOR EACH ROW EXECUTE FUNCTION guard_revision_child();
-CREATE TRIGGER revision_editors_guard BEFORE INSERT OR UPDATE OR DELETE ON revision_editors FOR EACH ROW EXECUTE FUNCTION guard_revision_child();
 
-CREATE FUNCTION guard_revision_snapshot() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE TRIGGER revision_credits_guard
+BEFORE INSERT OR UPDATE OR DELETE ON revision_credits FOR EACH ROW
+EXECUTE FUNCTION guard_revision_child ();
+
+CREATE TRIGGER revision_tags_guard
+BEFORE INSERT OR UPDATE OR DELETE ON revision_tags FOR EACH ROW
+EXECUTE FUNCTION guard_revision_child ();
+
+CREATE TRIGGER revision_editors_guard
+BEFORE INSERT OR UPDATE OR DELETE ON revision_editors FOR EACH ROW
+EXECUTE FUNCTION guard_revision_child ();
+
+CREATE FUNCTION guard_revision_snapshot () RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  IF TG_OP = 'DELETE' THEN
   IF OLD.state <> 'draft' THEN RAISE EXCEPTION 'revision is frozen' USING ERRCODE = '23514'; END IF;
@@ -39,9 +48,12 @@ BEGIN
  END IF;
  RETURN NEW;
 END $$;
-CREATE TRIGGER revision_snapshot_guard BEFORE UPDATE OR DELETE ON material_revisions FOR EACH ROW EXECUTE FUNCTION guard_revision_snapshot();
 
-CREATE FUNCTION check_publication_pointer() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE TRIGGER revision_snapshot_guard
+BEFORE UPDATE OR DELETE ON material_revisions FOR EACH ROW
+EXECUTE FUNCTION guard_revision_snapshot ();
+
+CREATE FUNCTION check_publication_pointer () RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF EXISTS (
    SELECT 1
@@ -59,8 +71,15 @@ BEGIN
  END IF;
  RETURN NULL;
 END $$;
-CREATE CONSTRAINT TRIGGER publication_pointer_guard AFTER INSERT OR UPDATE ON materials
- DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_publication_pointer();
-CREATE FUNCTION guard_moderation_action() RETURNS trigger LANGUAGE plpgsql AS $$
+
+CREATE CONSTRAINT TRIGGER publication_pointer_guard
+AFTER INSERT OR UPDATE ON materials
+DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+EXECUTE FUNCTION check_publication_pointer ();
+
+CREATE FUNCTION guard_moderation_action () RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN RAISE EXCEPTION 'moderation history is immutable' USING ERRCODE = '23514'; END $$;
-CREATE TRIGGER moderation_action_guard BEFORE UPDATE OR DELETE ON moderation_actions FOR EACH ROW EXECUTE FUNCTION guard_moderation_action();
+
+CREATE TRIGGER moderation_action_guard
+BEFORE UPDATE OR DELETE ON moderation_actions FOR EACH ROW
+EXECUTE FUNCTION guard_moderation_action ();
