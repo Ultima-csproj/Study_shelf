@@ -1,5 +1,5 @@
 use axum::Json;
-use axum::http::{HeaderValue, StatusCode, header};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use study_core::error::RepositoryErrorKind;
@@ -20,6 +20,15 @@ enum ApiErrorCode {
     MethodNotAllowed,
     InternalError,
     ServiceUnavailable,
+    InvalidCredentials,
+    Unauthenticated,
+    SessionExpired,
+    Forbidden,
+    Csrf,
+    EmailTaken,
+    VersionConflict,
+    ContributorAlreadyLinked,
+    RateLimited,
 }
 
 #[derive(Serialize)]
@@ -71,7 +80,7 @@ impl ApiError {
         }
     }
 
-    fn unavailable(error: CatalogError) -> Self {
+    fn unavailable(error: impl std::error::Error) -> Self {
         tracing::warn!(error = ?error, "Хранилище временно недоступно");
 
         Self {
@@ -82,20 +91,69 @@ impl ApiError {
     }
 }
 
+impl From<study_core::account::AccountError> for ApiError {
+    fn from(error: study_core::account::AccountError) -> Self {
+        use study_core::account::AccountError as E;
+        let (status, code) = match &error {
+            E::Storage(storage) => {
+                return match storage.kind() {
+                    RepositoryErrorKind::Unavailable | RepositoryErrorKind::Retryable => {
+                        Self::unavailable(error)
+                    }
+                    RepositoryErrorKind::InvalidQuery => Self::bad_request("Некорректный запрос"),
+                    RepositoryErrorKind::InvalidData | RepositoryErrorKind::Unexpected => {
+                        Self::internal(error)
+                    }
+                };
+            }
+            E::Validation(_) => (StatusCode::BAD_REQUEST, ApiErrorCode::BadRequest),
+            E::InvalidCredentials => (StatusCode::UNAUTHORIZED, ApiErrorCode::InvalidCredentials),
+            E::Unauthenticated => (StatusCode::UNAUTHORIZED, ApiErrorCode::Unauthenticated),
+            E::SessionExpired => (StatusCode::UNAUTHORIZED, ApiErrorCode::SessionExpired),
+            E::Forbidden => (StatusCode::FORBIDDEN, ApiErrorCode::Forbidden),
+            E::Csrf => (StatusCode::FORBIDDEN, ApiErrorCode::Csrf),
+            E::EmailTaken => (StatusCode::CONFLICT, ApiErrorCode::EmailTaken),
+            E::NotFound => (StatusCode::NOT_FOUND, ApiErrorCode::NotFound),
+            E::VersionConflict => (StatusCode::CONFLICT, ApiErrorCode::VersionConflict),
+            E::ContributorAlreadyLinked => {
+                (StatusCode::CONFLICT, ApiErrorCode::ContributorAlreadyLinked)
+            }
+            E::RateLimited => (StatusCode::TOO_MANY_REQUESTS, ApiErrorCode::RateLimited),
+        };
+        Self {
+            status,
+            code,
+            message: error.to_string(),
+        }
+    }
+}
+impl From<crate::auth::password::PasswordError> for ApiError {
+    fn from(error: crate::auth::password::PasswordError) -> Self {
+        match error {
+            crate::auth::password::PasswordError::Account(error) => error.into(),
+            other => Self::internal(other),
+        }
+    }
+}
+
 impl From<CatalogError> for ApiError {
     fn from(error: CatalogError) -> Self {
-        match &error {
-            CatalogError::Storage(storage) => match storage.kind() {
-                RepositoryErrorKind::Unavailable | RepositoryErrorKind::Retryable => {
-                    Self::unavailable(error)
-                }
-                RepositoryErrorKind::InvalidQuery => {
-                    Self::bad_request("Некорректный запрос каталога")
-                }
-                RepositoryErrorKind::InvalidData | RepositoryErrorKind::Unexpected => {
-                    Self::internal(error)
-                }
-            },
+        match error {
+            CatalogError::Storage(storage) => Self::from(storage),
+        }
+    }
+}
+
+impl From<study_core::error::RepositoryError> for ApiError {
+    fn from(error: study_core::error::RepositoryError) -> Self {
+        match error.kind() {
+            RepositoryErrorKind::Unavailable | RepositoryErrorKind::Retryable => {
+                Self::unavailable(error)
+            }
+            RepositoryErrorKind::InvalidQuery => Self::bad_request("Некорректный запрос"),
+            RepositoryErrorKind::InvalidData | RepositoryErrorKind::Unexpected => {
+                Self::internal(error)
+            }
         }
     }
 }
@@ -111,14 +169,6 @@ impl IntoResponse for ApiError {
             },
         };
 
-        let mut response = (status, Json(body)).into_response();
-
-        if status == StatusCode::METHOD_NOT_ALLOWED {
-            response
-                .headers_mut()
-                .insert(header::ALLOW, HeaderValue::from_static("GET, HEAD"));
-        }
-
-        response
+        (status, Json(body)).into_response()
     }
 }

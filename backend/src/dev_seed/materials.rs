@@ -10,7 +10,7 @@ use study_storage_postgres::material::{
     CreateMaterial, FixtureMode, FixturePlacement, MaterialFixture, PostgresMaterialRepository,
 };
 
-pub(super) async fn populate(pool: &PgPool, world: World) -> Result<u64, SeedError> {
+pub(super) async fn populate(pool: &PgPool, world: &World) -> Result<u64, SeedError> {
     let repository = PostgresMaterialRepository::new(pool.clone());
     let baseline = study_core::timestamp::from_utc(time::OffsetDateTime::parse(
         "2026-10-04T00:00:00Z",

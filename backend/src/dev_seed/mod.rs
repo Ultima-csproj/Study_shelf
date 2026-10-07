@@ -1,10 +1,13 @@
 mod data;
 mod identities;
+mod learning;
 mod materials;
 use sqlx::PgPool;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SeedError {
+    #[error("not enough non-video materials to build learning fixtures")]
+    MissingLearningMaterials,
     #[error("development seed database operation failed")]
     Database(#[from] sqlx::Error),
     #[error("development material fixture failed")]
@@ -16,5 +19,8 @@ pub enum SeedError {
 }
 pub async fn populate(pool: &PgPool) -> Result<u64, SeedError> {
     let world = identities::populate(pool).await?;
-    materials::populate(pool, world).await
+    let materials = materials::populate(pool, &world).await?;
+    let collections = learning::populate(pool, &world).await?;
+    println!("Добавлено {collections} учебных подборок");
+    Ok(materials)
 }

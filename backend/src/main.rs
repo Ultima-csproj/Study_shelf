@@ -29,7 +29,18 @@ async fn main() -> anyhow::Result<()> {
     let repository = PostgresCatalogRepository::new(pool.clone());
 
     let service = CatalogService::new(repository);
-    let state = AppState::new(service);
+    let state = AppState::new(
+        backend::auth::AuthService::new(
+            study_storage_postgres::account::PostgresAccountRepository::new(pool.clone()),
+            config.secure_cookie,
+            config.session_seconds,
+            config.auth_origins,
+        )
+        .await?,
+        service,
+        study_storage_postgres::discipline::PostgresDisciplineRepository::new(pool.clone()),
+        study_storage_postgres::collection::PostgresCollectionRepository::new(pool.clone()),
+    );
     let app = api::router(state);
 
     let listener = TcpListener::bind(config.bind_address)
@@ -41,9 +52,12 @@ async fn main() -> anyhow::Result<()> {
         "HTTP-сервер запущен"
     );
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await?;
 
     pool.close().await;
 

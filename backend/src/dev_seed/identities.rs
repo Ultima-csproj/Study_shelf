@@ -13,9 +13,8 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
     let mut tx = pool.begin().await?;
     sqlx::query(
         r#"
-            SELECT pg_advisory_xact_lock(
-                hashtextextended('study-seed-identities-v2', 0)
-            )
+            SELECT
+              pg_advisory_xact_lock(hashtextextended ('study-seed-identities-v2', 0))
         "#,
     )
     .execute(&mut *tx)
@@ -32,13 +31,13 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         let key = format!("institution:{index}");
         let id = sqlx::query_scalar::<_, i64>(
             r#"
-                INSERT INTO institutions (
-                    fixture_key,
-                    name
-                )
-                VALUES ($1, $2)
+                INSERT INTO
+                  institutions (fixture_key, name)
+                VALUES
+                  ($1, $2)
                 ON CONFLICT (fixture_key) DO NOTHING
-                RETURNING id
+                RETURNING
+                  id
             "#,
         )
         .bind(&key)
@@ -50,9 +49,12 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
             None => {
                 sqlx::query_scalar(
                     r#"
-                        SELECT id
-                        FROM institutions
-                        WHERE fixture_key = $1
+                        SELECT
+                          id
+                        FROM
+                          institutions
+                        WHERE
+                          fixture_key = $1
                     "#,
                 )
                 .bind(&key)
@@ -72,14 +74,13 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         let key = format!("user:{index}");
         let inserted = sqlx::query_scalar::<_, i64>(
             r#"
-                INSERT INTO users (
-                    fixture_key,
-                    display_name,
-                    state
-                )
-                VALUES ($1, $2, 'active')
+                INSERT INTO
+                  users (fixture_key, display_name, state)
+                VALUES
+                  ($1, $2, 'active')
                 ON CONFLICT (fixture_key) DO NOTHING
-                RETURNING id
+                RETURNING
+                  id
             "#,
         )
         .bind(&key)
@@ -91,9 +92,12 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
             None => {
                 sqlx::query_scalar(
                     r#"
-                        SELECT id
-                        FROM users
-                        WHERE fixture_key = $1
+                        SELECT
+                          id
+                        FROM
+                          users
+                        WHERE
+                          fixture_key = $1
                     "#,
                 )
                 .bind(&key)
@@ -104,11 +108,10 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         if inserted.is_some() && index == 6 {
             sqlx::query(
                 r#"
-                    INSERT INTO user_platform_permissions (
-                        user_id,
-                        permission
-                    )
-                    VALUES ($1, 'moderate_public_materials')
+                    INSERT INTO
+                      user_platform_permissions (user_id, permission)
+                    VALUES
+                      ($1, 'moderate_public_materials')
                 "#,
             )
             .bind(id)
@@ -118,14 +121,13 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         for institution in &institutions {
             let inserted = sqlx::query_scalar::<_, i64>(
                 r#"
-                    INSERT INTO institution_memberships (
-                        user_id,
-                        institution_id,
-                        state
-                    )
-                    VALUES ($1, $2, 'active')
+                    INSERT INTO
+                      institution_memberships (user_id, institution_id, state)
+                    VALUES
+                      ($1, $2, 'active')
                     ON CONFLICT DO NOTHING
-                    RETURNING user_id
+                    RETURNING
+                      user_id
                 "#,
             )
             .bind(id)
@@ -136,12 +138,10 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
                 let role = if index < 6 { "teacher" } else { "student" };
                 sqlx::query(
                     r#"
-                        INSERT INTO membership_academic_roles (
-                            user_id,
-                            institution_id,
-                            role
-                        )
-                        VALUES ($1, $2, $3)
+                        INSERT INTO
+                          membership_academic_roles (user_id, institution_id, role)
+                        VALUES
+                          ($1, $2, $3)
                     "#,
                 )
                 .bind(id)
@@ -152,19 +152,18 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
                 if index < 6 {
                     sqlx::query(
                         r#"
-                            INSERT INTO membership_permissions (
-                                user_id,
-                                institution_id,
-                                permission
-                            )
+                            INSERT INTO
+                              membership_permissions (user_id, institution_id, permission)
                             SELECT
-                                $1,
-                                $2,
-                                unnest(ARRAY[
-                                    'create_materials',
-                                    'manage_materials',
-                                    'manage_disciplines'
-                                ])
+                              $1,
+                              $2,
+                              unnest(
+                                ARRAY[
+                                  'create_materials',
+                                  'manage_materials',
+                                  'manage_disciplines'
+                                ]
+                              )
                         "#,
                     )
                     .bind(id)
@@ -210,15 +209,13 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
         let key = format!("discipline:{index}");
         let inserted = sqlx::query_scalar::<_, i64>(
             r#"
-                INSERT INTO disciplines (
-                    fixture_key,
-                    institution_id,
-                    slug,
-                    name
-                )
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO
+                  disciplines (fixture_key, institution_id, slug, name)
+                VALUES
+                  ($1, $2, $3, $4)
                 ON CONFLICT (fixture_key) DO NOTHING
-                RETURNING id
+                RETURNING
+                  id
             "#,
         )
         .bind(&key)
@@ -232,9 +229,12 @@ pub(super) async fn populate(pool: &PgPool) -> Result<World, SeedError> {
             None => {
                 sqlx::query_scalar(
                     r#"
-                        SELECT id
-                        FROM disciplines
-                        WHERE fixture_key = $1
+                        SELECT
+                          id
+                        FROM
+                          disciplines
+                        WHERE
+                          fixture_key = $1
                     "#,
                 )
                 .bind(&key)
@@ -266,16 +266,19 @@ async fn contributor(
     };
     let inserted = sqlx::query_scalar::<_, i64>(
         r#"
-            INSERT INTO contributors (
+            INSERT INTO
+              contributors (
                 fixture_key,
                 kind,
                 display_name,
                 user_id,
                 institution_id
-            )
-            VALUES ($1, $2, $3, $4, $5)
+              )
+            VALUES
+              ($1, $2, $3, $4, $5)
             ON CONFLICT (fixture_key) DO NOTHING
-            RETURNING id
+            RETURNING
+              id
         "#,
     )
     .bind(key)
@@ -290,9 +293,12 @@ async fn contributor(
         None => {
             sqlx::query_scalar(
                 r#"
-                    SELECT id
-                    FROM contributors
-                    WHERE fixture_key = $1
+                    SELECT
+                      id
+                    FROM
+                      contributors
+                    WHERE
+                      fixture_key = $1
                 "#,
             )
             .bind(key)

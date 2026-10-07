@@ -1,21 +1,18 @@
 # Локальный Rust/Axum backend — PostgreSQL
 
-Активный workspace: backend, study-core, study-storage-postgres. PostgreSQL 18 запускается Docker Compose, Rust и Vite работают на Windows. SQLite-адаптер сохранён в archive/backend-sqlite и не входит в сборку.
+Workspace: backend, study-core, study-storage-postgres. PostgreSQL 18 запускается Compose, Rust/Vite работают локально.
 
-## Первый запуск
+## Текущее окружение
 
-В корне проекта нужен игнорируемый .env с POSTGRES_PASSWORD и DATABASE_URL. Во время настройки файл уже создан; не заменяйте его другим паролем для существующего volume.
+PostgreSQL слушает 127.0.0.1:5433. Ignored корневой .env задаёт DATABASE_URL и POSTGRES_PASSWORD.
 
-Для нового окружения задайте собственный пароль вместо PLACEHOLDER:
+Для этапа 11 создана dev-база study_dev_stage11: в старой study_dev checksum изменённой 0001_identities.sql не совпадал с сохранённым. study_dev сохранена. Корневой .env уже переключён; не заменяйте его примером с другим паролем.
 
-~~~dotenv
-POSTGRES_PASSWORD=PLACEHOLDER
-DATABASE_URL=postgres://study_dev:PLACEHOLDER@127.0.0.1:5433/study_dev
-~~~
+Шесть миграций и первичный seed применены к study_dev_stage11. SQLite-адаптер находится в archive/backend-sqlite и не входит в сборку.
 
-При специальных символах пароль в DATABASE_URL должен быть URL-encoded. Пример дополнительных настроек находится в backend/.env.example. Секреты в Git не добавляются.
+## Запуск
 
-Из корня проекта:
+Из корня:
 
 ~~~powershell
 docker compose up -d postgres
@@ -29,54 +26,76 @@ cargo run --bin seed
 cargo run --bin backend
 ~~~
 
-Обычный запуск backend применяет migrations, но не добавляет демоданные. Seed запускается явно. .env загружается dotenvy из текущей папки или родительской; существующие переменные окружения имеют приоритет.
+При обычном старте применяются schema migrations, seed автоматически не запускается. .env загружается из текущей папки или родительской; переменные окружения имеют приоритет.
 
-База: study_dev, роль: study_dev, адрес: 127.0.0.1:5433. Данные хранятся в named volume study_postgres. docker compose stop останавливает БД без удаления данных. Для остановки не требуется удалять volume.
+Vite: из frontend выполните npm run dev. Страницы /catalog, /disciplines и /collections читают API. Proxy /api направлен на 127.0.0.1:3000. После изменения кода перезапустите уже работающий backend.
 
-## Команды
+## Новое чистое окружение
+
+Compose создаёт study_dev. Для новой установки задайте собственный пароль в корневом .env:
+
+~~~dotenv
+POSTGRES_PASSWORD=PLACEHOLDER
+DATABASE_URL=postgres://study_dev:PLACEHOLDER@127.0.0.1:5433/study_dev
+~~~
+
+Специальные символы пароля в URL кодируются URL-encoding. Дополнительные настройки — backend/.env.example. В текущем окружении используется уже созданная study_dev_stage11.
+
+Volume study_postgres сохраняет обе базы. Остановка docker compose stop не удаляет данные.
+
+## Dev-команды
 
 ~~~powershell
 cargo run --bin seed
-cargo run --bin catalog_preview
 cargo run --bin catalog_preview -- "транзакции"
+cargo run --bin learning_preview
 cargo run --bin rebuild_search
 ~~~
 
-- seed: 840 вымышленных материалов, 3 учреждения, 8 пользователей, 11 contributors, 7 дисциплин. Уже существующие fixture_key пропускаются; публикации и отозванные права не перезаписываются.
-- catalog_preview: первая публичная страница, необязательный текст поиска одним аргументом.
-- rebuild_search: явная пересборка производного поискового индекса. На время операции блокирует записи materials; не запускается автоматически.
+Seed создаёт 840 материалов, 3 учреждения, 8 пользователей, 11 contributors, 7 дисциплин, 21 раздел дисциплин и 48 подборок с 144 разделами. Публичны 729 материалов и 44 подборки. Учебные fixtures этапа 11 используют материалы без video.
 
-Не все 840 материалов доступны публично: seed содержит Private и неопубликованные Draft. Часть публикаций имеет новую редакцию Draft, которая не меняет публичную карточку.
+Существующие fixture keys пропускаются. Перезапуск не возвращает вручную изменённое содержание и права к исходному seed. Повторный seed в этом запросе не выполнялся.
 
-## Конфигурация
+learning_preview показывает публичные страницы, разделы, два счётчика подборок и следующую страницу пунктов. rebuild_search — отдельная maintenance-команда, блокирующая записи materials на время пересборки.
+
+## Настройки
 
 | Переменная | Значение |
 | --- | --- |
 | DATABASE_URL | Обязательная PostgreSQL URL |
-| BIND_ADDRESS | По умолчанию 127.0.0.1:3000 |
-| DATABASE_MAX_CONNECTIONS | По умолчанию 10, диапазон 1..100 |
-| DATABASE_ACQUIRE_TIMEOUT_SECONDS | По умолчанию 5, диапазон 1..60 |
-| RUST_LOG | Фильтр логов сервера |
+| BIND_ADDRESS | Default 127.0.0.1:3000 |
+| DATABASE_MAX_CONNECTIONS | Default 10, 1..100 |
+| DATABASE_ACQUIRE_TIMEOUT_SECONDS | Default 5, 1..60 |
+| RUST_LOG | Фильтр логирования |
+| AUTH_COOKIE_SECURE | false для loopback HTTP, true для HTTPS |
+| AUTH_SESSION_SECONDS | 604800 по умолчанию, 300..2592000 |
+| AUTH_ALLOWED_ORIGINS | Точные Origin через запятую; local defaults localhost/127.0.0.1:5173 и :3000 |
 
-Соединения используют UTC, statement_timeout=15s, lock_timeout=5s. DATABASE_PATH больше не используется. SQLite fallback и импорт старого файла отсутствуют.
+UTC, statement_timeout=15s, lock_timeout=5s. SQL statements/credentials не выводятся клиенту. DATABASE_PATH больше не используется.
 
-## HTTP и frontend
+Write Material wrappers повторяют всю транзакцию только для 40001/40P01: максимум три попытки, 25/50 мс. Business conflicts, сеть и неизвестный COMMIT не повторяются.
 
-Внутренние write-команды имеют ограниченный retry всей транзакции для PostgreSQL 40001/40P01: максимум три попытки, паузы 25/50 мс. Business conflict, сетевой отказ и неизвестный результат COMMIT не повторяются. Публичных write endpoints и HTTP-idempotency пока нет.
+## HTTP
 
-- GET /api/health — ответ HTTP-процесса, без отдельного запроса readiness к БД.
-- GET /api/catalog — query q; повторяемые type, discipline, teacher, course, year, tag; sort, page, pageSize.
-- GET /api/materials/{id} — текущая публичная публикация.
+- GET /api/health
+- GET /api/catalog
+- GET /api/materials/{id}
+- GET /api/disciplines
+- GET /api/disciplines/{id}
+- GET /api/disciplines/{id}/sections/{section}/items
+- GET /api/collections
+- GET /api/collections/{id}
+- GET /api/collections/{id}/sections/{section}/items
 
-DTO включает publishedRevisionId, credits с ролями и snapshot имени, tags, placements, nullable sourceYear/preview/durationSeconds/fileSizeBytes, publishedAt и firstPublishedAt. Материал может быть самостоятельным, без placement.
+Health подтверждает ответ процесса, не отдельную DB readiness.
 
-teacher в query обозначает ответственного пользователя учебного размещения. Этот пользователь не становится автором материала автоматически. Несколько учебных фильтров должны совпадать в одном размещении.
+Списки: page/pageSize (1..100); empty pageCount=0. Дисциплины: q, institution, sort=title. Подборки: q, повторяемые discipline/course, institution владельца, newest/oldest/title. Section items принимают только page/pageSize.
 
-pageSize=1..100; пустой результат имеет pageCount=0. Страница вне диапазона возвращает пустые items без изменения запрошенного page. Facets считаются по всему публичному каталогу.
+Detail содержит summary, sections с первыми 10 пунктами и уникальный materials[]; пункты ссылаются на Material IDs. Collection counts: stepCount и uniqueMaterialCount. Пустые публичные разделы скрываются, связи в БД сохраняются.
 
-400 — неверный запрос; 404 — отсутствие публичного материала; 405 — неподдерживаемый метод; 503 — недоступность/временный отказ хранения; 500 — некорректные сохранённые данные или неожиданная ошибка. Ответ: { "error": { "code": "...", "message": "..." } }.
+400 — invalid query, 404 — нет публичной сущности/раздела, 405 — метод, 503 — unavailable/retryable storage, 500 — invalid data/unexpected. JSON: { "error": { "code": "...", "message": "..." } }.
 
-Из frontend запустите npm run dev, откройте http://127.0.0.1:5173/catalog?all=1. Vite проксирует /api на 127.0.0.1:3000. Дисциплины/подборки ещё используют отдельные demo-данные до этапа 11.
+Auth, public write API, server library, proposals, revision history UI, assets/editor ещё впереди.
 
 ## Проверки сборки
 
@@ -86,11 +105,34 @@ cargo clippy --workspace --bins --lib -- -D warnings
 cargo fmt --all --check
 ~~~
 
-В этой реализации автоматические тесты не добавлялись и не запускались. Старые SQLite HTTP-тесты находятся в архиве; они не проверяют новую PostgreSQL-модель. Конкурентные команды, повторный seed, rollback и браузерные сценарии требуют отдельного запроса на проверку.
+Автотесты, concurrency/repeat seed и browser flow этапа 11 не запускались. Старые SQLite тесты сохранены в архиве и не проверяют текущую PostgreSQL-модель.
 
-## Документация
+## Документы
 
-Подробные решения сохранены локально:
-- .codex/docs/backend-storage-stage.md — объём этапа 10 и следующий этап.
-- .codex/docs/backend-function-semantics.md — функции, входы/результаты, ошибки, блокировки и аллокации.
-- .codex/docs/backend-postgres-contract.md — текущий HTTP-контракт.
+Локальная документация: .codex/docs/backend-learning-stage.md — этап 11 и семантика reader; backend-function-semantics.md — Material/storage; backend-postgres-contract.md — каталог; backend-plan.md — roadmap.
+
+## Аккаунты и первоначальные права — этап 12
+
+После обновления перезапустить backend. При открытии хранилища автоматически применяются migrations 0007/0008. Можно отдельно выполнить:
+
+~~~powershell
+cargo run --bin study-admin -- migrate
+~~~
+
+Регистрация — /login?mode=register на frontend. У seed User нет настоящих credentials; создайте собственный аккаунт. Его ID показывается в /settings.
+
+~~~powershell
+# 123 заменить ID своего зарегистрированного аккаунта.
+cargo run --bin study-admin -- grant-platform-admin --user-id 123
+cargo run --bin study-admin -- grant-institution-admin --user-id 123 --institution-id 1
+~~~
+
+После назначения обновить страницу. CLI также поддерживает revoke-platform-admin, revoke-institution-admin, accept-membership/reject-membership (--role student|teacher), accept-contributor/reject-contributor и cleanup-sessions. Выполнить --help для аргументов. Операции назначений/решений записываются в identity_audit.
+
+Основные endpoints: GET /api/auth/csrf, /api/viewer; POST /api/auth/register/login/logout/logout-others; GET/PATCH /api/me/profile; POST /api/me/password; GET /api/me/library/materials/collections/contributions; PUT/DELETE /api/me/library/materials/{id}/collections/{id}; GET/POST /api/me/collections; GET/PATCH /api/me/collections/{id}; GET /api/me/collections/{id}/sections/{section}/items. Каждый перечисленный суффикс — отдельный route, полный контракт в локальном документе ниже.
+
+Все unsafe запросы требуют разрешённый Origin, matching CSRF cookie/X-CSRF-Token; authenticated mutation также проверяет связанную с сессией digest. Клиент работает через Vite /api proxy. POST /api/me/library/flags — пакетный запрос максимум 100 ID каждого вида.
+
+Пароли Argon2id, максимум две blocking CPU-задачи; PostgreSQL хранит digest сессии, expiry/revocation и password_version. Profile DTO не принимает state/permissions/чужого owner. Private material reader возвращает только текущую Published revision согласно owner/membership/collaborator policy. Auth/me responses private/no-store.
+
+Email verification/mail reset, Organization representation, Public collection publication, administrative UI, Material drafts UI и files/editor ещё не реализованы. Следующий этап — administrative UI. Подробная семантика и ограничения: .codex/docs/backend-auth-implementation.md.

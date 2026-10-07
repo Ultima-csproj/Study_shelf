@@ -1,4 +1,4 @@
-mod dto;
+pub(super) mod dto;
 mod request;
 mod response;
 

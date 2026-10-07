@@ -49,6 +49,7 @@ impl From<RevisionCredit> for CreditDto {
 }
 #[derive(Serialize)]
 pub struct PlacementDto {
+    id: i64,
     discipline: DisciplineDto,
     responsible: Option<TeacherDto>,
     course: Option<u8>,
@@ -56,6 +57,7 @@ pub struct PlacementDto {
 impl From<EducationalPlacement> for PlacementDto {
     fn from(value: EducationalPlacement) -> Self {
         Self {
+            id: value.id.0,
             discipline: value.discipline.into(),
             responsible: value.responsible.map(Into::into),
             course: value.course,
