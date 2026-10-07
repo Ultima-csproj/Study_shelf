@@ -32,7 +32,10 @@ pub(super) async fn load_teachers(
                 separated.push_bind(id.0);
             }
 
-            separated.push_unseparated(") ORDER BY id");
+            separated.push_unseparated(
+                ")
+            ORDER BY id",
+            );
         }
 
         let rows: Vec<TeacherRow> = builder
@@ -75,7 +78,10 @@ pub(super) async fn load_disciplines(
                 separated.push_bind(id.0);
             }
 
-            separated.push_unseparated(") ORDER BY id");
+            separated.push_unseparated(
+                ")
+            ORDER BY id",
+            );
         }
 
         let rows: Vec<DisciplineRow> = builder

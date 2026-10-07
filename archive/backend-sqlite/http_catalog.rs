@@ -24,33 +24,72 @@ async fn fixture() -> (Router, SqlitePool) {
         .run(&pool)
         .await
         .unwrap();
-    sqlx::query("INSERT INTO teachers VALUES (1, 'Иванова Мария', 'Иванова М.')")
-        .execute(&pool)
-        .await
-        .unwrap();
-    sqlx::query("INSERT INTO disciplines (id, slug, name, course, semester, teacher_id) VALUES (1, 'database', 'Базы данных', 3, 5, 1)")
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        r#"
+        INSERT INTO
+          teachers
+        VALUES
+          (1, 'Иванова Мария', 'Иванова М.')
+    "#,
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    sqlx::query(
+        r#"
+        INSERT INTO
+          disciplines (id, slug, name, course, semester, teacher_id)
+        VALUES
+          (1, 'database', 'Базы данных', 3, 5, 1)
+    "#,
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
     for (id, kind, title) in [
         (1001, "book", "Учёт транзакций"),
         (1002, "video", "Разбор транзакций"),
         (1003, "lecture", "Индексы"),
     ] {
-        sqlx::query("INSERT INTO materials (id, title, material_type, discipline_id, teacher_id, course, year, created_at, search_text, sort_title) VALUES (?, ?, ?, 1, 1, 3, 2026, '2026-09-01', ?, ?)")
-            .bind(id)
-            .bind(title)
-            .bind(kind)
-            .bind(normalize_search_text(title))
-            .bind(normalize_search_text(title))
-            .execute(&pool)
-            .await
-            .unwrap();
-        sqlx::query("INSERT INTO material_tags VALUES (?, 'SQL')")
-            .bind(id)
-            .execute(&pool)
-            .await
-            .unwrap();
+        sqlx::query(
+            r#"
+            INSERT INTO
+              materials (
+                id,
+                title,
+                material_type,
+                discipline_id,
+                teacher_id,
+                course,
+                year,
+                created_at,
+                search_text,
+                sort_title
+              )
+            VALUES
+              (?, ?, ?, 1, 1, 3, 2026, '2026-09-01', ?, ?)
+        "#,
+        )
+        .bind(id)
+        .bind(title)
+        .bind(kind)
+        .bind(normalize_search_text(title))
+        .bind(normalize_search_text(title))
+        .execute(&pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"
+            INSERT INTO
+              material_tags
+            VALUES
+              (?, 'SQL')
+        "#,
+        )
+        .bind(id)
+        .execute(&pool)
+        .await
+        .unwrap();
     }
     let repository = SqliteCatalogRepository::new(pool.clone());
     let router = api::router(AppState::new(CatalogService::new(repository)));
@@ -166,10 +205,18 @@ async fn invalid_stored_material_returns_generic_internal_error() {
         .execute(&pool)
         .await
         .unwrap();
-    sqlx::query("UPDATE materials SET course = 0 WHERE id = 1001")
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        r#"
+        UPDATE materials
+        SET
+          course = 0
+        WHERE
+          id = 1001
+    "#,
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
     for uri in ["/api/catalog", "/api/materials/1001"] {
         assert_internal_error(app.clone(), uri).await;
     }
@@ -178,8 +225,20 @@ async fn invalid_stored_material_returns_generic_internal_error() {
 #[tokio::test]
 async fn missing_required_reference_returns_internal_error_instead_of_not_found() {
     for statement in [
-        "UPDATE materials SET teacher_id = 99999 WHERE id = 1001",
-        "UPDATE materials SET discipline_id = 99999 WHERE id = 1001",
+        r#"
+            UPDATE materials
+            SET
+              teacher_id = 99999
+            WHERE
+              id = 1001
+        "#,
+        r#"
+            UPDATE materials
+            SET
+              discipline_id = 99999
+            WHERE
+              id = 1001
+        "#,
     ] {
         let (app, pool) = fixture().await;
         sqlx::query("PRAGMA foreign_keys = OFF")

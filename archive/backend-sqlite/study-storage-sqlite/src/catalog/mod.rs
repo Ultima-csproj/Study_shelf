@@ -35,9 +35,12 @@ impl CatalogRepository for SqliteCatalogRepository {
     async fn get_by_id(&self, id: MaterialId) -> Result<Option<Material>> {
         let row: Option<MaterialRow> = sqlx::query_as(
             r#"
-                SELECT *
-                FROM materials
-                WHERE id = ?
+                SELECT
+                  *
+                FROM
+                  materials
+                WHERE
+                  id = ?
             "#,
         )
         .bind(id.0)
@@ -100,7 +103,10 @@ async fn load_tags(pool: &SqlitePool, items: &mut [Material]) -> Result<()> {
             separated.push_bind(material.id.0);
         }
 
-        separated.push_unseparated(") ORDER BY material_id, tag");
+        separated.push_unseparated(
+            ")
+        ORDER BY material_id, tag",
+        );
     }
 
     let tags: Vec<(i64, String)> = builder

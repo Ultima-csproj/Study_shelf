@@ -18,9 +18,12 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
 
     let mut count_sql: QueryBuilder<Sqlite> = QueryBuilder::new(
         r#"
-            SELECT COUNT(*)
-            FROM materials m
-            WHERE 1 = 1
+            SELECT
+              COUNT(*)
+            FROM
+              materials m
+            WHERE
+              1 = 1
         "#,
     );
     push_filters(&mut count_sql, &query);
@@ -40,19 +43,46 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
 
     let mut items_sql: QueryBuilder<Sqlite> = QueryBuilder::new(
         r#"
-            SELECT m.*
-            FROM materials m
-            WHERE 1 = 1
+            SELECT
+              m.*
+            FROM
+              materials m
+            WHERE
+              1 = 1
         "#,
     );
     push_filters(&mut items_sql, &query);
     match query.sort {
-        CatalogSort::Newest => items_sql.push(" ORDER BY m.created_at DESC, m.id ASC"),
-        CatalogSort::Oldest => items_sql.push(" ORDER BY m.created_at ASC, m.id ASC"),
-        CatalogSort::Title => items_sql.push(" ORDER BY m.sort_title ASC, m.id ASC"),
+        CatalogSort::Newest => items_sql.push(
+            "
+            ORDER BY
+              m.created_at DESC,
+              m.id ASC",
+        ),
+        CatalogSort::Oldest => items_sql.push(
+            "
+            ORDER BY
+              m.created_at ASC,
+              m.id ASC",
+        ),
+        CatalogSort::Title => items_sql.push(
+            "
+            ORDER BY
+              m.sort_title ASC,
+              m.id ASC",
+        ),
     };
-    items_sql.push(" LIMIT ").push_bind(i64::from(page_size));
-    items_sql.push(" OFFSET ").push_bind(offset);
+    items_sql
+        .push(
+            "
+            LIMIT ",
+        )
+        .push_bind(i64::from(page_size))
+        .push(
+            "
+            OFFSET ",
+        )
+        .push_bind(offset);
     let rows: Vec<MaterialRow> = items_sql
         .build_query_as()
         .fetch_all(pool)
@@ -75,9 +105,15 @@ pub(super) async fn run(pool: &SqlitePool, query: CatalogQuery) -> Result<Catalo
 fn push_filters(builder: &mut QueryBuilder<Sqlite>, query: &CatalogQuery) {
     for word in normalize_search_text(query.text.trim()).split_whitespace() {
         builder
-            .push(" AND m.search_text LIKE ")
+            .push(
+                "
+                AND m.search_text LIKE ",
+            )
             .push_bind(format!("%{}%", escape_like(word)))
-            .push(" ESCAPE '\\'");
+            .push(
+                "
+                ESCAPE '\\'",
+            );
     }
 
     push_values(
@@ -130,7 +166,13 @@ where
     if values.peek().is_none() {
         return;
     }
-    builder.push(" AND ").push(column).push(" IN (");
+    builder
+        .push(
+            "
+            AND ",
+        )
+        .push(column)
+        .push(" IN (");
     let mut separated = builder.separated(", ");
     for value in values {
         separated.push_bind(value);

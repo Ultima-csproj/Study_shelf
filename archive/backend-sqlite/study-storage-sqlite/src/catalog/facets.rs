@@ -57,11 +57,15 @@ struct NumberCountRow {
 
 pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
     let type_rows: Vec<CountRow> = sqlx::query_as(
-        "SELECT
-            material_type AS value,
-            COUNT(*) AS material_count
-         FROM materials
-         GROUP BY material_type",
+        r#"
+            SELECT
+              material_type AS value,
+              COUNT(*) AS material_count
+            FROM
+              materials
+            GROUP BY
+              material_type
+        "#,
     )
     .fetch_all(pool)
     .await
@@ -92,50 +96,70 @@ pub(super) async fn load(pool: &SqlitePool) -> Result<CatalogFacets> {
     .collect();
 
     let discipline_rows: Vec<DisciplineFacetRow> = sqlx::query_as(
-        "SELECT
-             d.*,
-             COUNT(m.id) AS material_count
-         FROM disciplines d
-         LEFT JOIN materials m ON m.discipline_id = d.id
-         GROUP BY d.id
-         ORDER BY d.id",
+        r#"
+            SELECT
+              d.*,
+              COUNT(m.id) AS material_count
+            FROM
+              disciplines d
+              LEFT JOIN materials m ON m.discipline_id = d.id
+            GROUP BY
+              d.id
+            ORDER BY
+              d.id
+        "#,
     )
     .fetch_all(pool)
     .await
     .map_err(crate::error::map_sqlx_error)?;
 
     let teacher_rows: Vec<TeacherFacetRow> = sqlx::query_as(
-        "SELECT
-             t.*,
-             COUNT(m.id) AS material_count
-         FROM teachers t
-         LEFT JOIN materials m ON m.teacher_id = t.id
-         GROUP BY t.id
-         ORDER BY t.id",
+        r#"
+            SELECT
+              t.*,
+              COUNT(m.id) AS material_count
+            FROM
+              teachers t
+              LEFT JOIN materials m ON m.teacher_id = t.id
+            GROUP BY
+              t.id
+            ORDER BY
+              t.id
+        "#,
     )
     .fetch_all(pool)
     .await
     .map_err(crate::error::map_sqlx_error)?;
 
     let course_rows: Vec<NumberCountRow> = sqlx::query_as(
-        "SELECT
-             course AS value,
-             COUNT(*) AS material_count
-         FROM materials
-         GROUP BY course
-         ORDER BY course",
+        r#"
+            SELECT
+              course AS value,
+              COUNT(*) AS material_count
+            FROM
+              materials
+            GROUP BY
+              course
+            ORDER BY
+              course
+        "#,
     )
     .fetch_all(pool)
     .await
     .map_err(crate::error::map_sqlx_error)?;
 
     let year_rows: Vec<NumberCountRow> = sqlx::query_as(
-        "SELECT
-             year AS value,
-             COUNT(*) AS material_count
-         FROM materials
-         GROUP BY year
-         ORDER BY year DESC",
+        r#"
+            SELECT
+              year AS value,
+              COUNT(*) AS material_count
+            FROM
+              materials
+            GROUP BY
+              year
+            ORDER BY
+              year DESC
+        "#,
     )
     .fetch_all(pool)
     .await
