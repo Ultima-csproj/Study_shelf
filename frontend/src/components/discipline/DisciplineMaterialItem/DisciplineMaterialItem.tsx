@@ -5,7 +5,6 @@ import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
 import { Badge } from "../../common/Badge/Badge";
 import { SaveAction } from "../../common/SaveAction/SaveAction";
 import styles from "./DisciplineMaterialItem.module.css";
-import { durationMinutes } from "../../../utils/format";
 import {
   locationPath,
   materialPath,
@@ -27,13 +26,13 @@ export function DisciplineMaterialItem({
 }: DisciplineMaterialItemProps) {
   const location = useLocation();
   const path = withNavigationOrigin(
-    materialPath(item.material.id, "mock"),
+    materialPath(item.material.id, item.material.source),
     locationPath(location),
   );
   let duration: string | null = null;
 
-  if (item.material.duration) {
-    duration = durationMinutes(item.material.duration);
+  if (item.material.durationSeconds !== null) {
+    duration = `${Math.ceil(item.material.durationSeconds / 60)} мин`;
   }
 
   const typeLabels = { book: "Учебник", lab: "Практика" };

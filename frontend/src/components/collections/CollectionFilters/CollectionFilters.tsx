@@ -1,11 +1,11 @@
 import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import type { CollectionRequest } from "../../../types/collection";
-import type { Discipline } from "../../../types/discipline";
+import type { EducationalDiscipline } from "../../../types/material";
 import styles from "./CollectionFilters.module.css";
 
 interface CollectionFiltersProps {
   request: CollectionRequest;
-  disciplines: Discipline[];
+  disciplines: EducationalDiscipline[];
   courses: number[];
   onChange: (request: CollectionRequest) => void;
   onReset: () => void;

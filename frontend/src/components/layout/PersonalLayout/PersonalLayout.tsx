@@ -12,8 +12,26 @@ const links = [
 ];
 
 export function PersonalLayout() {
-  const { viewer } = useViewer();
+  const { viewer, refreshViewer } = useViewer();
   const location = useLocation();
+
+  if (viewer.kind === "loading") {
+    return (
+      <main id="main-content">
+        <p role="status">Загружаем аккаунт…</p>
+      </main>
+    );
+  }
+  if (viewer.kind === "error") {
+    return (
+      <main id="main-content">
+        <p role="alert">{viewer.message}</p>
+        <button type="button" onClick={() => void refreshViewer()}>
+          Повторить
+        </button>
+      </main>
+    );
+  }
 
   if (viewer.kind === "guest") {
     const redirect = location.pathname + location.search + location.hash;
@@ -23,7 +41,7 @@ export function PersonalLayout() {
   }
 
   return (
-    <div className={styles.layout}>
+    <div key={viewer.user.id} className={styles.layout}>
       <aside className={styles.sidebar}>
         <h2>Личная зона</h2>
         <nav aria-label="Разделы личной зоны">

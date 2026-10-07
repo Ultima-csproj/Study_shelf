@@ -28,7 +28,7 @@ export function DisciplineSidebar({
           return (
             <Link
               key={discipline.id}
-              to={`/disciplines/${discipline.slug}`}
+              to={`/disciplines/${discipline.id}`}
               className={className}
               aria-current={currentPage}
             >

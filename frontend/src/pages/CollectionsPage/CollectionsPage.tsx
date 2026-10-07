@@ -6,6 +6,7 @@ import { XIcon } from "@phosphor-icons/react/dist/csr/X";
 import { SlidersHorizontalIcon } from "@phosphor-icons/react/dist/csr/SlidersHorizontal";
 import { CollectionFilters } from "../../components/collections/CollectionFilters/CollectionFilters";
 import { CollectionListItem } from "../../components/collections/CollectionListItem/CollectionListItem";
+import { Pagination } from "../../components/catalog/Pagination/Pagination";
 import { SearchInput } from "../../components/common/SearchInput/SearchInput";
 import { Select } from "../../components/common/Select/Select";
 import { useCollections } from "../../hooks/useCollections";
@@ -36,7 +37,7 @@ export function CollectionsPage() {
   const resultCount = result?.total ?? 0;
 
   const change = (next: CollectionRequest) => {
-    setParams(writeCollectionParams(next), { replace: true, flushSync: true });
+    setParams(writeCollectionParams({ ...next, page: 1 }), { replace: true, flushSync: true });
   };
 
   const reset = () => {
@@ -220,6 +221,16 @@ export function CollectionsPage() {
             />
           </div>
           {resultsContent}
+          {result && !loading && !error && (
+            <Pagination
+              page={result.page}
+              pageCount={result.pageCount}
+              total={result.total}
+              pageSize={request.pageSize}
+              itemLabel="подборок"
+              onChange={(page) => setParams(writeCollectionParams({ ...request, page }))}
+            />
+          )}
           <footer className={styles.footer}>
             <p>
               <InfoIcon size={23} aria-hidden="true" />

@@ -45,7 +45,7 @@ export function CollectionRouteItem({
     durationLabel = `${minutes} мин`;
   }
 
-  let lastLabel: string | null = "PDF";
+  let lastLabel: string | null = null;
 
   if (material.type === "video") {
     lastLabel = durationLabel;

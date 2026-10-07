@@ -15,7 +15,8 @@ export function DisciplineHeader({
 }: DisciplineHeaderProps) {
   const [expanded, setExpanded] = useState(false);
   const { viewer } = useViewer();
-  const teacher = discipline.teacher;
+  const responsible = discipline.responsible.map((person) => person.name).join(", ");
+  const courses = discipline.courses.join(", ");
   let descriptionClassName = styles.description;
   let descriptionAction = "Подробнее";
 
@@ -59,7 +60,7 @@ export function DisciplineHeader({
   return (
     <div className={styles.header}>
       <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}>
-        <Link to="/disciplines/database">Дисциплины</Link>
+        <Link to="/disciplines">Дисциплины</Link>
         <span aria-hidden="true">/</span>
         <span>{discipline.name}</span>
       </nav>
@@ -79,10 +80,10 @@ export function DisciplineHeader({
       </button>
       <div className={styles.meta}>
         <span>
-          {discipline.course} курс <span aria-hidden="true">·</span>{" "}
-          {discipline.semester} семестр
+          {discipline.institution.name}
         </span>
-        <span className={styles.teacher}>{teacher?.shortName}</span>
+        {courses && <span>Курсы: {courses}</span>}
+        {responsible && <span className={styles.teacher}>Ответственные: {responsible}</span>}
       </div>
       {guestHint}
     </div>

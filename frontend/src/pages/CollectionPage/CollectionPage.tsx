@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { CollectionRouteItem } from "../../components/collections/CollectionRouteItem/CollectionRouteItem";
+import { CollectionSectionEntries } from "../../components/collections/CollectionSectionEntries/CollectionSectionEntries";
 import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import { useCollection } from "../../hooks/useCollections";
 import { useViewer } from "../../hooks/useViewer";
@@ -246,16 +246,11 @@ export function CollectionPage() {
                 <span>{section.position}</span>
                 {section.title}
               </h2>
-              <ol aria-label={`Материалы раздела «${section.title}»`}>
-                {section.items.map((item) => (
-                  <CollectionRouteItem
-                    key={item.id}
-                    item={item}
-                    sectionNumber={section.position}
-                    sectionId={id}
-                  />
-                ))}
-              </ol>
+              <CollectionSectionEntries
+                collectionId={collection.id}
+                section={section}
+                sectionId={id}
+              />
             </section>
           );
         })}

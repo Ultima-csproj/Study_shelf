@@ -1,46 +1,52 @@
-import { disciplines } from "../data/disciplines";
-import { materials } from "../data/materials";
-import { teachers } from "../data/teachers";
-import { courseMaterialsFor } from "../data/courseMaterials";
+import { getJson, HttpError } from "./http";
+import { courseItem, materialMap } from "./learning";
 import type { DisciplineSummary } from "../types/discipline";
-const find = (id: string | number) =>
-  disciplines.find(
-    (item) => item.slug === String(id) || item.id === Number(id),
-  );
+import type { ApiPage, LearningDetail, SectionPage } from "../types/learning";
+import type { MaterialSectionData } from "../types/material";
+
 export async function getDisciplines(
   signal?: AbortSignal,
-): Promise<DisciplineSummary[]> {
-  await Promise.resolve();
-  signal?.throwIfAborted();
-  const order = [1, 5, 2, 4, 7, 3, 6];
-  return order.flatMap((id) => {
-    const discipline = find(id);
-    return discipline
-      ? [
-          {
-            ...discipline,
-            materialCount: materials.filter((item) => item.disciplineId === id)
-              .length,
-            teacher:
-              teachers.find((item) => item.id === discipline.teacherId) ?? null,
-          },
-        ]
-      : [];
-  });
+  page = 1,
+  pageSize = 20,
+): Promise<ApiPage<DisciplineSummary>> {
+  return getJson(`/api/disciplines?page=${page}&pageSize=${pageSize}`, signal);
 }
 export async function getDiscipline(id: string | number, signal?: AbortSignal) {
-  const list = await getDisciplines(signal);
-  return (
-    list.find((item) => item.slug === String(id) || item.id === Number(id)) ??
-    null
-  );
+  try {
+    const response = await getJson<DisciplineSummary & LearningDetail>(
+      "/api/disciplines/" + encodeURIComponent(String(id)),
+      signal,
+    );
+    const materials = materialMap(response.materials);
+    const sections: MaterialSectionData[] = response.sections.map((section) => {
+      return {
+        ...section,
+        initialPageSize: response.initialPageSize,
+        items: section.items.map((entry) => courseItem(entry, materials)),
+      };
+    });
+    return { discipline: response, sections };
+  } catch (reason) {
+    if (reason instanceof HttpError && reason.status === 404) {
+      return null;
+    }
+    throw reason;
+  }
 }
-export async function getDisciplineMaterials(
-  id: string | number,
+export async function getDisciplineSectionItems(
+  id: number,
+  section: number,
+  page: number,
+  pageSize: number,
   signal?: AbortSignal,
 ) {
-  await Promise.resolve();
-  signal?.throwIfAborted();
-  const discipline = find(id);
-  return discipline ? courseMaterialsFor(discipline.id) : [];
+  const response = await getJson<SectionPage>(
+    `/api/disciplines/${id}/sections/${section}/items?page=${page}&pageSize=${pageSize}`,
+    signal,
+  );
+  const materials = materialMap(response.materials);
+  return {
+    ...response,
+    items: response.items.map((entry) => courseItem(entry, materials)),
+  };
 }

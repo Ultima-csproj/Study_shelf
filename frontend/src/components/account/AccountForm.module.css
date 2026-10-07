@@ -1,0 +1,37 @@
+.form {
+  max-width: 640px;
+  margin: 24px 0;
+}
+.form fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.form input,
+.form textarea,
+.form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+}
+.form button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+.section {
+  border-top: 1px solid var(--color-border);
+  margin-top: 24px;
+  padding-top: 20px;
+}

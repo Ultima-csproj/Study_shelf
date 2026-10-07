@@ -1,6 +1,6 @@
 import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
 import { BookmarkSimpleIcon } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useViewer } from "../../../hooks/useViewer";
 import type { MaterialSource } from "../../../types/material";
@@ -21,28 +21,29 @@ export function SaveAction({
   compact = false,
   kind = "material",
   outlined = false,
-  source = "mock",
+  source = "api",
 }: SaveActionProps) {
   const {
     viewer,
-    savedMaterials,
-    savedCollectionIds,
+    savedFlags,
+    registerSave,
+    libraryVersion,
     toggleSaved,
     toggleSavedCollection,
   } = useViewer();
   const location = useLocation();
   const navigate = useNavigate();
-  const guest = viewer.kind === "guest";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const guest = viewer.kind !== "authenticated";
   const collection = kind === "collection";
-  let saved = false;
-
-  if (collection) {
-    saved = savedCollectionIds.includes(id);
-  } else {
-    saved = savedMaterials.some((material) => {
-      return material.id === id && material.source === source;
-    });
-  }
+  const key = `${kind}:${id}`;
+  const saved = savedFlags[key] ?? false;
+  useEffect(() => {
+    if (viewer.kind === "authenticated" && source === "api") {
+      registerSave(kind, id);
+    }
+  }, [viewer.kind, kind, id, source, registerSave, libraryVersion]);
 
   const classNames = [styles.action];
 
@@ -89,39 +90,54 @@ export function SaveAction({
     actionIcon = <LockKeyIcon size={21} aria-hidden="true" />;
   } else {
     actionIcon = (
-      <BookmarkSimpleIcon
-        size={21}
-        weight={iconWeight}
-        aria-hidden="true"
-      />
+      <BookmarkSimpleIcon size={21} weight={iconWeight} aria-hidden="true" />
     );
   }
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (guest) {
       const redirect = location.pathname + location.search + location.hash;
       navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
       return;
     }
 
-    if (collection) {
-      toggleSavedCollection(id);
-    } else {
-      toggleSaved({ id, source });
+    setBusy(true);
+    setError(null);
+    try {
+      if (collection) {
+        await toggleSavedCollection(id);
+      } else {
+        await toggleSaved({ id, source });
+      }
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Не удалось сохранить",
+      );
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <button
-      type="button"
-      className={className}
-      aria-label={`${action}: ${title}`}
-      aria-pressed={pressed}
-      title={buttonTitle}
-      onClick={handleClick}
-    >
-      {actionIcon}
-      <span>{buttonLabel}</span>
-    </button>
+    <>
+      <button
+        type="button"
+        className={className}
+        aria-label={`${action}: ${title}`}
+        aria-pressed={pressed}
+        title={buttonTitle}
+        onClick={handleClick}
+        disabled={
+          busy ||
+          viewer.kind === "loading" ||
+          viewer.kind === "error" ||
+          (!guest && savedFlags[key] === undefined)
+        }
+      >
+        {actionIcon}
+        <span>{buttonLabel}</span>
+      </button>
+      {error && <span role="alert">{error}</span>}
+    </>
   );
 }

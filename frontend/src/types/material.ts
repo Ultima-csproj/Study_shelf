@@ -1,4 +1,3 @@
-import type { DemoMaterial } from "./demoMaterial";
 
 export type MaterialType = "lecture" | "book" | "article" | "video" | "lab";
 export type CatalogSort = "newest" | "oldest" | "title";
@@ -25,6 +24,7 @@ export interface ResponsiblePerson {
   shortName: string;
 }
 export interface EducationalPlacement {
+  id: number;
   discipline: EducationalDiscipline;
   responsible: ResponsiblePerson | null;
   course: number | null;
@@ -51,15 +51,14 @@ export interface MaterialDetail extends MaterialSummary {
 export interface CreditView extends Omit<MaterialCredit, "contributorId"> {
   contributorId: number | null;
 }
-export interface CatalogMaterial extends Omit<MaterialSummary, "credits" | "publishedRevisionId"> {
-  source: MaterialSource;
-  publishedRevisionId: number | null;
-  credits: CreditView[];
+export interface CatalogMaterial extends MaterialSummary {
+  source: "api";
 }
 
 export type PreviewKind = "presentation" | "document" | "pdf";
 export interface CourseMaterial {
-  material: DemoMaterial;
+  id: number;
+  material: CatalogMaterial;
   number: number;
   title: string;
   description: string;
@@ -72,7 +71,10 @@ export interface CourseMaterial {
   previewKind?: PreviewKind;
 }
 export interface MaterialSectionData {
-  id: "start" | "lectures" | "practice";
+  id: number;
+  position: number;
+  stepCount: number;
+  initialPageSize: number;
   title: string;
   description: string;
   mobileDescription?: string;

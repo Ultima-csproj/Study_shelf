@@ -1,9 +1,12 @@
 import { useCallback, type ReactNode } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { getLibrary } from "../../api/library";
+import {
+  getSavedMaterials,
+  getSavedCollections,
+  getContributedCollections,
+} from "../../api/library";
 import { useApiResource } from "../../hooks/useApiResource";
 import { useViewer } from "../../hooks/useViewer";
-import { CollectionListItem } from "../../components/collections/CollectionListItem/CollectionListItem";
 import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import styles from "./LibraryPage.module.css";
 import {
@@ -13,50 +16,51 @@ import {
 } from "../../utils/navigation";
 
 export function LibraryPage() {
-  const { viewer, savedMaterials, savedCollectionIds } = useViewer();
+  const { libraryVersion } = useViewer();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const parentPath = locationPath(location);
-  let tab: "saved" | "collections" = "saved";
-
-  if (params.get("tab") === "collections") {
+  const contributions = params.get("tab") === "contributions";
+  const collections = params.get("tab") === "collections" || contributions;
+  let tab = "saved";
+  if (contributions) {
+    tab = "contributions";
+  } else if (collections) {
     tab = "collections";
   }
-
-  let userId = 0;
-
-  if (viewer.kind === "authenticated") {
-    userId = viewer.user.id;
-  }
-
+  const requested = Number(params.get("page") ?? "1");
+  const page = Number.isSafeInteger(requested) && requested > 0 ? requested : 1;
   const load = useCallback(
-    (signal: AbortSignal) => {
-      return getLibrary(userId, savedMaterials, savedCollectionIds, signal);
+    async (signal: AbortSignal) => {
+      const version = libraryVersion;
+      void version;
+      if (contributions) {
+        return {
+          kind: "collections" as const,
+          page: await getContributedCollections(page, signal),
+        };
+      }
+      if (collections) {
+        return {
+          kind: "collections" as const,
+          page: await getSavedCollections(page, signal),
+        };
+      }
+      return {
+        kind: "materials" as const,
+        page: await getSavedMaterials(page, signal),
+      };
     },
-    [userId, savedMaterials, savedCollectionIds],
+    [collections, contributions, page, libraryVersion],
   );
   const { result, error, loading, retry } = useApiResource(
     load,
     "Не удалось загрузить библиотеку",
   );
-  const materials = result?.materials ?? [];
-  const savedCollections = result?.savedCollections ?? [];
-  const contributedCollections = result?.contributedCollections ?? [];
 
-  const changeTab = (next: "saved" | "collections") => {
-    setParams({ tab: next }, { replace: true, flushSync: true });
-  };
-
-  const handleSavedTabClick = () => {
-    changeTab("saved");
-  };
-
-  const handleCollectionsTabClick = () => {
-    changeTab("collections");
-  };
-
-  let content: ReactNode;
-
+  const selectTab = (tab: string) => setParams({ tab }, { replace: true });
+  const selectPage = (next: number) => setParams({ tab, page: String(next) });
+  let content: ReactNode = null;
   if (loading) {
     content = <p role="status">Загружаем библиотеку…</p>;
   } else if (error) {
@@ -64,134 +68,122 @@ export function LibraryPage() {
       <div>
         <p role="alert">{error}</p>
         <button type="button" onClick={retry}>
-          Повторить загрузку
+          Повторить
         </button>
       </div>
     );
-  } else if (tab === "saved") {
-    let emptyMaterialsMessage: ReactNode = null;
-
-    if (materials.length === 0) {
-      emptyMaterialsMessage = (
-        <div className={styles.empty}>
-          <p>Здесь появятся материалы, которые вы сохраните.</p>
-          <Link to="/catalog">Найти материалы в каталоге →</Link>
-        </div>
-      );
+  } else if (result) {
+    let items: ReactNode;
+    if (result.kind === "materials") {
+      items = result.page.items.map((slot) => {
+        const material = slot.material;
+        const path = withNavigationOrigin(
+          materialPath(slot.id, "api"),
+          parentPath,
+        );
+        return (
+          <li key={slot.id}>
+            <div>
+              {material ? (
+                <h3>
+                  <Link to={path}>{material.title}</Link>
+                </h3>
+              ) : (
+                <p>Материал недоступен</p>
+              )}
+            </div>
+            <SaveAction
+              id={slot.id}
+              title={material?.title ?? "Недоступный материал"}
+            />
+          </li>
+        );
+      });
+    } else {
+      items = result.page.items.map((slot) => {
+        const target = slot.owned
+          ? `/library/collections/${slot.id}`
+          : `/collections/${slot.id}`;
+        const path = withNavigationOrigin(target, parentPath);
+        return (
+          <li key={slot.id}>
+            <div>
+              {slot.title === null ? (
+                <p>Подборка недоступна</p>
+              ) : (
+                <h3>
+                  <Link to={path}>{slot.title}</Link>
+                </h3>
+              )}
+              <p>{slot.shortDescription}</p>
+            </div>
+            <SaveAction
+              id={slot.id}
+              title={slot.title ?? "Недоступная подборка"}
+              kind="collection"
+            />
+          </li>
+        );
+      });
     }
-
-    content = (
-      <section aria-labelledby="saved-materials-heading">
-        <h2 id="saved-materials-heading">Сохранённые материалы</h2>
-        {emptyMaterialsMessage}
-        <ul className={styles.materials}>
-          {materials.map((material) => {
-            const path = withNavigationOrigin(
-              materialPath(material.id, material.source),
-              parentPath,
-            );
-
-            return (
-              <li key={`${material.source}:${material.id}`}>
-                <div>
-                  <h3>
-                    <Link to={path}>{material.title}</Link>
-                  </h3>
-                  <p>{material.placements.map((placement) => placement.discipline.name).join(" · ")}</p>
-                </div>
-                <SaveAction
-                  id={material.id}
-                  title={material.title}
-                  source={material.source}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    );
-  } else {
-    let emptyCollectionsMessage: ReactNode = null;
-
-    if (savedCollections.length === 0) {
-      emptyCollectionsMessage = (
-        <div className={styles.empty}>
-          <p>Вы пока не сохранили ни одной подборки.</p>
-          <Link to="/collections">Посмотреть публичные подборки →</Link>
-        </div>
-      );
-    }
-
-    let contributionsSection: ReactNode = null;
-
-    if (contributedCollections.length > 0) {
-      contributionsSection = (
-        <section
-          className={styles.contributions}
-          aria-labelledby="contributed-collections-heading"
-        >
-          <h2 id="contributed-collections-heading">
-            Подборки с вашим участием
-          </h2>
-          <ul className={styles.collections}>
-            {contributedCollections.map((collection) => (
-              <CollectionListItem
-                key={collection.id}
-                collection={collection}
-              />
-            ))}
-          </ul>
-        </section>
-      );
-    }
-
     content = (
       <>
-        <section aria-labelledby="saved-collections-heading">
-          <h2 id="saved-collections-heading">Сохранённые подборки</h2>
-          {emptyCollectionsMessage}
-          <ul className={styles.collections}>
-            {savedCollections.map((collection) => (
-              <CollectionListItem key={collection.id} collection={collection} />
-            ))}
-          </ul>
-        </section>
-        {contributionsSection}
+        {result.page.total === 0 && <p>Здесь появятся ваши сохранения.</p>}
+        <ul className={styles.materials}>{items}</ul>
+        <nav aria-label="Страницы библиотеки">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => selectPage(page - 1)}
+          >
+            Назад
+          </button>
+          <span>
+            {" "}
+            Страница {page} из {Math.max(1, result.page.pageCount)} · Всего{" "}
+            {result.page.total}{" "}
+          </span>
+          <button
+            type="button"
+            disabled={page >= result.page.pageCount}
+            onClick={() => selectPage(page + 1)}
+          >
+            Далее
+          </button>
+        </nav>
       </>
     );
   }
-
-  let savedTabCurrent: "page" | undefined = undefined;
-  let collectionsTabCurrent: "page" | undefined = undefined;
-
-  if (tab === "saved") {
-    savedTabCurrent = "page";
-  }
-
-  if (tab === "collections") {
-    collectionsTabCurrent = "page";
-  }
-
   return (
     <div className={styles.page}>
       <h1>Моя библиотека</h1>
       <p className={styles.subtitle}>
         Сохранённые материалы и учебные маршруты.
       </p>
+      <Link to="/library/collections">
+        Создать и редактировать свои подборки →
+      </Link>
       <nav className={styles.tabs} aria-label="Разделы библиотеки">
         <button
           type="button"
-          aria-current={savedTabCurrent}
-          onClick={handleSavedTabClick}
+          aria-current={!collections ? "page" : undefined}
+          onClick={() => selectTab("saved")}
         >
-          Сохранённое ({savedMaterials.length})
+          Материалы
         </button>
         <button
           type="button"
-          aria-current={collectionsTabCurrent}
-          onClick={handleCollectionsTabClick}
+          aria-current={collections && !contributions ? "page" : undefined}
+          onClick={() => selectTab("collections")}
         >
-          Подборки ({savedCollectionIds.length})
+          Подборки
+        </button>
+        <button
+          type="button"
+          aria-current={contributions ? "page" : undefined}
+          onClick={() => selectTab("contributions")}
+        >
+          С моим участием
         </button>
       </nav>
       <div className={styles.content}>{content}</div>

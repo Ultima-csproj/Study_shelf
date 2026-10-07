@@ -10,6 +10,7 @@ interface PaginationProps {
   pageCount: number;
   total: number;
   pageSize: number;
+  itemLabel?: string;
   onChange: (page: number) => void;
 }
 function pageNumbers(
@@ -46,6 +47,7 @@ export function Pagination({
   pageCount,
   total,
   pageSize,
+  itemLabel = "материалов",
   onChange,
 }: PaginationProps) {
   if (!total) {
@@ -54,7 +56,7 @@ export function Pagination({
 
   const firstVisibleItem = Math.min((page - 1) * pageSize + 1, total);
   const lastVisibleItem = Math.min(page * pageSize, total);
-  let summary = `Показаны ${firstVisibleItem}–${lastVisibleItem} из ${total} материалов`;
+  let summary = `Показаны ${firstVisibleItem}–${lastVisibleItem} из ${total} ${itemLabel}`;
   if (page > pageCount) {
     summary = `На странице ${page} материалов нет. Всего: ${total}`;
   }

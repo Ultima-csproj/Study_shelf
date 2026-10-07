@@ -80,8 +80,8 @@ export function MaterialPage() {
       responsibleLabel = " · Ответственный: " + placement.responsible.name;
     }
     return (
-      <p key={discipline.id}>
-        <Link className={styles.disciplineLink} to={"/disciplines/" + discipline.slug}>
+      <p key={placement.id}>
+        <Link className={styles.disciplineLink} to={"/disciplines/" + discipline.id}>
           {discipline.name}
         </Link>
         {courseLabel}{responsibleLabel}

@@ -7,13 +7,33 @@ export interface User {
   role: UserRole;
   course: number | null;
   group: string;
+  email: string;
+  emailVerified: boolean;
+  biography: string;
+  primaryContributorId: number;
+  permissions: string[];
+  memberships: Membership[];
 }
-export type UserRole = "student" | "teacher" | "admin";
-export type Viewer = { kind: "guest" } | { kind: "authenticated"; user: User };
+export interface Membership {
+  institutionId: number;
+  institutionName: string;
+  state: "pending" | "active" | "rejected" | "revoked";
+  roles: ("student" | "teacher")[];
+  permissions: string[];
+}
+export type UserRole = "user" | "student" | "teacher" | "admin";
+export type ServerViewer =
+  | { kind: "guest" }
+  | { kind: "authenticated"; user: User };
+export type Viewer =
+  | ServerViewer
+  | { kind: "loading" }
+  | { kind: "error"; message: string };
 
 export interface ProfileInput {
   firstName: string;
   lastName: string;
   course: number | null;
   group: string;
+  biography: string;
 }

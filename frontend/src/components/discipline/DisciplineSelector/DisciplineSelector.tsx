@@ -15,8 +15,8 @@ export function DisciplineSelector({
   const navigate = useNavigate();
   const options = disciplines.map((discipline) => {
     return {
-      value: discipline.slug,
-      label: discipline.name,
+      value: String(discipline.id),
+      label: discipline.name + " · " + discipline.institution.name,
     };
   });
 

@@ -149,6 +149,7 @@
 }
 
 .form input,
+.form textarea,
 .form select {
   width: 100%;
   min-width: 0;

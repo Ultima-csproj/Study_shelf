@@ -12,10 +12,7 @@ interface MobileMenuProps {
   onClose: () => void;
 }
 
-export function MobileMenu({
-  dialogRef,
-  onClose,
-}: MobileMenuProps) {
+export function MobileMenu({ dialogRef, onClose }: MobileMenuProps) {
   const { viewer, signOut } = useViewer();
   const location = useLocation();
   const login = loginPath(location);
@@ -46,8 +43,8 @@ export function MobileMenu({
     }
   };
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     close();
   };
 
@@ -64,7 +61,7 @@ export function MobileMenu({
         </NavLink>
       </>
     );
-  } else {
+  } else if (viewer.kind === "authenticated") {
     accountNavigation = (
       <>
         <p className={styles.user}>
@@ -79,14 +76,13 @@ export function MobileMenu({
         <NavLink to="/settings" onClick={close}>
           Настройки
         </NavLink>
-        <button
-          type="button"
-          onClick={handleSignOut}
-        >
+        <button type="button" onClick={handleSignOut}>
           Выйти
         </button>
       </>
     );
+  } else {
+    accountNavigation = <p role="status">Аккаунт пока недоступен</p>;
   }
 
   return (
@@ -104,11 +100,7 @@ export function MobileMenu({
         </button>
       </div>
       <nav aria-label="Мобильная навигация">
-        <Link
-          to="/catalog"
-          aria-current={catalogCurrent}
-          onClick={close}
-        >
+        <Link to="/catalog" aria-current={catalogCurrent} onClick={close}>
           Каталог
         </Link>
         <Link

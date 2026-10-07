@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, redirect } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { CatalogPage } from "../pages/CatalogPage/CatalogPage";
 import { DisciplinePage } from "../pages/DisciplinePage/DisciplinePage";
+import { DisciplinesPage } from "../pages/DisciplinesPage/DisciplinesPage";
 import { LoginPage } from "../pages/LoginPage/LoginPage";
 import { InformationPage } from "../pages/InformationPage/InformationPage";
 import { CollectionsPage } from "../pages/CollectionsPage/CollectionsPage";
@@ -9,6 +10,8 @@ import { CollectionPage } from "../pages/CollectionPage/CollectionPage";
 import { PersonalLayout } from "../components/layout/PersonalLayout/PersonalLayout";
 import { ProfilePage } from "../pages/ProfilePage/ProfilePage";
 import { LibraryPage } from "../pages/LibraryPage/LibraryPage";
+import { PersonalCollectionsPage } from "../pages/PersonalCollectionsPage/PersonalCollectionsPage";
+import { PersonalCollectionPage } from "../pages/PersonalCollectionPage/PersonalCollectionPage";
 import { SettingsPage } from "../pages/SettingsPage/SettingsPage";
 import informationStyles from "../pages/InformationPage/InformationPage.module.css";
 
@@ -35,14 +38,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "/disciplines",
-        element: <Navigate to="/disciplines/database" replace />,
+        element: <DisciplinesPage />,
       },
       { path: "/disciplines/:disciplineId", element: <DisciplinePage /> },
       {
         path: "/materials/:materialId",
         lazy: async () => {
-          const { MaterialPage } =
-            await import("../pages/MaterialPage/MaterialPage");
+          const { MaterialPage } = await import(
+            "../pages/MaterialPage/MaterialPage"
+          );
           return { Component: MaterialPage };
         },
       },
@@ -54,6 +58,14 @@ export const router = createBrowserRouter([
         children: [
           { path: "/profile", element: <ProfilePage /> },
           { path: "/library", element: <LibraryPage /> },
+          {
+            path: "/library/collections",
+            element: <PersonalCollectionsPage />,
+          },
+          {
+            path: "/library/collections/:id",
+            element: <PersonalCollectionPage />,
+          },
           { path: "/settings", element: <SettingsPage /> },
         ],
       },

@@ -31,16 +31,14 @@ export function ProfilePage() {
   return <ProfileContent user={viewer.user} onSaved={updateUser} />;
 }
 
-function ProfileContent({
-  user,
-  onSaved,
-}: ProfileContentProps) {
+function ProfileContent({ user, onSaved }: ProfileContentProps) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState<ProfileInput>({
     firstName: user.firstName,
     lastName: user.lastName,
     course: user.course,
     group: user.group,
+    biography: user.biography,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +87,7 @@ function ProfileContent({
       lastName: user.lastName,
       course: user.course,
       group: user.group,
+      biography: user.biography,
     });
     setError(null);
     setNotice("");
@@ -151,11 +150,11 @@ function ProfileContent({
     setError(null);
 
     try {
-      const updated = await updateProfile(user, input, controller.signal);
+      const updated = await updateProfile(input, controller.signal);
 
       if (!controller.signal.aborted) {
         onSaved(updated);
-        setNotice("Изменения профиля сохранены в текущей демо-сессии.");
+        setNotice("Изменения профиля сохранены.");
         setEditing(false);
       }
     } catch (reason: unknown) {
@@ -242,10 +241,21 @@ function ProfileContent({
           <input
             id="profile-last-name"
             autoComplete="family-name"
-            required
             maxLength={64}
             value={input.lastName}
             onChange={handleLastNameChange}
+          />
+          <label htmlFor="profile-biography">О себе</label>
+          <textarea
+            id="profile-biography"
+            maxLength={2000}
+            value={input.biography}
+            onChange={(event) =>
+              setInput((current) => ({
+                ...current,
+                biography: event.target.value,
+              }))
+            }
           />
         </section>
         {studentFields}
@@ -290,6 +300,8 @@ function ProfileContent({
             <dd>{user.firstName}</dd>
             <dt>Фамилия</dt>
             <dd>{user.lastName}</dd>
+            <dt>О себе</dt>
+            <dd>{user.biography || "Не указано"}</dd>
           </dl>
         </section>
         {studentSummary}
@@ -349,6 +361,37 @@ function ProfileContent({
       </div>
       {profileNotice}
       {profileFields}
+      <section className={styles.section}>
+        <h2>Учреждения</h2>
+        {user.memberships.length === 0 && (
+          <p>
+            Пока нет подтверждённого членства. Заявку можно подать в настройках.
+          </p>
+        )}
+        <ul>
+          {user.memberships.map((membership) => {
+            const labels = {
+              active: "Подтверждено",
+              pending: "На рассмотрении",
+              rejected: "Отклонено",
+              revoked: "Отозвано",
+            };
+            const roles = membership.roles
+              .map((role) => roleLabels[role])
+              .join(", ");
+            const manager =
+              membership.state === "active" &&
+              membership.permissions.includes("manage_members");
+            return (
+              <li key={membership.institutionId}>
+                {membership.institutionName} — {labels[membership.state]}
+                {membership.state === "active" && roles && ` · ${roles}`}
+                {manager && " · Управление участниками"}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
       <Link to="/settings" className={styles.settingsLink}>
         <ArrowSquareOutIcon size={20} aria-hidden="true" />
         <span>Email, пароль и безопасность — в настройках аккаунта</span>

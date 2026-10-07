@@ -1,33 +1,14 @@
-import type { Discipline } from "./discipline";
-import type { CatalogMaterial } from "./material";
+import type { EducationalDiscipline, CatalogMaterial } from "./material";
+import type { ApiPage } from "./learning";
 
 export type CollectionRole = "author" | "curator" | "contributor";
-
-export type ContributorIdentity =
-  | { kind: "teacher"; teacherId: number; displayName: string }
-  | { kind: "user"; userId: number; displayName: string }
-  | { kind: "organization"; organizationId: number; displayName: string };
-
 export interface CollectionContributor {
-  identity: ContributorIdentity;
+  contributorId: number;
+  displayName: string;
   role: CollectionRole;
   position: number;
 }
-
-export interface CollectionItem {
-  id: number;
-  materialId: number;
-  position: number;
-}
-
-export interface CollectionSection {
-  id: string;
-  title: string;
-  position: number;
-  items: CollectionItem[];
-}
-
-export interface Collection {
+export interface CollectionSummary {
   id: number;
   slug: string;
   title: string;
@@ -35,51 +16,46 @@ export interface Collection {
   description: string;
   purpose: string;
   targetAudience: string;
-  estimatedTime: string | null;
-  difficulty: "beginner" | "intermediate" | "advanced" | null;
-  disciplineId: number | null;
+  discipline: EducationalDiscipline | null;
   course: number | null;
-  isPublic: boolean;
+  difficulty: "beginner" | "intermediate" | "advanced" | null;
+  estimatedMinutes: number | null;
   createdAt: string;
   updatedAt: string;
   contributors: CollectionContributor[];
-  sections: CollectionSection[];
+  stepCount: number;
+  uniqueMaterialCount: number;
 }
-
-export interface CollectionSummary extends Omit<Collection, "sections"> {
-  discipline: Discipline | null;
-  materialCount: number;
-}
-
-export interface CollectionItemView extends CollectionItem {
+export interface CollectionItemView {
+  id: number;
+  materialId: number;
+  position: number;
   material: CatalogMaterial;
   formatLabel: string;
   attributionLabel: string;
 }
-
-export interface CollectionSectionView extends Omit<
-  CollectionSection,
-  "items"
-> {
+export interface CollectionSectionView {
+  id: number;
+  title: string;
+  description: string;
+  position: number;
+  stepCount: number;
+  initialPageSize: number;
   items: CollectionItemView[];
 }
-
 export interface CollectionDetail extends CollectionSummary {
   sections: CollectionSectionView[];
 }
-
 export type CollectionSort = "newest" | "oldest" | "title";
-
 export interface CollectionRequest {
   query: string;
   disciplineIds: number[];
   courses: number[];
   sort: CollectionSort;
+  page: number;
+  pageSize: number;
 }
-
-export interface CollectionResponse {
-  items: CollectionSummary[];
-  total: number;
-  disciplines: Discipline[];
+export interface CollectionResponse extends ApiPage<CollectionSummary> {
+  disciplines: EducationalDiscipline[];
   courses: number[];
 }

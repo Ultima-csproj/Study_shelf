@@ -32,11 +32,12 @@ export function MaterialListItem({ material, selectedTags, onTagClick }: Materia
     const discipline = placement.discipline;
     return (
       <Link
-        key={discipline.id}
+        key={placement.id}
         className={styles.discipline}
-        to={"/disciplines/" + discipline.slug}
+        to={"/disciplines/" + discipline.id}
       >
         {discipline.name}
+        {placement.course !== null && ` · ${placement.course} курс`}
       </Link>
     );
   });

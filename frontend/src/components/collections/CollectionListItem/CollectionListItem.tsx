@@ -4,7 +4,7 @@ import { BookBookmarkIcon } from "@phosphor-icons/react/dist/csr/BookBookmark";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import type { CollectionSummary } from "../../../types/collection";
 import {
-  collectionMaterialCount,
+  collectionCounts,
   compilerNames,
 } from "../../../utils/collectionLabels";
 import styles from "./CollectionListItem.module.css";
@@ -21,11 +21,11 @@ interface CollectionListItemProps {
 export function CollectionListItem({ collection }: CollectionListItemProps) {
   const location = useLocation();
   const path = withNavigationOrigin(
-    `/collections/${collection.slug}`,
+    `/collections/${collection.id}`,
     locationPath(location),
   );
   const names = compilerNames(collection.contributors);
-  const count = collectionMaterialCount(collection.materialCount);
+  const count = collectionCounts(collection);
   let courseLabel: string | null = null;
 
   if (collection.course !== null) {
@@ -38,8 +38,8 @@ export function CollectionListItem({ collection }: CollectionListItemProps) {
     metadataParts.push(courseLabel);
   }
 
-  if (collection.estimatedTime) {
-    metadataParts.push(collection.estimatedTime);
+  if (collection.estimatedMinutes !== null) {
+    metadataParts.push(`${collection.estimatedMinutes} мин`);
   }
 
   const metadata = metadataParts.join(" · ");
