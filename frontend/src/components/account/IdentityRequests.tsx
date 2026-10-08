@@ -16,6 +16,7 @@ export function IdentityRequests() {
   const [version, setVersion] = useState(0);
   const [institution, setInstitution] = useState("");
   const [contributor, setContributor] = useState("");
+  const [evidence, setEvidence] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const load = useCallback(
@@ -58,7 +59,7 @@ export function IdentityRequests() {
       if (kind === "membership") {
         await requestMembership(id);
       } else {
-        await requestContributor(id);
+        await requestContributor(id, evidence);
       }
       setNotice("Заявка отправлена на подтверждение.");
       setVersion((value) => value + 1);
@@ -73,7 +74,7 @@ export function IdentityRequests() {
     }
   };
   return (
-    <section className={styles.section}>
+    <section id="institution-membership" className={styles.section}>
       <h2>Учреждение и авторство</h2>
       <p>
         Подтверждённые роли назначаются после рассмотрения заявки. Привязка
@@ -124,6 +125,15 @@ export function IdentityRequests() {
             required
             value={contributor}
             onChange={(event) => setContributor(event.target.value)}
+          />
+          <label htmlFor="contributor-evidence">Основание привязки</label>
+          <textarea
+            id="contributor-evidence"
+            required
+            minLength={3}
+            maxLength={2000}
+            value={evidence}
+            onChange={(event) => setEvidence(event.target.value)}
           />
           <button type="submit">Запросить привязку автора</button>
         </fieldset>

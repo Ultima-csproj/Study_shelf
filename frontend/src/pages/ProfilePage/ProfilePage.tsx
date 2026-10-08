@@ -14,6 +14,7 @@ import { useViewer } from "../../hooks/useViewer";
 import { updateProfile } from "../../api/profile";
 import { roleLabels } from "../../utils/viewerLabels";
 import type { ProfileInput, User } from "../../types/viewer";
+import { ProfileSummary } from "./ProfileSummary";
 import styles from "./ProfilePage.module.css";
 
 interface ProfileContentProps {
@@ -52,18 +53,6 @@ function ProfileContent({ user, onSaved }: ProfileContentProps) {
 
   if (input.course !== null) {
     courseValue = String(input.course);
-  }
-
-  let courseLabel = "Не указан";
-
-  if (user.course !== null) {
-    courseLabel = `${user.course} курс`;
-  }
-
-  let groupLabel = user.group;
-
-  if (!groupLabel) {
-    groupLabel = "Не указана";
   }
 
   useEffect(() => {
@@ -275,38 +264,7 @@ function ProfileContent({ user, onSaved }: ProfileContentProps) {
       </form>
     );
   } else {
-    let studentSummary: ReactNode = null;
-
-    if (student) {
-      studentSummary = (
-        <section className={styles.section}>
-          <h2>Обучение</h2>
-          <dl>
-            <dt>Курс</dt>
-            <dd>{courseLabel}</dd>
-            <dt>Группа</dt>
-            <dd>{groupLabel}</dd>
-          </dl>
-        </section>
-      );
-    }
-
-    profileFields = (
-      <>
-        <section className={styles.section}>
-          <h2>Личная информация</h2>
-          <dl>
-            <dt>Имя</dt>
-            <dd>{user.firstName}</dd>
-            <dt>Фамилия</dt>
-            <dd>{user.lastName}</dd>
-            <dt>О себе</dt>
-            <dd>{user.biography || "Не указано"}</dd>
-          </dl>
-        </section>
-        {studentSummary}
-      </>
-    );
+    profileFields = <ProfileSummary user={user} />;
   }
 
   let editProfileButton: ReactNode = null;
@@ -316,11 +274,11 @@ function ProfileContent({ user, onSaved }: ProfileContentProps) {
       <button
         ref={editButton}
         type="button"
-        className={styles.primary}
+        className={styles.secondary}
         onClick={startEditing}
       >
         <PencilSimpleIcon size={20} aria-hidden="true" />
-        Редактировать профиль
+        Изменить
       </button>
     );
   }
@@ -337,11 +295,6 @@ function ProfileContent({ user, onSaved }: ProfileContentProps) {
 
   return (
     <div className={styles.page}>
-      <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}>
-        <span>Личная зона</span>
-        <span aria-hidden="true">/</span>
-        <span>Профиль</span>
-      </nav>
       <div className={styles.heading}>
         <div>
           <h1>Мой профиль</h1>
@@ -356,18 +309,24 @@ function ProfileContent({ user, onSaved }: ProfileContentProps) {
         <div>
           <h2>{user.name}</h2>
           <p className={styles.role}>{roleLabels[user.role]}</p>
-          <p className={styles.privacy}>Информация видна только вам.</p>
+          <p className={styles.biography}>
+            {user.biography || "Пока нет описания профиля"}
+          </p>
         </div>
       </div>
       {profileNotice}
       {profileFields}
       <section className={styles.section}>
-        <h2>Учреждения</h2>
+        <h2>Мои учреждения</h2>
         {user.memberships.length === 0 && (
-          <p>
-            Пока нет подтверждённого членства. Заявку можно подать в настройках.
-          </p>
+          <p>Вы пока не состоите ни в одном учреждении.</p>
         )}
+        <Link
+          className={styles.secondary}
+          to="/settings#institution-membership"
+        >
+          Найти учреждение
+        </Link>
         <ul>
           {user.memberships.map((membership) => {
             const labels = {
@@ -394,7 +353,10 @@ function ProfileContent({ user, onSaved }: ProfileContentProps) {
       </section>
       <Link to="/settings" className={styles.settingsLink}>
         <ArrowSquareOutIcon size={20} aria-hidden="true" />
-        <span>Email, пароль и безопасность — в настройках аккаунта</span>
+        <span>
+          <strong>Безопасность аккаунта</strong>
+          <small>Почта, пароль и другие настройки</small>
+        </span>
         <ArrowRightIcon size={18} aria-hidden="true" />
       </Link>
     </div>

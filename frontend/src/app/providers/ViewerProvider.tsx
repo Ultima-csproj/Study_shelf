@@ -27,6 +27,7 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
   const [libraryVersion, setLibraryVersion] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
   const generation = useRef(0);
+  const viewerRequest = useRef(0);
   const flags = useRef<Record<string, boolean>>({});
   const queued = useRef(new Set<string>());
   const requested = useRef(new Set<string>());
@@ -36,6 +37,7 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
 
   const reset = useCallback(() => {
     generation.current += 1;
+    viewerRequest.current += 1;
     flags.current = {};
     queued.current.clear();
     requested.current.clear();
@@ -45,10 +47,10 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
   }, []);
 
   const refreshViewer = useCallback(async () => {
-    const version = ++generation.current;
+    const version = ++viewerRequest.current;
     try {
       const result = await getViewer();
-      if (version === generation.current) {
+      if (version === viewerRequest.current) {
         const user = result.kind === "authenticated" ? result.user.id : null;
         if (currentUser.current !== user) {
           reset();
@@ -58,7 +60,7 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
         setViewer(result);
       }
     } catch (reason) {
-      if (version === generation.current) {
+      if (version === viewerRequest.current) {
         authenticated.current = false;
         setViewer({
           kind: "error",
@@ -80,6 +82,7 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
     });
     return () => {
       mounted = false;
+      viewerRequest.current += 1;
       generation.current += 1;
       if (timer.current !== null) {
         clearTimeout(timer.current);

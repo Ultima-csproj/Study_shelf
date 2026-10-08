@@ -21,6 +21,6 @@ export function getIdentityRequests(signal?: AbortSignal) {
 export function requestMembership(id: number) {
   return mutateJson(`/api/me/membership-requests/${id}`, "PUT");
 }
-export function requestContributor(id: number) {
-  return mutateJson(`/api/me/contributor-requests/${id}`, "PUT");
+export function requestContributor(id: number, evidence: string) {
+  return mutateJson(`/api/me/contributor-requests/${id}`, "PUT", { evidence });
 }

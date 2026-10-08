@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
 import { BookOpenIcon } from "@phosphor-icons/react/dist/csr/BookOpen";
@@ -7,6 +7,7 @@ import { GearIcon } from "@phosphor-icons/react/dist/csr/Gear";
 import { SignOutIcon } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useViewer } from "../../../hooks/useViewer";
 import { roleLabels } from "../../../utils/viewerLabels";
+import { hasAdmin } from "../../../utils/adminAccess";
 import styles from "./AccountMenu.module.css";
 
 export function AccountMenu() {
@@ -76,19 +77,31 @@ export function AccountMenu() {
           </div>
         </div>
         <nav aria-label="Личная зона аккаунта">
-          <Link to="/profile">
+          <NavLink to="/profile">
             <UserIcon size={22} aria-hidden="true" />
             Профиль
-          </Link>
-          <Link to="/library">
+          </NavLink>
+          <NavLink to="/library">
             <BookOpenIcon size={22} aria-hidden="true" />
             Моя библиотека
-          </Link>
-          <Link to="/settings">
+          </NavLink>
+          <NavLink to="/author/materials">
+            <BookOpenIcon size={22} aria-hidden="true" />
+            Мои публикации
+          </NavLink>
+          <NavLink to="/settings">
             <GearIcon size={22} aria-hidden="true" />
             Настройки
-          </Link>
+          </NavLink>
         </nav>
+        {hasAdmin(user) && (
+          <nav className={styles.adminNav} aria-label="Управление">
+            <NavLink to="/admin">
+              <GearIcon size={22} aria-hidden="true" />
+              Управление
+            </NavLink>
+          </nav>
+        )}
         <button type="button" className={styles.signOut} onClick={signOut}>
           <SignOutIcon size={22} aria-hidden="true" />
           Выйти

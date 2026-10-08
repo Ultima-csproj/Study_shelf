@@ -5,6 +5,7 @@ import { useViewer } from "../../../hooks/useViewer";
 import { roleLabels } from "../../../utils/viewerLabels";
 import { loginPath } from "../../../utils/redirect";
 import { materialNavigationSection } from "../../../utils/navigation";
+import { hasAdmin } from "../../../utils/adminAccess";
 import styles from "./MobileMenu.module.css";
 
 interface MobileMenuProps {
@@ -76,6 +77,14 @@ export function MobileMenu({ dialogRef, onClose }: MobileMenuProps) {
         <NavLink to="/settings" onClick={close}>
           Настройки
         </NavLink>
+        <NavLink to="/author/materials" onClick={close}>
+          Мои публикации
+        </NavLink>
+        {hasAdmin(viewer.user) && (
+          <NavLink to="/admin" onClick={close}>
+            Администрирование
+          </NavLink>
+        )}
         <button type="button" onClick={handleSignOut}>
           Выйти
         </button>

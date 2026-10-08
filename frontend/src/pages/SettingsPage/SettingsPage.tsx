@@ -1,17 +1,28 @@
-import { useState, type FormEvent } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
+import { useLocation } from "react-router-dom";
 import { ThemeToggle } from "../../components/common/ThemeToggle/ThemeToggle";
 import { IdentityRequests } from "../../components/account/IdentityRequests";
 import { changePassword, logoutOthers } from "../../api/auth";
 import { useViewer } from "../../hooks/useViewer";
 import styles from "./SettingsPage.module.css";
 import formStyles from "../../components/account/AccountForm.module.css";
+const InstitutionRegistration = lazy(async () => ({
+  default: (await import("../../components/account/InstitutionRegistration"))
+    .InstitutionRegistration,
+}));
 
 export function SettingsPage() {
+  const location = useLocation();
   const { viewer, refreshViewer } = useViewer();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (location.hash === "#institution-membership" && viewer.kind === "authenticated") {
+      document.getElementById("institution-membership")?.scrollIntoView({ block: "start" });
+    }
+  }, [location.hash, viewer.kind]);
   if (viewer.kind !== "authenticated") {
     return null;
   }
@@ -54,12 +65,12 @@ export function SettingsPage() {
   return (
     <div className={styles.page}>
       <h1>Настройки</h1>
-      <section>
-        <h2>Внешний вид</h2>
-        <div className={styles.appearance}>
+      <section className={styles.appearance}>
+        <div>
+          <h2>Внешний вид</h2>
           <p>Светлая или тёмная тема</p>
-          <ThemeToggle />
         </div>
+        <ThemeToggle />
       </section>
       <section>
         <h2>Аккаунт</h2>
@@ -111,6 +122,11 @@ export function SettingsPage() {
         {notice && <p role="status">{notice}</p>}
       </section>
       <IdentityRequests />
+      <Suspense
+        fallback={<p role="status">Загружаем регистрацию учреждения…</p>}
+      >
+        <InstitutionRegistration />
+      </Suspense>
     </div>
   );
 }

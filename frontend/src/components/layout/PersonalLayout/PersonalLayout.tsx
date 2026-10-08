@@ -8,6 +8,7 @@ import styles from "./PersonalLayout.module.css";
 const links = [
   { to: "/profile", label: "Профиль", Icon: UserIcon },
   { to: "/library", label: "Моя библиотека", Icon: BookOpenIcon },
+  { to: "/author/materials", label: "Мои публикации", Icon: BookOpenIcon },
   { to: "/settings", label: "Настройки", Icon: GearIcon },
 ];
 
