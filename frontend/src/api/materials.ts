@@ -10,6 +10,7 @@ export async function getMaterial(
   signal?: AbortSignal,
   source: MaterialSource = "api",
   allowPrivate = false,
+  context = "",
 ): Promise<CatalogMaterial | null> {
   // Retired demo references never resolve to an unrelated real API material.
   if (source === "mock") {
@@ -17,7 +18,7 @@ export async function getMaterial(
   }
   try {
     const material = await getJson<MaterialDetail>(
-      "/api/materials/" + encodeURIComponent(String(id)),
+      "/api/materials/" + encodeURIComponent(String(id)) + "?" + context.replace(/^&/, ""),
       signal,
     );
     return { ...material, source: "api" };
@@ -28,7 +29,7 @@ export async function getMaterial(
       }
       try {
         const material = await getJson<MaterialDetail>(
-          "/api/me/materials/" + encodeURIComponent(String(id)),
+          "/api/me/materials/" + encodeURIComponent(String(id)) + "?" + context.replace(/^&/, ""),
           signal,
         );
         return { ...material, source: "api" };

@@ -37,9 +37,31 @@
 .availability {
   font-size: 14px;
 }
+
+.publication {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.publication time {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
 @media (max-width: 479px) {
   .summary {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+}
+.banner {
+  padding: 12px 16px;
+  background: var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary);
+}
+.description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

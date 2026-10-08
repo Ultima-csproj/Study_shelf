@@ -1,5 +1,11 @@
 import { Fragment } from "react";
-import { authorLabel, contributorRoles, exactPublication, publicationLabel } from "../../utils/materialLabels";
+import { PublicMaterialRestrictionPanel } from "../../components/materialWorkspace/PublicMaterialRestrictionPanel";
+import {
+  authorLabel,
+  contributorRoles,
+  exactPublication,
+  publicationLabel,
+} from "../../utils/materialLabels";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useMaterial } from "../../hooks/useMaterial";
 import { MaterialPreview } from "../../components/common/MaterialPreview/MaterialPreview";
@@ -67,7 +73,10 @@ export function MaterialPage() {
     metadataParts.push("Год источника: " + material.sourceYear);
   }
   const metadata = metadataParts.join(" · ");
-  const dateLabel = publicationLabel(material.firstPublishedAt, material.publishedAt);
+  const dateLabel = publicationLabel(
+    material.firstPublishedAt,
+    material.publishedAt,
+  );
   const publishedDate = exactPublication(material.publishedAt);
   const placements = material.placements.map((placement) => {
     const discipline = placement.discipline;
@@ -81,10 +90,14 @@ export function MaterialPage() {
     }
     return (
       <p key={placement.id}>
-        <Link className={styles.disciplineLink} to={"/disciplines/" + discipline.id}>
+        <Link
+          className={styles.disciplineLink}
+          to={"/disciplines/" + discipline.id}
+        >
           {discipline.name}
         </Link>
-        {courseLabel}{responsibleLabel}
+        {courseLabel}
+        {responsibleLabel}
       </p>
     );
   });
@@ -108,21 +121,46 @@ export function MaterialPage() {
         <div>
           <Badge type={material.type} />
           <h1>{material.title}</h1>
-          <p>
-            {metadata}
-          </p>
-          <time dateTime={material.publishedAt}>{dateLabel}: {publishedDate}</time>
+          <p>{metadata}</p>
+          <div className={styles.publication}>
+            <time dateTime={material.publishedAt}>
+              {dateLabel}: {publishedDate}
+            </time>
+            <SaveAction
+              id={material.id}
+              title={material.title}
+              source={material.source}
+            />
+          </div>
           {placements}
-          <SaveAction
-            id={material.id}
-            title={material.title}
-            source={material.source}
-          />
         </div>
       </div>
       <div className={common.notice}>
+        {material.lifecycle === "archived" && (
+          <p className={styles.banner}>
+            Материал в архиве. Публикация доступна по прямой ссылке.
+          </p>
+        )}
+        {material.publication === "unpublished" && (
+          <p className={styles.banner}>
+            Материал снят с публикации. Просмотр доступен вам по действующим
+            правам.
+          </p>
+        )}
+        {material.restrictions?.map((restriction) => (
+          <p key={restriction.id} className={styles.banner}>
+            Просмотр с особыми полномочиями. Ограничение:{" "}
+            {restriction.institutionName ?? "вся платформа"}. Причина:{" "}
+            {restriction.reason}
+          </p>
+        ))}
+        <p>
+          <Link to={"/materials/" + material.id + "/history" + location.search}>
+            История опубликованных редакций
+          </Link>
+        </p>
         <h2>О материале</h2>
-        <p>{material.description}</p>
+        <p className={styles.description}>{material.description}</p>
         <h2>Участники материала</h2>
         <ul>
           {material.credits.map((credit) => (
@@ -136,6 +174,9 @@ export function MaterialPage() {
           о нём.
         </p>
       </div>
+      {material.source === "api" && (
+        <PublicMaterialRestrictionPanel id={material.id} />
+      )}
     </main>
   );
 }
