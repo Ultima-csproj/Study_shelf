@@ -4,7 +4,7 @@ mod credentials;
 pub mod library;
 mod profile;
 mod requests;
-mod session;
+pub(crate) mod session;
 pub use credentials::Credential;
 pub use requests::{
     IdentityRequests, InstitutionPage, InstitutionReference, LinkRequest, MembershipRequest,

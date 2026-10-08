@@ -25,6 +25,18 @@ pub enum AccountError {
     ContributorAlreadyLinked,
     #[error("Слишком много запросов. Попробуйте позже")]
     RateLimited,
+    #[error("Нельзя лишить платформу последнего активного администратора")]
+    LastPlatformAdministrator,
+    #[error("Нельзя лишить учреждение последнего активного управляющего")]
+    LastInstitutionManager,
+    #[error("Заявка уже рассмотрена")]
+    AlreadyDecided,
+    #[error("Для этого действия нужен активный аккаунт")]
+    AccountDisabled,
+    #[error("У вас уже есть заявка на регистрацию учреждения на рассмотрении")]
+    PendingInstitutionRequest,
+    #[error("Для подтверждения привязки авторства заявитель должен указать основание")]
+    ContributorEvidenceMissing,
     #[error("{0}")]
     Storage(#[from] RepositoryError),
 }

@@ -112,6 +112,9 @@ impl PostgresAccountRepository {
                 "manage_accounts" => Ok(PlatformPermission::ManageAccounts),
                 "manage_institutions" => Ok(PlatformPermission::ManageInstitutions),
                 "manage_platform_permissions" => Ok(PlatformPermission::ManagePlatformPermissions),
+                "view_account_private_data" => Ok(PlatformPermission::ViewAccountPrivateData),
+                "restrict_public_materials" => Ok(PlatformPermission::RestrictPublicMaterials),
+                "review_restricted_materials" => Ok(PlatformPermission::ReviewRestrictedMaterials),
                 _ => Err(unknown("platform permission", p)),
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -142,6 +145,10 @@ impl PostgresAccountRepository {
                         "manage_disciplines" => Ok(InstitutionPermission::ManageDisciplines),
                         "create_materials" => Ok(InstitutionPermission::CreateMaterials),
                         "manage_materials" => Ok(InstitutionPermission::ManageMaterials),
+                        "restrict_materials" => Ok(InstitutionPermission::RestrictMaterials),
+                        "review_restricted_materials" => {
+                            Ok(InstitutionPermission::ReviewRestrictedMaterials)
+                        }
                         _ => Err(unknown("membership permission", p)),
                     })
                     .collect::<Result<Vec<_>, _>>()?;

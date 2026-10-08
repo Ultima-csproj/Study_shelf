@@ -1,4 +1,5 @@
 pub mod account;
+pub mod administration;
 pub mod catalog;
 pub mod collection;
 mod connection;

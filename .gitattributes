@@ -1,0 +1,2 @@
+# SQLx checksums depend on exact migration bytes; keep line endings stable on Windows.
+backend/crates/study-storage-postgres/migrations/*.sql text eol=lf

@@ -36,11 +36,11 @@ impl PostgresAccountRepository {
         let mut tx = session::snapshot(&self.pool).await?;
         let total = sqlx::query_scalar(
             r#"
-            SELECT
-              count(*)
-            FROM
-              institutions
-        "#,
+                SELECT
+                  count(*)
+                FROM
+                  institutions
+            "#,
         )
         .fetch_one(&mut *tx)
         .await
@@ -95,12 +95,15 @@ impl PostgresAccountRepository {
         sqlx::query(
             r#"
                 INSERT INTO
-                  institution_memberships (user_id, institution_id, state)
+                  institution_memberships (user_id, institution_id, state, requested_at)
                 VALUES
-                  ($1, $2, 'pending')
+                  ($1, $2, 'pending', clock_timestamp())
                 ON CONFLICT (user_id, institution_id) DO UPDATE
                 SET
-                  state = 'pending'
+                  state = 'pending',
+                  requested_at = clock_timestamp(),
+                  decision_reason = NULL,
+                  edit_version = institution_memberships.edit_version + 1
                 WHERE
                   institution_memberships.state IN ('rejected', 'revoked')
             "#,
@@ -113,7 +116,17 @@ impl PostgresAccountRepository {
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(())
     }
-    pub async fn request_contributor(&self, digest: &[u8], contributor: i64) -> AccountResult<()> {
+    pub async fn request_contributor(
+        &self,
+        digest: &[u8],
+        contributor: i64,
+        evidence: &str,
+    ) -> AccountResult<()> {
+        if evidence.trim().chars().count() < 3 || evidence.chars().count() > 2000 {
+            return Err(AccountError::Validation(
+                "Укажите основание привязки автора: 3–2000 символов",
+            ));
+        }
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
         let user = session::require(&mut tx, digest).await?.user_id;
         let linked: Option<Option<i64>> = sqlx::query_scalar(
@@ -141,18 +154,23 @@ impl PostgresAccountRepository {
         sqlx::query(
             r#"
                 INSERT INTO
-                  contributor_link_requests (user_id, contributor_id, state)
+                  contributor_link_requests (user_id, contributor_id, state, evidence)
                 VALUES
-                  ($1, $2, 'pending')
+                  ($1, $2, 'pending', $3)
                 ON CONFLICT (user_id, contributor_id) DO UPDATE
                 SET
-                  state = 'pending'
+                  state = 'pending',
+                  evidence = $3,
+                  decision_reason = NULL,
+                  created_at = clock_timestamp(),
+                  edit_version = contributor_link_requests.edit_version + 1
                 WHERE
-                  contributor_link_requests.state = 'rejected'
+                  contributor_link_requests.state IN ('rejected', 'pending')
             "#,
         )
         .bind(user)
         .bind(contributor)
+        .bind(evidence.trim())
         .execute(&mut *tx)
         .await
         .map_err(map_sqlx_error)?;

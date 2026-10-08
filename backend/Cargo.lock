@@ -1549,6 +1549,8 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "futures-util",
+ "serde",
+ "serde_json",
  "sqlx",
  "study-core",
  "thiserror",

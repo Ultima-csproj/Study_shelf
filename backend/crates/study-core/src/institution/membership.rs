@@ -20,6 +20,8 @@ pub enum InstitutionPermission {
     ManageDisciplines,
     CreateMaterials,
     ManageMaterials,
+    RestrictMaterials,
+    ReviewRestrictedMaterials,
 }
 
 #[derive(Debug, Clone)]
