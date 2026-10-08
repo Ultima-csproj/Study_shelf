@@ -75,16 +75,16 @@ impl PostgresAccountRepository {
                 info.validate()?;
                 sqlx::query(
                     r#"
-                    UPDATE collections
-                    SET
-                      title = $1,
-                      short_description = $2,
-                      description = $3,
-                      purpose = $4,
-                      target_audience = $5
-                    WHERE
-                      id = $6
-                "#,
+                        UPDATE collections
+                        SET
+                          title = $1,
+                          short_description = $2,
+                          description = $3,
+                          purpose = $4,
+                          target_audience = $5
+                        WHERE
+                          id = $6
+                    "#,
                 )
                 .bind(info.title.trim())
                 .bind(info.short_description)
@@ -145,14 +145,14 @@ impl PostgresAccountRepository {
                 validate_section(&title, &description)?;
                 let n = sqlx::query(
                     r#"
-                    UPDATE collection_sections
-                    SET
-                      title = $1,
-                      description = $2
-                    WHERE
-                      id = $3
-                      AND collection_id = $4
-                "#,
+                        UPDATE collection_sections
+                        SET
+                          title = $1,
+                          description = $2
+                        WHERE
+                          id = $3
+                          AND collection_id = $4
+                    "#,
                 )
                 .bind(title.trim())
                 .bind(description)
@@ -207,17 +207,17 @@ impl PostgresAccountRepository {
                 }
                 let valid: bool = sqlx::query_scalar(
                     r#"
-                    SELECT
-                      EXISTS (
                         SELECT
-                          1
-                        FROM
-                          collection_sections
-                        WHERE
-                          id = $1
-                          AND collection_id = $2
-                      )
-                "#,
+                          EXISTS (
+                            SELECT
+                              1
+                            FROM
+                              collection_sections
+                            WHERE
+                              id = $1
+                              AND collection_id = $2
+                          )
+                    "#,
                 )
                 .bind(section)
                 .bind(id)
@@ -272,12 +272,12 @@ impl PostgresAccountRepository {
             CollectionEdit::DeleteEntry { section, id: entry } => {
                 let n = sqlx::query(
                     r#"
-                    DELETE FROM collection_entries
-                    WHERE
-                      id = $1
-                      AND section_id = $2
-                      AND collection_id = $3
-                "#,
+                        DELETE FROM collection_entries
+                        WHERE
+                          id = $1
+                          AND section_id = $2
+                          AND collection_id = $3
+                    "#,
                 )
                 .bind(entry)
                 .bind(section)
@@ -310,12 +310,15 @@ impl PostgresAccountRepository {
                 validate_order(&current, &ids)?;
                 sqlx::query(
                     r#"
-            UPDATE collection_sections s
-            SET position=x.position::integer
-            FROM unnest($1::bigint[]) WITH ORDINALITY x(id,position)
-            WHERE s.id=x.id
-                AND s.collection_id=$2
-        "#,
+                        UPDATE collection_sections s
+                        SET
+                          position = x.position::integer
+                        FROM
+                          unnest($1::bigint[]) WITH ORDINALITY x (id, position)
+                        WHERE
+                          s.id = x.id
+                          AND s.collection_id = $2
+                    "#,
                 )
                 .bind(ids)
                 .bind(id)
@@ -326,17 +329,17 @@ impl PostgresAccountRepository {
             CollectionEdit::ReorderEntries { section, ids } => {
                 let valid: bool = sqlx::query_scalar(
                     r#"
-                    SELECT
-                      EXISTS (
                         SELECT
-                          1
-                        FROM
-                          collection_sections
-                        WHERE
-                          id = $1
-                          AND collection_id = $2
-                      )
-                "#,
+                          EXISTS (
+                            SELECT
+                              1
+                            FROM
+                              collection_sections
+                            WHERE
+                              id = $1
+                              AND collection_id = $2
+                          )
+                    "#,
                 )
                 .bind(section)
                 .bind(id)
@@ -348,16 +351,16 @@ impl PostgresAccountRepository {
                 }
                 let current: Vec<i64> = sqlx::query_scalar(
                     r#"
-                    SELECT
-                      id
-                    FROM
-                      collection_entries
-                    WHERE
-                      section_id = $1
-                      AND collection_id = $2
-                    ORDER BY
-                      id
-                "#,
+                        SELECT
+                          id
+                        FROM
+                          collection_entries
+                        WHERE
+                          section_id = $1
+                          AND collection_id = $2
+                        ORDER BY
+                          id
+                    "#,
                 )
                 .bind(section)
                 .bind(id)
@@ -367,13 +370,16 @@ impl PostgresAccountRepository {
                 validate_order(&current, &ids)?;
                 sqlx::query(
                     r#"
-            UPDATE collection_entries e
-            SET position=x.position::integer
-            FROM unnest($1::bigint[]) WITH ORDINALITY x(id,position)
-            WHERE e.id=x.id
-                AND e.section_id=$2
-                AND e.collection_id=$3
-        "#,
+                        UPDATE collection_entries e
+                        SET
+                          position = x.position::integer
+                        FROM
+                          unnest($1::bigint[]) WITH ORDINALITY x (id, position)
+                        WHERE
+                          e.id = x.id
+                          AND e.section_id = $2
+                          AND e.collection_id = $3
+                    "#,
                 )
                 .bind(ids)
                 .bind(section)
@@ -385,15 +391,15 @@ impl PostgresAccountRepository {
         }
         let version = sqlx::query_scalar(
             r#"
-            UPDATE collections
-            SET
-              edit_version = edit_version + 1,
-              updated_at = clock_timestamp()
-            WHERE
-              id = $1
-            RETURNING
-              edit_version
-        "#,
+                UPDATE collections
+                SET
+                  edit_version = edit_version + 1,
+                  updated_at = clock_timestamp()
+                WHERE
+                  id = $1
+                RETURNING
+                  edit_version
+            "#,
         )
         .bind(id)
         .fetch_one(&mut *tx)
