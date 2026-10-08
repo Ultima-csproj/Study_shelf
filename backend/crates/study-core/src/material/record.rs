@@ -24,6 +24,8 @@ pub struct Material {
     pub(super) created_by_user_id: UserId,
     pub(super) created_at: SystemTime,
     pub(super) visibility: MaterialVisibility,
+    pub(super) lifecycle: super::MaterialLifecycle,
+    pub(super) publication: super::PublicationState,
     pub(super) published_revision: Option<PublishedRevision>,
 }
 
@@ -47,6 +49,8 @@ impl Material {
             created_by_user_id: actor.user.id,
             created_at,
             visibility,
+            lifecycle: super::MaterialLifecycle::Active,
+            publication: super::PublicationState::Unpublished,
             published_revision: None,
         })
     }
@@ -81,7 +85,9 @@ impl Material {
     }
 
     pub fn is_publicly_available(&self) -> bool {
-        self.visibility == MaterialVisibility::Public && self.published_revision.is_some()
+        self.visibility == MaterialVisibility::Public
+            && self.publication == super::PublicationState::Published
+            && self.published_revision.is_some()
     }
 
     pub fn set_visibility(

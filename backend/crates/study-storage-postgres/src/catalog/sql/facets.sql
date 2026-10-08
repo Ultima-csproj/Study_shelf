@@ -1,3 +1,8 @@
+WITH visible_materials AS (
+    SELECT *
+    FROM public_materials
+    WHERE $1::boolean OR lifecycle = 'active'
+)
 SELECT
   'type'::text AS kind,
   NULL::bigint AS value,
@@ -5,7 +10,7 @@ SELECT
   NULL::text AS slug,
   count(*) AS material_count
 FROM
-  public_materials
+  visible_materials
 GROUP BY
   material_type
 UNION ALL
@@ -16,7 +21,7 @@ SELECT
   NULL,
   count(*)
 FROM
-  public_materials
+  visible_materials
 WHERE
   source_year IS NOT NULL
 GROUP BY
@@ -29,9 +34,11 @@ SELECT
   d.slug,
   count(DISTINCT p.id)
 FROM
-  public_materials p
+  visible_materials p
   JOIN discipline_placements x ON x.material_id = p.id
   JOIN disciplines d ON d.id = x.discipline_id
+WHERE
+  material_publicly_readable(p.id, x.institution_id)
 GROUP BY
   d.id
 UNION ALL
@@ -42,9 +49,11 @@ SELECT
   NULL,
   count(DISTINCT p.id)
 FROM
-  public_materials p
+  visible_materials p
   JOIN discipline_placements x ON x.material_id = p.id
   JOIN users u ON u.id = x.responsible_user_id
+WHERE
+  material_publicly_readable(p.id, x.institution_id)
 GROUP BY
   u.id
 UNION ALL
@@ -55,10 +64,11 @@ SELECT
   NULL,
   count(DISTINCT p.id)
 FROM
-  public_materials p
+  visible_materials p
   JOIN discipline_placements x ON x.material_id = p.id
 WHERE
   x.course IS NOT NULL
+  AND material_publicly_readable(p.id, x.institution_id)
 GROUP BY
   x.course
 ORDER BY

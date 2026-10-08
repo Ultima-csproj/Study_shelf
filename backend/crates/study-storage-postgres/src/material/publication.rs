@@ -78,7 +78,7 @@ impl PostgresMaterialRepository {
         .await
     }
 }
-async fn save_action(
+pub(super) async fn save_action(
     conn: &mut PgConnection,
     action: &ModerationAction,
 ) -> Result<(), MaterialWriteError> {
@@ -144,7 +144,8 @@ pub(super) async fn approve_in(
             SET
               state = 'published',
               published_at = $1,
-              updated_at = $1
+              updated_at = $1,
+              edit_version = edit_version + 1
             WHERE
               id = $2
               AND state = 'pending_moderation'
@@ -160,7 +161,10 @@ pub(super) async fn approve_in(
             UPDATE materials
             SET
               published_revision_id = $1,
-              first_published_at = COALESCE(first_published_at, $2)
+              first_published_at = COALESCE(first_published_at, $2),
+              publication_state = 'published',
+              visibility = 'public',
+              edit_version = edit_version + 1
             WHERE
               id = $3
               AND published_revision_id IS NOT DISTINCT FROM $4

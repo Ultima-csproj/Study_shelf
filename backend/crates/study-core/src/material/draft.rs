@@ -3,8 +3,7 @@ use std::time::SystemTime;
 use crate::ids::MaterialRevisionId;
 
 use super::{
-    Actor, Material, MaterialError, MaterialRevision, MaterialVisibility, RevisionContent,
-    RevisionState, policy,
+    Actor, Material, MaterialError, MaterialRevision, RevisionContent, RevisionState, policy,
 };
 
 impl MaterialRevision {
@@ -85,8 +84,8 @@ impl MaterialRevision {
         if !policy::can_submit_revision(actor, material, self) {
             return Err(MaterialError::PermissionDenied);
         }
-        if material.visibility() != MaterialVisibility::Public {
-            return Err(MaterialError::MaterialIsPrivate);
+        if material.lifecycle() != super::MaterialLifecycle::Active {
+            return Err(MaterialError::MaterialArchived);
         }
         self.ensure_current_base(material)?;
         self.ensure_timestamp(at)?;
@@ -95,6 +94,42 @@ impl MaterialRevision {
         self.submitted_at = Some(at);
         self.updated_at = at;
         self.state = RevisionState::PendingModeration;
+        Ok(())
+    }
+
+    pub fn withdraw(
+        &mut self,
+        actor: &Actor<'_>,
+        material: &Material,
+        at: SystemTime,
+    ) -> Result<(), MaterialError> {
+        self.ensure_material(material)?;
+        self.ensure_state(RevisionState::PendingModeration)?;
+        if !policy::can_create_revision(actor, material) {
+            return Err(MaterialError::PermissionDenied);
+        }
+        self.ensure_timestamp(at)?;
+        self.state = RevisionState::Draft;
+        self.submitted_by_user_id = None;
+        self.submitted_at = None;
+        self.updated_at = at;
+        Ok(())
+    }
+
+    pub fn discard(
+        &mut self,
+        actor: &Actor<'_>,
+        material: &Material,
+        at: SystemTime,
+    ) -> Result<(), MaterialError> {
+        self.ensure_material(material)?;
+        self.ensure_state(RevisionState::Draft)?;
+        if !policy::can_edit_revision(actor, material, self) {
+            return Err(MaterialError::PermissionDenied);
+        }
+        self.ensure_timestamp(at)?;
+        self.state = RevisionState::Discarded;
+        self.updated_at = at;
         Ok(())
     }
 }

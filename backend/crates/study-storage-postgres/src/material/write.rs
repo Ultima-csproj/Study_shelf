@@ -18,10 +18,24 @@ pub enum Entity {
 
 #[derive(Debug, Error)]
 pub enum MaterialWriteError {
+    #[error("{0}")]
+    Account(#[from] study_core::account::AccountError),
     #[error("invalid development fixture")]
     InvalidFixture,
     #[error("draft edit conflict: expected {expected}, current {current}")]
     DraftConflict { expected: i64, current: i64 },
+    #[error("Материал изменился; обновите страницу")]
+    MaterialVersionConflict,
+    #[error("У материала уже есть рабочая редакция")]
+    WorkingRevisionExists,
+    #[error("Ограничение в этой области уже действует")]
+    RestrictionExists,
+    #[error("Материал не относится к указанной области")]
+    ScopeMismatch,
+    #[error("Причина должна содержать от 3 до 2000 символов")]
+    InvalidReason,
+    #[error("Сначала отзовите редакцию из очереди модерации")]
+    PendingReviewActive,
     #[error("{0:?} not found")]
     NotFound(Entity),
     #[error("revision conflict: expected {expected:?}, current {current:?}")]

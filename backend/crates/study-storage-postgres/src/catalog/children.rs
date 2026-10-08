@@ -111,6 +111,13 @@ pub(crate) async fn populate(
                   LEFT JOIN users AS u ON u.id = p.responsible_user_id
                 WHERE
                   p.material_id = ANY ($1)
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM material_restrictions AS restriction
+                    WHERE restriction.material_id = p.material_id
+                        AND restriction.institution_id = p.institution_id
+                        AND restriction.revoked_at IS NULL
+                  )
                 ORDER BY
                   p.material_id,
                   d.id,

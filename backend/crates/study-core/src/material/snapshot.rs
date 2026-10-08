@@ -29,6 +29,8 @@ pub struct MaterialSnapshot {
     pub created_by_user_id: UserId,
     pub created_at: SystemTime,
     pub visibility: MaterialVisibility,
+    pub lifecycle: super::MaterialLifecycle,
+    pub publication: super::PublicationState,
     pub published_revision: Option<(MaterialRevisionId, SystemTime)>,
 }
 
@@ -49,12 +51,19 @@ impl Material {
                 return Err(SnapshotError::InvalidTimestamps);
             }
         }
+        if snapshot.publication == super::PublicationState::Published
+            && snapshot.published_revision.is_none()
+        {
+            return Err(SnapshotError::InvalidLifecycle);
+        }
         Ok(Self {
             id: snapshot.id,
             owner: snapshot.owner,
             created_by_user_id: snapshot.created_by_user_id,
             created_at: snapshot.created_at,
             visibility: snapshot.visibility,
+            lifecycle: snapshot.lifecycle,
+            publication: snapshot.publication,
             published_revision: snapshot
                 .published_revision
                 .map(|(id, published_at)| PublishedRevision { id, published_at }),
@@ -108,7 +117,7 @@ impl MaterialRevision {
         }
         let submitted = snapshot.submitted_at.is_some() && snapshot.submitted_by_user_id.is_some();
         let valid = match snapshot.state {
-            RevisionState::Draft => {
+            RevisionState::Draft | RevisionState::Discarded => {
                 snapshot.submitted_at.is_none()
                     && snapshot.submitted_by_user_id.is_none()
                     && snapshot.published_at.is_none()

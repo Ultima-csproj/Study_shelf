@@ -13,7 +13,7 @@ pub struct Actor<'a> {
 }
 
 impl Actor<'_> {
-    pub(super) fn has_institution_permission(
+    pub fn has_institution_permission(
         &self,
         institution_id: InstitutionId,
         permission: InstitutionPermission,
@@ -26,7 +26,7 @@ impl Actor<'_> {
             })
     }
 
-    pub(super) fn has_material_permission(
+    pub fn has_material_permission(
         &self,
         material_id: MaterialId,
         permission: MaterialPermission,

@@ -73,10 +73,9 @@ fn build(scope: SectionScope) -> Queries {
     );
     let count = format!(
         r#"
-        SELECT
-          count(*)
-          {base}
-          AND e.section_id = $2
+            SELECT
+              count(*) {base}
+              AND e.section_id = $2
         "#
     );
     Queries {

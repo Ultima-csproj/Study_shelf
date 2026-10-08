@@ -32,6 +32,8 @@ pub(super) async fn populate(
               JOIN users u ON u.id = p.responsible_user_id
             WHERE
               p.discipline_id = ANY ($1)
+              AND m.lifecycle = 'active'
+              AND material_publicly_readable(m.id, p.institution_id)
             ORDER BY
               p.discipline_id,
               u.id

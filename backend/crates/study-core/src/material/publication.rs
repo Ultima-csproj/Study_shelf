@@ -43,6 +43,8 @@ impl Material {
             id: revision.id(),
             published_at: at,
         });
+        self.visibility = super::MaterialVisibility::Public;
+        self.publication = super::PublicationState::Published;
         Ok(action)
     }
 

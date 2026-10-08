@@ -15,6 +15,7 @@ pub(crate) struct ScopeSql {
     pub person_join: &'static str,
     pub responsible: &'static str,
     pub course: &'static str,
+    pub institution_context: &'static str,
 }
 impl ScopeSql {
     pub fn new(scope: SectionScope) -> Self {
@@ -32,6 +33,7 @@ impl ScopeSql {
                     ON u.id = p.responsible_user_id",
                 responsible: "p.responsible_user_id",
                 course: "p.course",
+                institution_context: "p.institution_id",
             },
             SectionScope::Collection(id) => Self {
                 parent: id.0,
@@ -45,17 +47,25 @@ impl ScopeSql {
                     ON FALSE",
                 responsible: "NULL::bigint",
                 course: "NULL::smallint",
+                institution_context: "(SELECT owner_institution_id FROM collections WHERE id = e.collection_id)",
             },
         }
     }
     /// All inserted identifiers come from the closed SectionScope above.
     pub fn visible_entries(&self) -> String {
         format!(
-            "FROM {} e {}
+            r#"FROM {} e {}
             JOIN public_materials m
                 ON m.id = {} {}
-            WHERE e.{} = $1",
-            self.entries, self.relation, self.material, self.person_join, self.parent_column
+            WHERE e.{} = $1
+                AND m.lifecycle = 'active'
+                AND material_publicly_readable(m.id, {})"#,
+            self.entries,
+            self.relation,
+            self.material,
+            self.person_join,
+            self.parent_column,
+            self.institution_context
         )
     }
 }

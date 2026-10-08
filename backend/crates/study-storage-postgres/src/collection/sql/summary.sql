@@ -26,6 +26,8 @@ FROM
     FROM
       collection_entries e
       JOIN public_materials m ON m.id = e.material_id
+        AND m.lifecycle = 'active'
+        AND material_publicly_readable(m.id, c.owner_institution_id)
     WHERE
       e.collection_id = c.id
   ) counts ON TRUE

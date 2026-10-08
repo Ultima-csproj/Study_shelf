@@ -75,77 +75,17 @@ impl PostgresMaterialRepository {
         super::retry::run(|| {
             let content = content.clone();
             async move {
-                let at = study_core::timestamp::normalize(at)?;
                 let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-                let material = load::material(&mut tx, material_id, true)
-                    .await?
-                    .ok_or(MaterialWriteError::NotFound(Entity::Material))?;
-                let actor = access::load(
+                let stored = super::edit::replace_in(
                     &mut tx,
                     user,
-                    Some(material_id),
-                    owner_institution(material.owner()),
+                    material_id,
+                    id,
+                    expected_edit_version,
+                    content,
+                    at,
                 )
                 .await?;
-                let mut stored = load::revision(&mut tx, id, true)
-                    .await?
-                    .ok_or(MaterialWriteError::NotFound(Entity::Revision))?;
-                let changed = stored.revision.content() != &content;
-                stored
-                    .revision
-                    .replace_content(&actor.actor(), &material, content, at)?;
-                if stored.edit_version != expected_edit_version {
-                    return Err(MaterialWriteError::DraftConflict {
-                        expected: expected_edit_version,
-                        current: stored.edit_version,
-                    });
-                }
-                if !changed {
-                    tx.commit().await.map_err(map_sqlx_error)?;
-                    return Ok(stored);
-                }
-                let content = stored.revision.content();
-                let meta = &content.metadata;
-                let result = sqlx::query(
-                    r#"
-                        UPDATE material_revisions
-                        SET
-                          title = $1,
-                          description = $2,
-                          material_type = $3,
-                          source_year = $4,
-                          preview_url = $5,
-                          duration_seconds = $6,
-                          file_size_bytes = $7,
-                          updated_at = $8,
-                          edit_version = edit_version + 1
-                        WHERE
-                          id = $9
-                          AND state = 'draft'
-                          AND edit_version = $10
-                    "#,
-                )
-                .bind(&content.title)
-                .bind(&content.description)
-                .bind(content.material_type.as_db_value())
-                .bind(meta.source_year)
-                .bind(meta.preview_url.as_deref())
-                .bind(meta.duration_seconds.map(i64::from))
-                .bind(meta.file_size_bytes)
-                .bind(study_core::timestamp::to_utc(stored.revision.updated_at())?)
-                .bind(id.0)
-                .bind(expected_edit_version)
-                .execute(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
-                if result.rows_affected() != 1 {
-                    return Err(MaterialWriteError::DraftConflict {
-                        expected: expected_edit_version,
-                        current: stored.edit_version,
-                    });
-                }
-                children::save_children(&mut tx, &stored.revision).await?;
-                stored.edit_version += 1;
                 tx.commit().await.map_err(map_sqlx_error)?;
                 Ok(stored)
             }
@@ -200,7 +140,8 @@ pub(super) async fn submit_in(
               state = 'pending_moderation',
               submitted_by_user_id = $1,
               submitted_at = $2,
-              updated_at = $2
+              updated_at = $2,
+              edit_version = edit_version + 1
             WHERE
               id = $3
               AND state = 'draft'

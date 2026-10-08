@@ -16,6 +16,8 @@ pub(super) struct MaterialRow {
     pub created_by_user_id: i64,
     pub created_at: OffsetDateTime,
     pub visibility: String,
+    pub lifecycle: String,
+    pub publication_state: String,
     pub published_revision_id: Option<i64>,
     pub published_at: Option<OffsetDateTime>,
     pub published_state: Option<String>,
@@ -44,6 +46,8 @@ impl MaterialRow {
             created_by_user_id: UserId(self.created_by_user_id),
             created_at: mapping::stored_time(self.created_at)?,
             visibility: mapping::visibility(&self.visibility)?,
+            lifecycle: mapping::lifecycle(&self.lifecycle)?,
+            publication: mapping::publication(&self.publication_state)?,
             published_revision,
         })
         .map_err(|error| {

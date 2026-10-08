@@ -21,6 +21,7 @@ pub struct CatalogQuery {
     pub sort: CatalogSort,
     pub page: u32,
     pub page_size: u32,
+    pub include_archived: bool,
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -17,7 +17,10 @@ struct FacetRow {
     material_count: i64,
 }
 
-pub(super) async fn load(conn: &mut PgConnection) -> RepositoryResult<CatalogFacets> {
+pub(super) async fn load(
+    conn: &mut PgConnection,
+    include_archived: bool,
+) -> RepositoryResult<CatalogFacets> {
     let mut result = CatalogFacets {
         types: Vec::with_capacity(5),
         disciplines: Vec::new(),
@@ -25,7 +28,9 @@ pub(super) async fn load(conn: &mut PgConnection) -> RepositoryResult<CatalogFac
         courses: Vec::new(),
         years: Vec::new(),
     };
-    let mut rows = sqlx::query_as::<_, FacetRow>(include_str!("sql/facets.sql")).fetch(conn);
+    let mut rows = sqlx::query_as::<_, FacetRow>(include_str!("sql/facets.sql"))
+        .bind(include_archived)
+        .fetch(conn);
     while let Some(row) = rows.try_next().await.map_err(map_sqlx_error)? {
         let count = row.material_count;
         match row.kind.as_str() {

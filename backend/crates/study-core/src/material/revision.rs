@@ -10,6 +10,7 @@ pub enum RevisionState {
     PendingModeration,
     Published,
     Rejected,
+    Discarded,
 }
 
 #[derive(Debug, Clone)]

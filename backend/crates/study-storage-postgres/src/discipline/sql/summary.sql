@@ -29,6 +29,8 @@ FROM
     FROM
       discipline_placements p
       JOIN public_materials m ON m.id = p.material_id
+        AND m.lifecycle = 'active'
+        AND material_publicly_readable(m.id, d.institution_id)
     WHERE
       p.discipline_id = d.id
   ) placements ON TRUE
@@ -39,6 +41,8 @@ FROM
       discipline_section_entries e
       JOIN discipline_placements p ON p.id = e.placement_id
       JOIN public_materials m ON m.id = p.material_id
+        AND m.lifecycle = 'active'
+        AND material_publicly_readable(m.id, d.institution_id)
     WHERE
       e.discipline_id = d.id
   ) entries ON TRUE

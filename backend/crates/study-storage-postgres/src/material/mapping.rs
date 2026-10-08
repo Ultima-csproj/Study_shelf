@@ -15,12 +15,31 @@ pub(crate) fn visibility(value: &str) -> RepositoryResult<MaterialVisibility> {
         _ => Err(crate::error::unknown("visibility", value)),
     }
 }
+
+pub(crate) fn lifecycle(value: &str) -> RepositoryResult<study_core::material::MaterialLifecycle> {
+    use study_core::material::MaterialLifecycle;
+    match value {
+        "active" => Ok(MaterialLifecycle::Active),
+        "archived" => Ok(MaterialLifecycle::Archived),
+        _ => Err(crate::error::unknown("material lifecycle", value)),
+    }
+}
+
+pub(crate) fn publication(value: &str) -> RepositoryResult<study_core::material::PublicationState> {
+    use study_core::material::PublicationState;
+    match value {
+        "published" => Ok(PublicationState::Published),
+        "unpublished" => Ok(PublicationState::Unpublished),
+        _ => Err(crate::error::unknown("publication state", value)),
+    }
+}
 pub(crate) fn state(value: &str) -> RepositoryResult<RevisionState> {
     match value {
         "draft" => Ok(RevisionState::Draft),
         "pending_moderation" => Ok(RevisionState::PendingModeration),
         "published" => Ok(RevisionState::Published),
         "rejected" => Ok(RevisionState::Rejected),
+        "discarded" => Ok(RevisionState::Discarded),
         _ => Err(crate::error::unknown("revision state", value)),
     }
 }

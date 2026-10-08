@@ -52,7 +52,7 @@ impl CatalogRepository for PostgresCatalogRepository {
             }
         }
         children::populate(&mut tx, &mut items).await?;
-        let facets = facets::load(&mut tx).await?;
+        let facets = facets::load(&mut tx, query.include_archived).await?;
         let page_count =
             u32::try_from(total.div_ceil(u64::from(query.page_size))).map_err(|error| {
                 RepositoryError::invalid_data_with_source("page count overflow", error)

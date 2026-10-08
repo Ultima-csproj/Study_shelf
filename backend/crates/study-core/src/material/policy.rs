@@ -32,8 +32,10 @@ pub fn can_manage_material(actor: &Actor<'_>, material: &Material) -> bool {
 }
 
 pub fn can_create_revision(actor: &Actor<'_>, material: &Material) -> bool {
-    can_manage_material(actor, material)
-        || actor.has_material_permission(material.id(), MaterialPermission::EditRevision)
+    material.lifecycle() == super::MaterialLifecycle::Active
+        && (can_manage_material(actor, material)
+            || actor.has_material_permission(material.id(), MaterialPermission::EditRevision)
+            || is_institution_author(actor, material))
 }
 
 pub fn can_edit_revision(
@@ -63,7 +65,13 @@ pub fn can_submit_revision(
 ) -> bool {
     revision.material_id() == material.id()
         && revision.state() == RevisionState::Draft
+        && can_submit_material(actor, material)
+}
+
+pub fn can_submit_material(actor: &Actor<'_>, material: &Material) -> bool {
+    material.lifecycle() == super::MaterialLifecycle::Active
         && (can_manage_material(actor, material)
+            || is_institution_author(actor, material)
             || actor
                 .has_material_permission(material.id(), MaterialPermission::SubmitForModeration))
 }
@@ -75,7 +83,7 @@ pub fn can_moderate_revision(
 ) -> bool {
     revision.material_id() == material.id()
         && revision.state() == RevisionState::PendingModeration
-        && material.visibility() == super::MaterialVisibility::Public
+        && material.lifecycle() == super::MaterialLifecycle::Active
         && actor
             .user
             .has_permission(PlatformPermission::ModeratePublicMaterials)
@@ -88,7 +96,7 @@ pub fn can_read_material(actor: Option<&Actor<'_>>, material: &Material) -> bool
     can_read_nonpublic_material(actor, material)
 }
 
-/// Public material access must not expose its draft or a historical revision by ID.
+/// Public history exposes published revisions; working revisions require separate access.
 pub fn can_read_revision(
     actor: Option<&Actor<'_>>,
     material: &Material,
@@ -97,21 +105,19 @@ pub fn can_read_revision(
     if revision.material_id() != material.id() {
         return false;
     }
-    if material.is_publicly_available()
-        && revision.state() == RevisionState::Published
-        && material.published_revision_id() == Some(revision.id())
-    {
+    if material.is_publicly_available() && revision.state() == RevisionState::Published {
         return true;
     }
     can_read_nonpublic_material(actor, material)
         || actor.is_some_and(|actor| can_moderate_revision(actor, material, revision))
 }
 
-fn can_read_nonpublic_material(actor: Option<&Actor<'_>>, material: &Material) -> bool {
+pub fn can_read_nonpublic_material(actor: Option<&Actor<'_>>, material: &Material) -> bool {
     let Some(actor) = actor else {
         return false;
     };
     can_manage_material(actor, material)
+        || is_institution_author(actor, material)
         || [
             MaterialPermission::Read,
             MaterialPermission::EditRevision,
@@ -120,4 +126,16 @@ fn can_read_nonpublic_material(actor: Option<&Actor<'_>>, material: &Material) -
         ]
         .into_iter()
         .any(|permission| actor.has_material_permission(material.id(), permission))
+}
+
+fn is_institution_author(actor: &Actor<'_>, material: &Material) -> bool {
+    if material.created_by_user_id() != actor.user.id {
+        return false;
+    }
+    match material.owner() {
+        MaterialOwner::Institution(id) => {
+            actor.has_institution_permission(id, InstitutionPermission::CreateMaterials)
+        }
+        MaterialOwner::User(_) => false,
+    }
 }

@@ -23,6 +23,8 @@ pub enum MaterialError {
         published_revision_id: Option<MaterialRevisionId>,
     },
     MaterialIsPrivate,
+    MaterialArchived,
+    NoPublishedRevision,
     InvalidContent(super::ContentError),
     InvalidTimestamp,
 }
@@ -56,6 +58,12 @@ impl fmt::Display for MaterialError {
             ),
             Self::MaterialIsPrivate => {
                 formatter.write_str("cannot publicly publish a private material")
+            }
+            Self::MaterialArchived => {
+                formatter.write_str("Материал в архиве; сначала восстановите его")
+            }
+            Self::NoPublishedRevision => {
+                formatter.write_str("У материала ещё нет опубликованной редакции")
             }
             Self::InvalidContent(error) => fmt::Display::fmt(error, formatter),
             Self::InvalidTimestamp => {

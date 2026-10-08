@@ -3,6 +3,8 @@ FROM
   LEFT JOIN material_search s ON s.material_id = p.id
   AND s.revision_id = p.published_revision_id
 WHERE
+  ($8::boolean OR p.lifecycle = 'active')
+  AND
   (
     $1::text = ''
     OR NOT EXISTS (
@@ -32,6 +34,7 @@ WHERE
         discipline_placements x
       WHERE
         x.material_id = p.id
+        AND material_publicly_readable(p.id, x.institution_id)
         AND (
           cardinality($3::bigint[]) = 0
           OR x.discipline_id = ANY ($3)

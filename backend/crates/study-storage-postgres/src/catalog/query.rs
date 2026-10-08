@@ -14,6 +14,7 @@ pub(super) struct PreparedFilter<'a> {
     courses: Vec<i16>,
     years: &'a [i32],
     tags: &'a [String],
+    include_archived: bool,
 }
 impl<'a> PreparedFilter<'a> {
     pub fn new(query: &'a CatalogQuery) -> Self {
@@ -33,6 +34,7 @@ impl<'a> PreparedFilter<'a> {
                 .collect(),
             years: &query.years,
             tags: &query.tags,
+            include_archived: query.include_archived,
         }
     }
     pub fn bind<'b, O>(
@@ -47,6 +49,7 @@ impl<'a> PreparedFilter<'a> {
             .bind(&self.courses)
             .bind(self.years)
             .bind(self.tags)
+            .bind(self.include_archived)
     }
     pub fn bind_as<'b, O>(
         &'b self,
@@ -60,6 +63,7 @@ impl<'a> PreparedFilter<'a> {
             .bind(&self.courses)
             .bind(self.years)
             .bind(self.tags)
+            .bind(self.include_archived)
     }
 }
 const FILTER: &str = include_str!("sql/filter.sql");
@@ -80,9 +84,9 @@ static NEWEST: LazyLock<String> = LazyLock::new(|| {
               p.published_at DESC,
               p.id
             LIMIT
-              $8
-            OFFSET
               $9
+            OFFSET
+              $10
         "#
     )
 });
@@ -95,9 +99,9 @@ static OLDEST: LazyLock<String> = LazyLock::new(|| {
               p.published_at,
               p.id
             LIMIT
-              $8
-            OFFSET
               $9
+            OFFSET
+              $10
         "#
     )
 });
@@ -110,9 +114,9 @@ static TITLE: LazyLock<String> = LazyLock::new(|| {
               s.sort_title NULLS LAST,
               p.id
             LIMIT
-              $8
-            OFFSET
               $9
+            OFFSET
+              $10
         "#
     )
 });
