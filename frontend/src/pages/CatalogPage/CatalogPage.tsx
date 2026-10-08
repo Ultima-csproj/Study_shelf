@@ -109,6 +109,14 @@ export function CatalogPage() {
               <p aria-live="polite">{resultLabel}</p>
             </div>
             <CatalogSearch value={filters.query} onChange={changeQuery} />
+            <label className={styles.archiveToggle}>
+              <input
+                type="checkbox"
+                checked={filters.includeArchived}
+                onChange={(event) => changeFilters({ ...filters, includeArchived: event.target.checked })}
+              />
+              Включить архивные материалы
+            </label>
             <CatalogToolbar
               filters={filters}
               facets={result.facets}

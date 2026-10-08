@@ -81,3 +81,10 @@
     font-size: 14px;
   }
 }
+.archiveToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  color: var(--color-text-secondary);
+}

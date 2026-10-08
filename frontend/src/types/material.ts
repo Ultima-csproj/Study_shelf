@@ -46,12 +46,18 @@ export interface MaterialSummary {
   fileSizeBytes: number | null;
 }
 export interface MaterialDetail extends MaterialSummary {
+  lifecycle: "active" | "archived";
+  publication: "published" | "unpublished";
+  restrictions: { id: number; institutionId: number | null; institutionName: string | null; reason: string; createdAt: string }[];
   // File/body access is introduced in its own backend stage.
 }
 export interface CreditView extends Omit<MaterialCredit, "contributorId"> {
   contributorId: number | null;
 }
 export interface CatalogMaterial extends MaterialSummary {
+  lifecycle?: MaterialDetail["lifecycle"];
+  publication?: MaterialDetail["publication"];
+  restrictions?: MaterialDetail["restrictions"];
   source: "api";
 }
 
@@ -81,6 +87,7 @@ export interface MaterialSectionData {
   items: CourseMaterial[];
 }
 export interface CatalogFilters {
+  includeArchived: boolean;
   query: string;
   types: MaterialType[];
   disciplineIds: number[];

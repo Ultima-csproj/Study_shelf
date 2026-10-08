@@ -7,6 +7,7 @@ import type {
 } from "../types/material";
 
 export const emptyFilters: CatalogFilters = {
+  includeArchived: false,
   query: "",
   types: [],
   disciplineIds: [],

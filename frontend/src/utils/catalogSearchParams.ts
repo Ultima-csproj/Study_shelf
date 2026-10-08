@@ -17,6 +17,7 @@ export function readCatalogParams(params: URLSearchParams): CatalogRequest {
   const disciplineIds = numbers(params, "discipline");
   return {
     filters: {
+      includeArchived: params.get("includeArchived") === "true",
       query: params.get("q") ?? "",
       types: types.filter((type) => params.getAll("type").includes(type)),
       disciplineIds,
@@ -36,6 +37,9 @@ export function writeCatalogParams(
   page = 1,
 ) {
   const params = new URLSearchParams();
+  if (filters.includeArchived) {
+    params.set("includeArchived", "true");
+  }
   if (filters.query) {
     params.set("q", filters.query);
   }

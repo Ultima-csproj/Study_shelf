@@ -19,6 +19,9 @@ export async function getCatalog(
     page: String(page),
     pageSize: String(pageSize),
   });
+  if (filters.includeArchived) {
+    params.set("includeArchived", "true");
+  }
 
   if (filters.query.trim()) {
     params.set("q", filters.query.trim());
