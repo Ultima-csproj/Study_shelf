@@ -10,7 +10,8 @@ export function useApiResource<T>(
     attempt: number;
     result: T | null;
     error: string | null;
-  }>({ load: null, attempt: -1, result: null, error: null });
+    failure: unknown;
+  }>({ load: null, attempt: -1, result: null, error: null, failure: null });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -18,13 +19,13 @@ export function useApiResource<T>(
     load(controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
-          setState({ load, attempt, result, error: null });
+          setState({ load, attempt, result, error: null, failure: null });
         }
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
           const error = reason instanceof Error ? reason.message : errorMessage;
-          setState({ load, attempt, result: null, error });
+          setState({ load, attempt, result: null, error, failure: reason });
         }
       });
 
@@ -41,5 +42,6 @@ export function useApiResource<T>(
     setAttempt((current) => current + 1);
   };
 
-  return { result, error, loading: !settled, retry };
+  const failure = settled ? state.failure : null;
+  return { result, error, failure, loading: !settled, retry };
 }

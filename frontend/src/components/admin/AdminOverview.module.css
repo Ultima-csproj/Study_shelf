@@ -1,0 +1,89 @@
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.metric {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.metric > span {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.metric strong {
+  color: var(--color-text);
+  font-size: 32px;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.metric small {
+  color: var(--color-primary-text);
+  font-size: 12px;
+}
+.metric:hover {
+  background: var(--color-subtle);
+  border-color: var(--color-control-border);
+}
+.attention {
+  display: grid;
+  gap: 12px;
+  margin: 30px 0;
+  scroll-margin-top: 24px;
+}
+.attention h2 {
+  margin-bottom: 4px;
+}
+.task {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.task strong {
+  color: var(--color-text);
+  font-size: 15px;
+}
+.task p,
+.quiet {
+  color: var(--color-text-secondary);
+  margin: 5px 0 8px;
+}
+.task div > span {
+  font-size: 13px;
+  color: var(--color-primary-text);
+}
+.task:hover {
+  background: var(--color-subtle);
+}
+.count {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 5px;
+  color: var(--color-primary-text);
+  background: var(--color-primary-soft);
+  font-weight: 600;
+}
+@media (max-width: 500px) {
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .metric {
+    padding: 16px;
+  }
+  .task {
+    padding: 16px;
+  }
+}
