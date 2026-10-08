@@ -29,6 +29,22 @@ enum ApiErrorCode {
     VersionConflict,
     ContributorAlreadyLinked,
     RateLimited,
+    LastPlatformAdministrator,
+    LastInstitutionManager,
+    AlreadyDecided,
+    AccountDisabled,
+    PendingInstitutionRequest,
+    ContributorEvidenceMissing,
+    MaterialVersionConflict,
+    WorkingRevisionExists,
+    RestrictionExists,
+    ScopeMismatch,
+    InvalidReason,
+    PendingReviewActive,
+    RevisionConflict,
+    InvalidRevisionState,
+    MaterialArchived,
+    NoPublishedRevision,
 }
 
 #[derive(Serialize)]
@@ -119,6 +135,23 @@ impl From<study_core::account::AccountError> for ApiError {
                 (StatusCode::CONFLICT, ApiErrorCode::ContributorAlreadyLinked)
             }
             E::RateLimited => (StatusCode::TOO_MANY_REQUESTS, ApiErrorCode::RateLimited),
+            E::LastPlatformAdministrator => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::LastPlatformAdministrator,
+            ),
+            E::LastInstitutionManager => {
+                (StatusCode::CONFLICT, ApiErrorCode::LastInstitutionManager)
+            }
+            E::AlreadyDecided => (StatusCode::CONFLICT, ApiErrorCode::AlreadyDecided),
+            E::AccountDisabled => (StatusCode::CONFLICT, ApiErrorCode::AccountDisabled),
+            E::PendingInstitutionRequest => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::PendingInstitutionRequest,
+            ),
+            E::ContributorEvidenceMissing => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::ContributorEvidenceMissing,
+            ),
         };
         Self {
             status,
@@ -170,5 +203,96 @@ impl IntoResponse for ApiError {
         };
 
         (status, Json(body)).into_response()
+    }
+}
+
+impl From<study_storage_postgres::material::MaterialWriteError> for ApiError {
+    fn from(error: study_storage_postgres::material::MaterialWriteError) -> Self {
+        use study_core::material::MaterialError as D;
+        use study_storage_postgres::material::MaterialWriteError as E;
+        let (status, code, message) = match error {
+            E::Account(error) => return error.into(),
+            E::Storage(error) => return error.into(),
+            E::Timestamp(error) => return Self::internal(error),
+            E::InvalidFixture => return Self::bad_request("Некорректные fixture данные"),
+            E::NotFound(_) => {
+                return Self::not_found("Материал или редакция не найдены либо недоступны");
+            }
+            E::DraftConflict { .. } => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::VersionConflict,
+                "Черновик изменился. Обновите данные".to_owned(),
+            ),
+            E::MaterialVersionConflict => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::MaterialVersionConflict,
+                "Материал изменился. Обновите данные".to_owned(),
+            ),
+            E::WorkingRevisionExists => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::WorkingRevisionExists,
+                "У материала уже есть рабочая редакция".to_owned(),
+            ),
+            E::RestrictionExists => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::RestrictionExists,
+                "Ограничение в этой области уже действует".to_owned(),
+            ),
+            E::ScopeMismatch => (
+                StatusCode::BAD_REQUEST,
+                ApiErrorCode::ScopeMismatch,
+                "Материал не относится к указанной области".to_owned(),
+            ),
+            E::InvalidReason => (
+                StatusCode::BAD_REQUEST,
+                ApiErrorCode::InvalidReason,
+                "Причина: от 3 до 2000 символов".to_owned(),
+            ),
+            E::PendingReviewActive => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::PendingReviewActive,
+                "Сначала отзовите редакцию из очереди модерации".to_owned(),
+            ),
+            E::RevisionConflict { .. } => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::RevisionConflict,
+                "Опубликованная база изменилась. Пересмотрите черновик на новой базе".to_owned(),
+            ),
+            E::Domain(D::PermissionDenied) => (
+                StatusCode::FORBIDDEN,
+                ApiErrorCode::Forbidden,
+                "Недостаточно прав для этого действия".to_owned(),
+            ),
+            E::Domain(D::InvalidRevisionState { .. }) => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::InvalidRevisionState,
+                "Состояние редакции изменилось либо действие недопустимо".to_owned(),
+            ),
+            E::Domain(D::MaterialArchived) => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::MaterialArchived,
+                "Сначала восстановите материал из архива".to_owned(),
+            ),
+            E::Domain(D::NoPublishedRevision) => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::NoPublishedRevision,
+                "У материала ещё нет опубликованной редакции".to_owned(),
+            ),
+            E::Domain(D::MaterialIsPrivate) => (
+                StatusCode::CONFLICT,
+                ApiErrorCode::InvalidRevisionState,
+                "Для публичного доступа отправьте новую редакцию на модерацию".to_owned(),
+            ),
+            E::Domain(error) => (
+                StatusCode::BAD_REQUEST,
+                ApiErrorCode::BadRequest,
+                error.to_string(),
+            ),
+        };
+        Self {
+            status,
+            code,
+            message,
+        }
     }
 }

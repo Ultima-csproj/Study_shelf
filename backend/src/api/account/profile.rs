@@ -153,40 +153,26 @@ pub async fn contributor(
     State(state): State<AppState>,
     actor: Authenticated,
     Path(id): Path<i64>,
+    AccountJson(body): AccountJson<ContributorEvidence>,
 ) -> Result<StatusCode, ApiError> {
     state
         .auth
         .repository
-        .request_contributor(&actor.digest, id)
+        .request_contributor(&actor.digest, id, &body.evidence)
         .await?;
     Ok(StatusCode::NO_CONTENT)
 }
-pub async fn material(
-    State(state): State<AppState>,
-    actor: Authenticated,
-    Path(id): Path<i64>,
-) -> Result<Response, ApiError> {
-    let item = state
-        .auth
-        .repository
-        .material(&actor.digest, id)
-        .await?
-        .ok_or(AccountError::NotFound)?;
-    let dto = crate::api::catalog::dto::material::MaterialDetailDto::try_from(item)
-        .map_err(ApiError::internal)?;
-    let mut response = Json(dto).into_response();
-    response.headers_mut().insert(
-        axum::http::header::CACHE_CONTROL,
-        axum::http::HeaderValue::from_static("private, no-store"),
-    );
-    Ok(response)
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ContributorEvidence {
+    evidence: String,
 }
-
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 pub struct InstitutionDto {
     id: i64,
     name: String,
 }
+
 pub async fn institutions(
     State(state): State<AppState>,
     axum::extract::Query(p): axum::extract::Query<super::library::Pagination>,

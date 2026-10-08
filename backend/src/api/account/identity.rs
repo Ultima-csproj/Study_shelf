@@ -16,15 +16,19 @@ pub enum AcademicRoleBody {
     Teacher,
 }
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MembershipDecision {
     role: AcademicRoleBody,
     accept: bool,
+    expected_version: i64,
+    reason: String,
 }
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LinkDecision {
     accept: bool,
+    expected_version: i64,
+    reason: String,
 }
 pub async fn membership(
     State(state): State<AppState>,
@@ -33,13 +37,22 @@ pub async fn membership(
     AccountJson(body): AccountJson<MembershipDecision>,
 ) -> Result<StatusCode, ApiError> {
     let role = match body.role {
-        AcademicRoleBody::Student => "student",
-        AcademicRoleBody::Teacher => "teacher",
+        AcademicRoleBody::Student => study_core::institution::AcademicRole::Student,
+        AcademicRoleBody::Teacher => study_core::institution::AcademicRole::Teacher,
     };
     state
-        .auth
-        .repository
-        .review_membership(&actor.digest, user, institution, role, body.accept)
+        .administration
+        .decide_membership(
+            study_storage_postgres::administration::AdminOrigin::Session(&actor.digest),
+            user,
+            institution,
+            study_storage_postgres::administration::MembershipDecision {
+                expected: Some(body.expected_version),
+                role,
+                accept: body.accept,
+                reason: &body.reason,
+            },
+        )
         .await?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -50,9 +63,15 @@ pub async fn contributor(
     AccountJson(body): AccountJson<LinkDecision>,
 ) -> Result<StatusCode, ApiError> {
     state
-        .auth
-        .repository
-        .review_contributor(&actor.digest, user, contributor, body.accept)
+        .administration
+        .decide_contributor(
+            study_storage_postgres::administration::AdminOrigin::Session(&actor.digest),
+            user,
+            contributor,
+            Some(body.expected_version),
+            body.accept,
+            &body.reason,
+        )
         .await?;
     Ok(StatusCode::NO_CONTENT)
 }

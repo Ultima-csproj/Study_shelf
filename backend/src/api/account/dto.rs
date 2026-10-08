@@ -40,6 +40,9 @@ impl From<AccountProfile> for ProfileDto {
                 PlatformPermission::ManageAccounts => "manage_accounts",
                 PlatformPermission::ManageInstitutions => "manage_institutions",
                 PlatformPermission::ManagePlatformPermissions => "manage_platform_permissions",
+                PlatformPermission::ViewAccountPrivateData => "view_account_private_data",
+                PlatformPermission::RestrictPublicMaterials => "restrict_public_materials",
+                PlatformPermission::ReviewRestrictedMaterials => "review_restricted_materials",
             })
             .collect();
         let mut role = "user";
@@ -107,6 +110,10 @@ impl From<AccountProfile> for ProfileDto {
                             InstitutionPermission::ManageDisciplines => "manage_disciplines",
                             InstitutionPermission::CreateMaterials => "create_materials",
                             InstitutionPermission::ManageMaterials => "manage_materials",
+                            InstitutionPermission::RestrictMaterials => "restrict_materials",
+                            InstitutionPermission::ReviewRestrictedMaterials => {
+                                "review_restricted_materials"
+                            }
                         })
                         .collect(),
                 })

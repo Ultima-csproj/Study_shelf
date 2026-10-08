@@ -1,7 +1,9 @@
 mod account;
+mod administration;
 mod catalog;
 pub mod error;
 mod learning;
+mod material_workspace;
 pub mod state;
 
 use axum::{
@@ -28,6 +30,144 @@ async fn health() -> Json<HealthResponse> {
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/api/health", get(health))
+        .route(
+            "/api/me/author-materials",
+            get(material_workspace::author_list).post(material_workspace::create),
+        )
+        .route(
+            "/api/admin/materials/pending",
+            get(material_workspace::moderation_list),
+        )
+        .route(
+            "/api/admin/materials/restricted",
+            get(material_workspace::restricted_list),
+        )
+        .route(
+            "/api/admin/materials/{id}/restriction-target",
+            get(material_workspace::restriction_target),
+        )
+        .route(
+            "/api/me/materials/{id}/workspace",
+            get(material_workspace::workspace),
+        )
+        .route(
+            "/api/me/materials/{id}/drafts",
+            post(material_workspace::fork),
+        )
+        .route(
+            "/api/me/materials/{id}/revisions/{revision}",
+            get(material_workspace::revision).put(material_workspace::save),
+        )
+        .route(
+            "/api/me/materials/{id}/revisions/{revision}/transition",
+            post(material_workspace::transition),
+        )
+        .route(
+            "/api/me/materials/{id}/state",
+            post(material_workspace::material_state),
+        )
+        .route(
+            "/api/me/materials/{id}/restrictions",
+            post(material_workspace::restrict).get(material_workspace::restriction_metadata),
+        )
+        .route(
+            "/api/me/materials/{id}/restrictions/{restriction}/revoke",
+            post(material_workspace::unrestrict),
+        )
+        .route(
+            "/api/me/materials/{id}/collaborators",
+            get(material_workspace::collaborators),
+        )
+        .route(
+            "/api/me/materials/{id}/collaborators/{user}",
+            put(material_workspace::set_collaborator),
+        )
+        .route(
+            "/api/me/materials/{id}/events",
+            get(material_workspace::events),
+        )
+        .route(
+            "/api/me/materials/{id}/placements/{placement}/detach",
+            post(material_workspace::detach_placement),
+        )
+        .route(
+            "/api/me/materials/{id}/placements/{placement}/entries",
+            get(material_workspace::placement_entries),
+        )
+        .route(
+            "/api/me/materials/{id}/entries/{entry}/detach",
+            post(material_workspace::detach_entry),
+        )
+        .route(
+            "/api/materials/{id}/history",
+            get(material_workspace::history_public),
+        )
+        .route(
+            "/api/me/materials/{id}/history",
+            get(material_workspace::history_authenticated),
+        )
+        .route(
+            "/api/materials/{id}/history/{revision}",
+            get(material_workspace::history_revision_public),
+        )
+        .route(
+            "/api/me/materials/{id}/history/{revision}",
+            get(material_workspace::history_revision_authenticated),
+        )
+        .route("/api/admin/access", get(administration::access))
+        .route("/api/admin/overview", get(administration::overview))
+        .route("/api/admin/users", get(administration::users))
+        .route("/api/admin/users/{id}", get(administration::user))
+        .route(
+            "/api/admin/users/{id}/state",
+            post(administration::user_state),
+        )
+        .route(
+            "/api/admin/users/{id}/sessions/revoke",
+            post(administration::revoke_sessions),
+        )
+        .route(
+            "/api/admin/users/{id}/permissions",
+            put(administration::platform_permissions),
+        )
+        .route("/api/admin/institutions", get(administration::institutions))
+        .route(
+            "/api/admin/institutions/{id}",
+            get(administration::institution).patch(administration::rename),
+        )
+        .route(
+            "/api/admin/institutions/{id}/members",
+            get(administration::members),
+        )
+        .route(
+            "/api/admin/institutions/{institution}/members/{user}",
+            put(administration::membership),
+        )
+        .route(
+            "/api/admin/institutions/{institution}/requests/{user}/decision",
+            post(administration::decide_membership),
+        )
+        .route(
+            "/api/admin/requests/contributors",
+            get(administration::contributor_requests),
+        )
+        .route(
+            "/api/admin/requests/contributors/{contributor}/{user}/decision",
+            post(administration::decide_contributor),
+        )
+        .route(
+            "/api/admin/requests/institutions",
+            get(administration::institution_requests),
+        )
+        .route(
+            "/api/admin/requests/institutions/{id}/decision",
+            post(administration::decide_institution),
+        )
+        .route("/api/admin/audit", get(administration::audit))
+        .route(
+            "/api/me/institution-requests",
+            get(administration::own_institution_requests).post(administration::request_institution),
+        )
         .route("/api/auth/csrf", get(account::auth::csrf))
         .route("/api/auth/register", post(account::auth::register))
         .route("/api/auth/login", post(account::auth::login))
@@ -64,7 +204,10 @@ pub fn router(state: AppState) -> Router {
             "/api/me/contributor-requests/{id}",
             put(account::profile::contributor),
         )
-        .route("/api/me/materials/{id}", get(account::profile::material))
+        .route(
+            "/api/me/materials/{id}",
+            get(material_workspace::published_authenticated),
+        )
         .route(
             "/api/me/library/materials",
             get(account::library::materials),
@@ -95,7 +238,10 @@ pub fn router(state: AppState) -> Router {
             get(account::collections::entries),
         )
         .route("/api/catalog", get(catalog::list))
-        .route("/api/materials/{id}", get(catalog::get_by_id))
+        .route(
+            "/api/materials/{id}",
+            get(material_workspace::published_public),
+        )
         .route("/api/disciplines", get(learning::discipline::list))
         .route("/api/disciplines/{id}", get(learning::discipline::detail))
         .route(

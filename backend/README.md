@@ -95,7 +95,7 @@ Detail содержит summary, sections с первыми 10 пунктами 
 
 400 — invalid query, 404 — нет публичной сущности/раздела, 405 — метод, 503 — unavailable/retryable storage, 500 — invalid data/unexpected. JSON: { "error": { "code": "...", "message": "..." } }.
 
-Auth, public write API, server library, proposals, revision history UI, assets/editor ещё впереди.
+Auth/server library и авторский Material API/UI реализованы в этапах 12–14. Proposals и assets/editor ещё впереди.
 
 ## Проверки сборки
 
@@ -127,7 +127,7 @@ cargo run --bin study-admin -- grant-platform-admin --user-id 123
 cargo run --bin study-admin -- grant-institution-admin --user-id 123 --institution-id 1
 ~~~
 
-После назначения обновить страницу. CLI также поддерживает revoke-platform-admin, revoke-institution-admin, accept-membership/reject-membership (--role student|teacher), accept-contributor/reject-contributor и cleanup-sessions. Выполнить --help для аргументов. Операции назначений/решений записываются в identity_audit.
+После назначения обновить страницу. CLI также поддерживает revoke-platform-admin, revoke-institution-admin, accept-membership/reject-membership (--role student|teacher), accept-contributor/reject-contributor и cleanup-sessions. Выполнить --help для аргументов. После этапа 13 назначения/решения используют общий Administration service и administration_audit; старый identity_audit перенесён в историю.
 
 Основные endpoints: GET /api/auth/csrf, /api/viewer; POST /api/auth/register/login/logout/logout-others; GET/PATCH /api/me/profile; POST /api/me/password; GET /api/me/library/materials/collections/contributions; PUT/DELETE /api/me/library/materials/{id}/collections/{id}; GET/POST /api/me/collections; GET/PATCH /api/me/collections/{id}; GET /api/me/collections/{id}/sections/{section}/items. Каждый перечисленный суффикс — отдельный route, полный контракт в локальном документе ниже.
 
@@ -135,4 +135,24 @@ cargo run --bin study-admin -- grant-institution-admin --user-id 123 --instituti
 
 Пароли Argon2id, максимум две blocking CPU-задачи; PostgreSQL хранит digest сессии, expiry/revocation и password_version. Profile DTO не принимает state/permissions/чужого owner. Private material reader возвращает только текущую Published revision согласно owner/membership/collaborator policy. Auth/me responses private/no-store.
 
-Email verification/mail reset, Organization representation, Public collection publication, administrative UI, Material drafts UI и files/editor ещё не реализованы. Следующий этап — administrative UI. Подробная семантика и ограничения: .codex/docs/backend-auth-implementation.md.
+Email verification/mail reset, Organization representation, Public collection publication и files/editor ещё не реализованы. Material drafts UI подключён в этапе 14. Подробная семантика аккаунтов: .codex/docs/backend-auth-implementation.md.
+
+## Административная панель — этап 13
+
+После перезапуска backend `/admin` на frontend доступен согласно permissions/membership. Миграции 0009/0010 добавляют версии административных записей, institution registration requests и administration_audit. Аккаунты, права, отзыв сессий, учреждения, membership/Contributor requests и журнал читаются через `/api/admin/*`. Подача/собственные заявки учреждения: `/api/me/institution-requests`.
+
+HTTP mutations требуют прежнюю session/CSRF проверку, причину и expectedVersion для изменяемых сущностей. ManageAccounts и ViewAccountPrivateData разделены; последнее нужно для email и Contributor evidence. Последнего активного platform administrator/institution manager нельзя отключить или лишить управляющего права; CLI использует тот же guard. Назначить замену до отзыва.
+
+Admin responses private/no-store. UI произвольного SQL не выполняет. Material lifecycle/модерация подключены основным срезом этапа 14; общего staff bypass Private материалов нет. Реализация и ограничения: `.codex/docs/backend-admin-implementation.md`, `.codex/docs/backend-material-implementation.md`.
+
+## Материалы и модерация
+
+Migration 0011 добавляет независимые lifecycle/publication, restrictions, материаловый audit и один рабочий Draft/Pending. Авторские routes: `/api/me/author-materials`, `/api/me/materials/{id}/workspace`, drafts/revisions/transition/state/collaborators/events. Moderation queue: `/api/admin/materials/pending`; ограничения: `/api/admin/materials/restricted` и restriction-target. Published history: `/api/materials/{id}/history`, signed counterpart `/api/me/materials/{id}/history`.
+
+Owner/invited Private access и конкретный Pending для модератора проверяются отдельно. Approve атомарно публикует новую редакцию; старые Published immutable. Archive исключает обычные списки, сохраняя прямое чтение; Unpublish сохраняет pointer; Restore/Republish не снимают restrictions. Context discipline/collection/restriction выводит учреждение на сервере.
+
+SQL нового workflow многострочный, небольшие файлы в `material/workspace/sql`. Семантика функций и ручные сценарии: `.codex/docs/backend-material-implementation.md`, `.codex/docs/material-checklist.md`. Персональные hide material/author остаются срезом 14.7; далее proposals и files/editor. Migrate/build не подтверждают сценарии прав и конкуренции.
+
+Применённые SQLx migrations не изменять даже ради форматирования: checksum зависит от байтов файла. При обнаружении старого рассогласования не отключать проверку и не подменять checksum без подтверждения точного исторического текста и отсутствия семантических изменений.
+
+Для SQL migrations в `.gitattributes` закреплён LF, чтобы Git на Windows не менял checksum преобразованием строк при следующем checkout.

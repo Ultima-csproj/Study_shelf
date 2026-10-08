@@ -30,6 +30,8 @@ async fn main() -> anyhow::Result<()> {
 
     let service = CatalogService::new(repository);
     let state = AppState::new(
+        study_storage_postgres::material::PostgresMaterialRepository::new(pool.clone()),
+        study_storage_postgres::administration::Administration::new(pool.clone()),
         backend::auth::AuthService::new(
             study_storage_postgres::account::PostgresAccountRepository::new(pool.clone()),
             config.secure_cookie,

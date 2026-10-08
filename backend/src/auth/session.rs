@@ -59,6 +59,7 @@ pub fn set_cookie(headers: &mut HeaderMap, name: &str, value: &str, seconds: u32
 }
 pub async fn guard(State(state): State<AppState>, request: Request, next: Next) -> Response {
     let private = request.uri().path().starts_with("/api/me/")
+        || request.uri().path().starts_with("/api/admin/")
         || request.uri().path().starts_with("/api/auth/")
         || request.uri().path() == "/api/viewer";
     if !matches!(

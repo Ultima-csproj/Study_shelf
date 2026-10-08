@@ -23,6 +23,7 @@ async fn main() -> anyhow::Result<()> {
         sort: CatalogSort::Newest,
         page: 1,
         page_size: 5,
+        include_archived: false,
     };
     let page = service.list(query).await?;
     println!("Public materials: {}, page {}", page.total, page.page);
