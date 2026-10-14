@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { ViewerContext } from "./ViewerContext";
+import { useSavedLibrary, type SavedKind } from "./useSavedLibrary";
 import {
   enter,
   getViewer,
@@ -13,52 +14,45 @@ import {
   type LoginInput,
   type RegisterInput,
 } from "../../api/auth";
-import { HttpError, mutateJson } from "../../api/http";
+import { HttpError } from "../../api/http";
 import type { User, Viewer } from "../../types/viewer";
 import type { MaterialReference } from "../../types/material";
 
-interface ViewerProviderProps {
-  children: ReactNode;
-}
-
-export function ViewerProvider({ children }: ViewerProviderProps) {
+export function ViewerProvider({ children }: { children: ReactNode }) {
   const [viewer, setViewer] = useState<Viewer>({ kind: "loading" });
-  const [savedFlags, setSavedFlags] = useState<Record<string, boolean>>({});
-  const [libraryVersion, setLibraryVersion] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
-  const generation = useRef(0);
   const viewerRequest = useRef(0);
-  const flags = useRef<Record<string, boolean>>({});
-  const queued = useRef(new Set<string>());
-  const requested = useRef(new Set<string>());
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const authenticated = useRef(false);
   const currentUser = useRef<number | null>(null);
+  const {
+    savedStates,
+    libraryVersion,
+    registerSave,
+    retrySave,
+    resetLibrary,
+    toggle,
+  } = useSavedLibrary(authenticated);
 
   const reset = useCallback(() => {
-    generation.current += 1;
     viewerRequest.current += 1;
-    flags.current = {};
-    queued.current.clear();
-    requested.current.clear();
-    setSavedFlags({});
-    setLibraryVersion((value) => value + 1);
+    resetLibrary();
     setActionError(null);
-  }, []);
+  }, [resetLibrary]);
 
   const refreshViewer = useCallback(async () => {
     const version = ++viewerRequest.current;
     try {
       const result = await getViewer();
-      if (version === viewerRequest.current) {
-        const user = result.kind === "authenticated" ? result.user.id : null;
-        if (currentUser.current !== user) {
-          reset();
-          currentUser.current = user;
-        }
-        authenticated.current = result.kind === "authenticated";
-        setViewer(result);
+      if (version !== viewerRequest.current) {
+        return;
       }
+      const user = result.kind === "authenticated" ? result.user.id : null;
+      if (currentUser.current !== user) {
+        reset();
+        currentUser.current = user;
+      }
+      authenticated.current = result.kind === "authenticated";
+      setViewer(result);
     } catch (reason) {
       if (version === viewerRequest.current) {
         authenticated.current = false;
@@ -83,11 +77,6 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
     return () => {
       mounted = false;
       viewerRequest.current += 1;
-      generation.current += 1;
-      if (timer.current !== null) {
-        clearTimeout(timer.current);
-        timer.current = null;
-      }
     };
   }, [refreshViewer]);
 
@@ -117,86 +106,13 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
     }
   };
 
-  const registerSave = useCallback(
-    (kind: "material" | "collection", id: number) => {
-      const key = `${kind}:${id}`;
-      if (!authenticated.current || requested.current.has(key)) {
-        return;
-      }
-      requested.current.add(key);
-      queued.current.add(key);
-      if (timer.current !== null) {
-        return;
-      }
-      timer.current = setTimeout(async () => {
-        timer.current = null;
-        const keys = Array.from(queued.current);
-        queued.current.clear();
-        const version = generation.current;
-        for (let offset = 0; offset < keys.length; offset += 100) {
-          const chunk = keys.slice(offset, offset + 100);
-          const materialIds = chunk
-            .filter((k) => k.startsWith("material:"))
-            .map((k) => Number(k.split(":")[1]));
-          const collectionIds = chunk
-            .filter((k) => k.startsWith("collection:"))
-            .map((k) => Number(k.split(":")[1]));
-          try {
-            const result = await mutateJson<{
-              materialIds: number[];
-              collectionIds: number[];
-            }>("/api/me/library/flags", "POST", { materialIds, collectionIds });
-            if (version !== generation.current) {
-              return;
-            }
-            const present = new Set([
-              ...result.materialIds.map((id) => `material:${id}`),
-              ...result.collectionIds.map((id) => `collection:${id}`),
-            ]);
-            const next = { ...flags.current };
-            for (const key of chunk) {
-              next[key] = present.has(key);
-            }
-            flags.current = next;
-            setSavedFlags(next);
-          } catch (reason) {
-            if (version === generation.current) {
-              for (const key of chunk) {
-                requested.current.delete(key);
-              }
-              setActionError(
-                reason instanceof Error
-                  ? reason.message
-                  : "Не удалось загрузить сохранения",
-              );
-            }
-          }
-        }
-      }, 0);
-    },
-    [],
-  );
-
-  const toggle = async (kind: "material" | "collection", id: number) => {
-    const key = `${kind}:${id}`;
-    const current = flags.current[key];
-    if (current === undefined || !authenticated.current) {
-      return;
-    }
-    const version = generation.current;
+  const toggleSaved = async (kind: SavedKind, id: number) => {
+    const user = currentUser.current;
     try {
-      await mutateJson(
-        `/api/me/library/${kind === "material" ? "materials" : "collections"}/${id}`,
-        current ? "DELETE" : "PUT",
-      );
-      if (version === generation.current) {
-        flags.current = { ...flags.current, [key]: !current };
-        setSavedFlags(flags.current);
-        setLibraryVersion((value) => value + 1);
-      }
+      await toggle(kind, id);
     } catch (reason) {
       if (
-        version === generation.current &&
+        user === currentUser.current &&
         reason instanceof HttpError &&
         reason.status === 401
       ) {
@@ -217,6 +133,10 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
       return { kind: "authenticated", user };
     });
   };
+  const retryAccount = () => {
+    reset();
+    void refreshViewer();
+  };
   const value = {
     viewer,
     libraryVersion,
@@ -224,32 +144,24 @@ export function ViewerProvider({ children }: ViewerProviderProps) {
     signOut,
     refreshViewer,
     registerSave,
-    savedFlags,
+    retrySave,
+    savedStates,
     toggleSaved: (material: MaterialReference) =>
-      toggle("material", material.id),
-    toggleSavedCollection: (id: number) => toggle("collection", id),
+      toggleSaved("material", material.id),
+    toggleSavedCollection: (id: number) => toggleSaved("collection", id),
     updateUser,
   };
 
-  let errorNotice: ReactNode = null;
-  const retryAccount = () => {
-    reset();
-    void refreshViewer();
-  };
-  if (actionError) {
-    errorNotice = (
-      <p role="alert">
-        {actionError}
-        <button type="button" onClick={retryAccount}>
-          Повторить
-        </button>
-      </p>
-    );
-  }
-
   return (
     <ViewerContext.Provider value={value}>
-      {errorNotice}
+      {actionError && (
+        <p role="alert">
+          {actionError}
+          <button type="button" onClick={retryAccount}>
+            Повторить
+          </button>
+        </p>
+      )}
       {children}
     </ViewerContext.Provider>
   );

@@ -25,7 +25,8 @@ export function SaveAction({
 }: SaveActionProps) {
   const {
     viewer,
-    savedFlags,
+    savedStates,
+    retrySave,
     registerSave,
     libraryVersion,
     toggleSaved,
@@ -38,7 +39,12 @@ export function SaveAction({
   const guest = viewer.kind !== "authenticated";
   const collection = kind === "collection";
   const key = `${kind}:${id}`;
-  const saved = savedFlags[key] ?? false;
+  const state = savedStates[key];
+  const saved = state?.status === "ready" && state.saved;
+  const checking =
+    viewer.kind === "loading" ||
+    (!guest && (!state || state.status === "loading"));
+  const failed = !guest && state?.status === "error";
   useEffect(() => {
     if (viewer.kind === "authenticated" && source === "api") {
       registerSave(kind, id);
@@ -63,14 +69,23 @@ export function SaveAction({
   let action = "Сохранить";
   let buttonTitle = action;
   let buttonLabel = "Сохранить";
-  let pressed: boolean | undefined = saved;
+  let pressed: boolean | undefined =
+    state?.status === "ready" ? saved : undefined;
   let iconWeight: "fill" | "regular" = "regular";
 
   if (collection) {
     buttonLabel = "Сохранить подборку";
   }
 
-  if (guest) {
+  if (checking) {
+    action = "Проверяем сохранение";
+    buttonLabel = "Проверяем…";
+    buttonTitle = action;
+  } else if (failed) {
+    action = "Повторить проверку сохранения";
+    buttonLabel = "Повторить";
+    buttonTitle = action;
+  } else if (guest) {
     action = "Войти, чтобы сохранить";
     buttonTitle = "Сохранение — после входа";
     pressed = undefined;
@@ -95,6 +110,10 @@ export function SaveAction({
   }
 
   const handleClick = async () => {
+    if (failed) {
+      retrySave(kind, id);
+      return;
+    }
     if (guest) {
       const redirect = location.pathname + location.search + location.hash;
       navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
@@ -131,13 +150,15 @@ export function SaveAction({
           busy ||
           viewer.kind === "loading" ||
           viewer.kind === "error" ||
-          (!guest && savedFlags[key] === undefined)
+          checking ||
+          (state?.status === "ready" && state.busy)
         }
       >
         {actionIcon}
         <span>{buttonLabel}</span>
       </button>
       {error && <span role="alert">{error}</span>}
+      {failed && <span role="alert">{state.message}</span>}
     </>
   );
 }
