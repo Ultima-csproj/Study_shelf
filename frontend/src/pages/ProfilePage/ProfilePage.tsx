@@ -1,364 +1,73 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-  type ReactNode,
-} from "react";
-import { Link } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
 import { useViewer } from "../../hooks/useViewer";
-import { updateProfile } from "../../api/profile";
-import { roleLabels } from "../../utils/viewerLabels";
-import type { ProfileInput, User } from "../../types/viewer";
+import { useNavigationContext } from "../../hooks/useNavigationContext";
+import { ProfileEditor } from "../../components/account/profile-editor/ProfileEditor";
+import type { User } from "../../types/viewer";
 import { ProfileSummary } from "./ProfileSummary";
+import { ProfileLayout } from "./ProfileLayout";
 import styles from "./ProfilePage.module.css";
 
-interface ProfileContentProps {
-  user: User;
-  onSaved: (user: User) => void;
-}
+const ProfilePublications = lazy(() => import("./ProfilePublications"));
 
 export function ProfilePage() {
   const { viewer, updateUser } = useViewer();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { back, linkTo } = useNavigationContext("/profile");
+  const editing = params.get("edit") === "1";
+  const publications = params.get("tab") === "publications";
 
   if (viewer.kind !== "authenticated") {
     return null;
   }
-
-  return <ProfileContent user={viewer.user} onSaved={updateUser} />;
-}
-
-function ProfileContent({ user, onSaved }: ProfileContentProps) {
-  const [editing, setEditing] = useState(false);
-  const [input, setInput] = useState<ProfileInput>({
-    firstName: user.firstName,
-    lastName: user.lastName,
-    course: user.course,
-    group: user.group,
-    biography: user.biography,
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState("");
-  const request = useRef<AbortController | null>(null);
-  const editButton = useRef<HTMLButtonElement>(null);
-  const firstNameInput = useRef<HTMLInputElement>(null);
-  const wasEditing = useRef(false);
-  const student = user.role === "student";
-  let courseValue = "";
-
-  if (input.course !== null) {
-    courseValue = String(input.course);
-  }
-
-  useEffect(() => {
-    return () => {
-      request.current?.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (editing) {
-      firstNameInput.current?.focus();
-    } else if (wasEditing.current) {
-      editButton.current?.focus();
-    }
-    wasEditing.current = editing;
-  }, [editing]);
-
   const startEditing = () => {
-    setInput({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      course: user.course,
-      group: user.group,
-      biography: user.biography,
-    });
-    setError(null);
-    setNotice("");
-    setEditing(true);
+    navigate(linkTo("/profile?edit=1"));
   };
-
-  const cancelEditing = () => {
-    request.current?.abort();
-    setSaving(false);
-    setError(null);
-    setEditing(false);
-  };
-
-  const handleFirstNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const firstName = event.target.value;
-
-    setInput((currentInput) => {
-      return { ...currentInput, firstName };
+  const cancelEditing = () => navigate(back.path, { replace: true });
+  const saved = (user: User) => {
+    updateUser(user);
+    navigate(back.path, {
+      replace: true,
+      state: { notice: "Изменения профиля сохранены." },
     });
   };
-
-  const handleLastNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const lastName = event.target.value;
-
-    setInput((currentInput) => {
-      return { ...currentInput, lastName };
-    });
-  };
-
-  const handleCourseChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    let course: number | null = null;
-
-    if (event.target.value) {
-      course = Number(event.target.value);
-    }
-
-    setInput((currentInput) => {
-      return { ...currentInput, course };
-    });
-  };
-
-  const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const group = event.target.value;
-
-    setInput((currentInput) => {
-      return { ...currentInput, group };
-    });
-  };
-
-  const save = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (saving) {
-      return;
-    }
-
-    const controller = new AbortController();
-    request.current = controller;
-    setSaving(true);
-    setError(null);
-
-    try {
-      const updated = await updateProfile(input, controller.signal);
-
-      if (!controller.signal.aborted) {
-        onSaved(updated);
-        setNotice("Изменения профиля сохранены.");
-        setEditing(false);
-      }
-    } catch (reason: unknown) {
-      if (!controller.signal.aborted) {
-        let message = "Не удалось сохранить профиль.";
-
-        if (reason instanceof Error) {
-          message = reason.message;
-        }
-
-        setError(message);
-      }
-    } finally {
-      if (!controller.signal.aborted) {
-        setSaving(false);
-      }
-    }
-  };
-
-  let studentFields: ReactNode = null;
-
-  if (student) {
-    studentFields = (
-      <section className={styles.section}>
-        <h2>Обучение</h2>
-        <label htmlFor="profile-course">Курс</label>
-        <select
-          id="profile-course"
-          value={courseValue}
-          onChange={handleCourseChange}
-        >
-          <option value="">Не указан</option>
-          {[1, 2, 3, 4, 5, 6].map((course) => (
-            <option key={course} value={course}>
-              {course} курс
-            </option>
-          ))}
-        </select>
-        <label htmlFor="profile-group">Группа</label>
-        <input
-          id="profile-group"
-          maxLength={30}
-          value={input.group}
-          onChange={handleGroupChange}
-        />
-      </section>
-    );
-  }
-
-  let errorMessage: ReactNode = null;
-
-  if (error) {
-    errorMessage = <p role="alert">{error}</p>;
-  }
-
-  let saveButtonLabel = "Сохранить изменения";
-
-  if (saving) {
-    saveButtonLabel = "Сохраняем…";
-  }
-
-  let profileFields: ReactNode;
-
-  if (editing) {
-    profileFields = (
-      <form
-        onSubmit={save}
-        className={styles.form}
-        aria-label="Редактирование профиля"
-      >
-        <section className={styles.section}>
-          <h2>Личная информация</h2>
-          <label htmlFor="profile-first-name">Имя</label>
-          <input
-            ref={firstNameInput}
-            id="profile-first-name"
-            autoComplete="given-name"
-            required
-            maxLength={64}
-            value={input.firstName}
-            onChange={handleFirstNameChange}
-          />
-          <label htmlFor="profile-last-name">Фамилия</label>
-          <input
-            id="profile-last-name"
-            autoComplete="family-name"
-            maxLength={64}
-            value={input.lastName}
-            onChange={handleLastNameChange}
-          />
-          <label htmlFor="profile-biography">О себе</label>
-          <textarea
-            id="profile-biography"
-            maxLength={2000}
-            value={input.biography}
-            onChange={(event) =>
-              setInput((current) => ({
-                ...current,
-                biography: event.target.value,
-              }))
-            }
-          />
-        </section>
-        {studentFields}
-        {errorMessage}
-        <div className={styles.actions}>
-          <button type="submit" className={styles.primary} disabled={saving}>
-            {saveButtonLabel}
-          </button>
-          <button
-            type="button"
-            className={styles.secondary}
-            onClick={cancelEditing}
-          >
-            Отмена
-          </button>
-        </div>
-      </form>
-    );
-  } else {
-    profileFields = <ProfileSummary user={user} />;
-  }
-
-  let editProfileButton: ReactNode = null;
-
-  if (!editing) {
-    editProfileButton = (
-      <button
-        ref={editButton}
-        type="button"
-        className={styles.secondary}
-        onClick={startEditing}
-      >
-        <PencilSimpleIcon size={20} aria-hidden="true" />
-        Изменить
-      </button>
-    );
-  }
-
-  let profileNotice: ReactNode = null;
-
-  if (notice) {
-    profileNotice = (
-      <p role="status" className={styles.notice}>
-        {notice}
-      </p>
-    );
-  }
+  const editAction = editing ? null : (
+    <button type="button" className={styles.secondary} onClick={startEditing}>
+      <PencilSimpleIcon size={20} aria-hidden="true" />
+      Редактировать профиль
+    </button>
+  );
 
   return (
-    <div className={styles.page}>
-      <div className={styles.heading}>
-        <div>
-          <h1>Мой профиль</h1>
-          <p>Личная информация и данные об обучении.</p>
-        </div>
-        {editProfileButton}
-      </div>
-      <div className={styles.identity}>
-        <span className={styles.avatar} aria-hidden="true">
-          {user.initials}
-        </span>
-        <div>
-          <h2>{user.name}</h2>
-          <p className={styles.role}>{roleLabels[user.role]}</p>
-          <p className={styles.biography}>
-            {user.biography || "Пока нет описания профиля"}
-          </p>
-        </div>
-      </div>
-      {profileNotice}
-      {profileFields}
-      <section className={styles.section}>
-        <h2>Мои учреждения</h2>
-        {user.memberships.length === 0 && (
-          <p>Вы пока не состоите ни в одном учреждении.</p>
-        )}
-        <Link
-          className={styles.secondary}
-          to="/settings#institution-membership"
-        >
-          Найти учреждение
-        </Link>
-        <ul>
-          {user.memberships.map((membership) => {
-            const labels = {
-              active: "Подтверждено",
-              pending: "На рассмотрении",
-              rejected: "Отклонено",
-              revoked: "Отозвано",
-            };
-            const roles = membership.roles
-              .map((role) => roleLabels[role])
-              .join(", ");
-            const manager =
-              membership.state === "active" &&
-              membership.permissions.includes("manage_members");
-            return (
-              <li key={membership.institutionId}>
-                {membership.institutionName} — {labels[membership.state]}
-                {membership.state === "active" && roles && ` · ${roles}`}
-                {manager && " · Управление участниками"}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-      <Link to="/settings" className={styles.settingsLink}>
-        <ArrowSquareOutIcon size={20} aria-hidden="true" />
-        <span>
-          <strong>Безопасность аккаунта</strong>
-          <small>Почта, пароль и другие настройки</small>
-        </span>
-        <ArrowRightIcon size={18} aria-hidden="true" />
-      </Link>
-    </div>
+    <ProfileLayout
+      user={viewer.user}
+      editing={editing}
+      editAction={editAction}
+      onCancel={cancelEditing}
+    >
+      {editing ? (
+        <>
+          <div className={styles.heading}>
+            <div>
+              <h1>Редактирование профиля</h1>
+              <p>Личная информация и данные об обучении.</p>
+            </div>
+          </div>
+          <ProfileEditor
+            user={viewer.user}
+            onSaved={saved}
+            onCancel={cancelEditing}
+          />
+        </>
+      ) : publications ? (
+        <Suspense fallback={<p role="status">Загружаем публикации…</p>}>
+          <ProfilePublications />
+        </Suspense>
+      ) : (
+        <ProfileSummary user={viewer.user} onEdit={startEditing} />
+      )}
+    </ProfileLayout>
   );
 }
