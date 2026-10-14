@@ -3,7 +3,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useViewer } from "../../hooks/useViewer";
 import { safeRedirect } from "../../utils/redirect";
 import styles from "../InformationPage/InformationPage.module.css";
-import formStyles from "../../components/account/AccountForm.module.css";
+import formStyles from "../../components/common/Form/Form.module.css";
 
 export function LoginPage() {
   const [params] = useSearchParams();

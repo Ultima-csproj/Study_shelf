@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import type { CollectionInfo } from "../../api/personalCollections";
-import styles from "./AccountForm.module.css";
+import type { CollectionInfo } from "../../../api/personalCollections";
+import styles from "../../common/Form/Form.module.css";
 
 interface CollectionInfoFormProps {
   info: CollectionInfo;

@@ -1,52 +1,37 @@
-import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
-import { useLocation } from "react-router-dom";
+import { lazy, Suspense, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "../../components/common/ThemeToggle/ThemeToggle";
+import { Button } from "../../components/common/Button/Button";
 import { IdentityRequests } from "../../components/account/IdentityRequests";
-import { changePassword, logoutOthers } from "../../api/auth";
+import { logoutOthers } from "../../api/auth";
 import { useViewer } from "../../hooks/useViewer";
 import styles from "./SettingsPage.module.css";
-import formStyles from "../../components/account/AccountForm.module.css";
+import { ProfileLayout } from "../ProfilePage/ProfileLayout";
+import { SettingsPreferences } from "./SettingsPreferences";
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
+import { SunIcon } from "@phosphor-icons/react/dist/csr/Sun";
+import { DevicesIcon } from "@phosphor-icons/react/dist/csr/Devices";
+import { PasswordForm } from "../../components/account/security/PasswordForm";
+import { useNavigationContext } from "../../hooks/useNavigationContext";
 const InstitutionRegistration = lazy(async () => ({
   default: (await import("../../components/account/InstitutionRegistration"))
     .InstitutionRegistration,
 }));
 
 export function SettingsPage() {
+  const { linkTo } = useNavigationContext();
   const location = useLocation();
-  const { viewer, refreshViewer } = useViewer();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const { viewer } = useViewer();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  useEffect(() => {
-    if (location.hash === "#institution-membership" && viewer.kind === "authenticated") {
-      document.getElementById("institution-membership")?.scrollIntoView({ block: "start" });
-    }
-  }, [location.hash, viewer.kind]);
   if (viewer.kind !== "authenticated") {
     return null;
   }
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
+  const closeOtherSessions = async () => {
     if (busy) {
       return;
     }
-    setBusy(true);
-    setNotice(null);
-    try {
-      await changePassword(currentPassword, newPassword);
-      setCurrentPassword("");
-      setNewPassword("");
-      await refreshViewer();
-    } catch (reason) {
-      setNotice(
-        reason instanceof Error ? reason.message : "Не удалось изменить пароль",
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-  const closeOtherSessions = async () => {
     setBusy(true);
     setNotice(null);
     try {
@@ -63,70 +48,100 @@ export function SettingsPage() {
     }
   };
   return (
-    <div className={styles.page}>
-      <h1>Настройки</h1>
-      <section className={styles.appearance}>
-        <div>
-          <h2>Внешний вид</h2>
-          <p>Светлая или тёмная тема</p>
+    <ProfileLayout user={viewer.user}>
+      <div className={styles.page}>
+        <div className={styles.intro}>
+          <h1>Настройки</h1>
+          <p>Аккаунт, оформление и безопасность в одном месте.</p>
         </div>
-        <ThemeToggle />
-      </section>
-      <section>
-        <h2>Аккаунт</h2>
-        <p>ID аккаунта: {viewer.user.id}</p>
-        <p>Email: {viewer.user.email}</p>
-        <p>Основной автор: #{viewer.user.primaryContributorId}</p>
-        <p>
-          Подтверждение email и восстановление пароля через почту будут
-          подключены отдельно.
-        </p>
-        <form className={formStyles.form} onSubmit={submit}>
-          <fieldset disabled={busy}>
-            <label htmlFor="current-password">Текущий пароль</label>
-            <input
-              id="current-password"
-              type="password"
-              required
-              autoComplete="current-password"
-              maxLength={1024}
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-            />
-            <label htmlFor="new-password">
-              Новый пароль — минимум 12 символов
-            </label>
-            <input
-              id="new-password"
-              type="password"
-              required
-              minLength={12}
-              maxLength={1024}
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-            />
-            <p>
-              После смены пароля потребуется войти заново на всех устройствах.
-            </p>
-            <button type="submit">Изменить пароль</button>
-          </fieldset>
-        </form>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void closeOtherSessions()}
+        <div className={styles.grid}>
+          <section className={styles.card}>
+            <header className={styles.cardHeading}>
+              <h2>Аккаунт</h2>
+              <Link to={linkTo("/profile?edit=1")}>Изменить профиль</Link>
+            </header>
+            <div className={styles.row}>
+              <EnvelopeSimpleIcon size={21} aria-hidden="true" />
+              <span>Email</span>
+              <strong>{viewer.user.email}</strong>
+            </div>
+            <div className={styles.row}>
+              <LockKeyIcon size={21} aria-hidden="true" />
+              <span>Пароль</span>
+              <span>Установлен</span>
+            </div>
+            <details className={styles.password}>
+              <summary>Сменить пароль</summary>
+              <PasswordForm />
+            </details>
+          </section>
+          <SettingsPreferences kind="notifications" />
+          <SettingsPreferences kind="privacy" />
+          <section className={styles.card}>
+            <header className={styles.cardHeading}>
+              <h2>Оформление и доступ</h2>
+            </header>
+            <div className={styles.row}>
+              <SunIcon size={21} aria-hidden="true" />
+              <span>Тема интерфейса</span>
+              <ThemeToggle />
+            </div>
+            <div className={styles.row}>
+              <span className={styles.textIcon}>Аа</span>
+              <span>Размер интерфейса</span>
+              <span>Стандартный</span>
+            </div>
+            <p className={styles.hint}>Тема применяется ко всему приложению.</p>
+          </section>
+          <section className={`${styles.card} ${styles.fullWidth}`}>
+            <header className={styles.cardHeading}>
+              <h2>Сессии и безопасность</h2>
+              <DevicesIcon size={22} aria-hidden="true" />
+            </header>
+            <div className={styles.sessionRow}>
+              <div>
+                <strong>Вход на других устройствах</strong>
+                <p>
+                  Завершите остальные сессии, сохранив вход на этом устройстве.
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => void closeOtherSessions()}
+              >
+                Завершить остальные сессии
+              </Button>
+            </div>
+            {notice && (
+              <p className={styles.notice} role="status">
+                {notice}
+              </p>
+            )}
+          </section>
+        </div>
+        <details
+          className={styles.disclosure}
+          id="institution-membership"
+          open={location.hash === "#institution-membership"}
         >
-          Выйти на остальных устройствах
-        </button>
-        {notice && <p role="status">{notice}</p>}
-      </section>
-      <IdentityRequests />
-      <Suspense
-        fallback={<p role="status">Загружаем регистрацию учреждения…</p>}
-      >
-        <InstitutionRegistration />
-      </Suspense>
-    </div>
+          <summary>
+            Учреждения и авторство{" "}
+            <span>Заявки, членство и связь с автором</span>
+          </summary>
+          <IdentityRequests />
+        </details>
+        <details className={styles.disclosure}>
+          <summary>
+            Регистрация учреждения <span>Создать новое учреждение</span>
+          </summary>
+          <Suspense
+            fallback={<p role="status">Загружаем регистрацию учреждения…</p>}
+          >
+            <InstitutionRegistration />
+          </Suspense>
+        </details>
+      </div>
+    </ProfileLayout>
   );
 }

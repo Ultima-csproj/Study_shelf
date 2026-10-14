@@ -1,12 +1,14 @@
+import { useNavigationContext } from "../../../hooks/useNavigationContext";
+import { Pagination } from "../../common/Pagination/Pagination";
 import { useCallback, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   getPersonalEntries,
   type CollectionAction,
   type PersonalSection,
-} from "../../api/personalCollections";
-import { useApiResource } from "../../hooks/useApiResource";
-import styles from "./AccountForm.module.css";
+} from "../../../api/personalCollections";
+import { useApiResource } from "../../../hooks/useApiResource";
+import styles from "../../common/Form/Form.module.css";
 
 interface PersonalSectionEditorProps {
   revision: number;
@@ -49,6 +51,7 @@ function SectionContent({
   section,
   onEdit,
 }: Omit<PersonalSectionEditorProps, "revision">) {
+  const { linkTo } = useNavigationContext();
   const [page, setPage] = useState(1);
   const [title, setTitle] = useState(section.title);
   const [description, setDescription] = useState(section.description);
@@ -175,7 +178,7 @@ function SectionContent({
         {result?.items.map((entry, index) => (
           <li key={entry.id}>
             {entry.material ? (
-              <Link to={`/materials/${entry.materialId}`}>
+              <Link to={linkTo(`/materials/${entry.materialId}`)}>
                 {entry.material.title}
               </Link>
             ) : (
@@ -217,26 +220,13 @@ function SectionContent({
         ))}
       </ol>
       {result && (
-        <nav aria-label={`Страницы раздела ${section.title}`}>
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((value) => value - 1)}
-          >
-            Назад
-          </button>
-          <span>
-            {" "}
-            Страница {page} из {Math.max(1, result.pageCount)}{" "}
-          </span>
-          <button
-            type="button"
-            disabled={page >= result.pageCount}
-            onClick={() => setPage((value) => value + 1)}
-          >
-            Далее
-          </button>
-        </nav>
+        <Pagination
+          page={page}
+          pageCount={result.pageCount}
+          onChange={setPage}
+          loading={loading}
+          label={`Страницы раздела ${section.title}`}
+        />
       )}
     </>
   );

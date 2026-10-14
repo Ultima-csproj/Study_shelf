@@ -7,12 +7,15 @@ import {
 } from "../../api/personalCollections";
 import { useApiResource } from "../../hooks/useApiResource";
 import { useViewer } from "../../hooks/useViewer";
-import { CollectionInfoForm } from "../../components/account/CollectionInfoForm";
-import { PersonalSectionEditor } from "../../components/account/PersonalSectionEditor";
-import styles from "../LibraryPage/LibraryPage.module.css";
-import formStyles from "../../components/account/AccountForm.module.css";
+import { CollectionInfoForm } from "../../components/collections/editor/CollectionInfoForm";
+import { PersonalSectionEditor } from "../../components/collections/editor/PersonalSectionEditor";
+import styles from "../../components/collections/editor/CollectionWorkspace.module.css";
+import { ProfileLayout } from "../ProfilePage/ProfileLayout";
+import { useNavigationContext } from "../../hooks/useNavigationContext";
+import formStyles from "../../components/common/Form/Form.module.css";
 
 export function PersonalCollectionPage() {
+  const { back } = useNavigationContext("/library/collections");
   const { viewer } = useViewer();
   const userId = viewer.kind === "authenticated" ? viewer.user.id : null;
   const { id: rawId } = useParams();
@@ -69,81 +72,91 @@ export function PersonalCollectionPage() {
     [ids[index], ids[next]] = [ids[next], ids[index]];
     void run({ action: "reorder_sections", ids });
   };
+  if (viewer.kind !== "authenticated") {
+    return null;
+  }
   return (
-    <div className={styles.page}>
-      <Link to="/library/collections">← Мои подборки</Link>
-      <h1>{result?.collection.title ?? "Подборка"}</h1>
-      {loading && <p role="status">Загружаем…</p>}
-      {error && (
-        <p role="alert">
-          {error}{" "}
-          <button type="button" onClick={retry}>
-            Повторить
-          </button>
-        </p>
-      )}
-      {notice && (
-        <p role="alert">
-          {notice}{" "}
-          <button type="button" onClick={retry}>
-            Обновить данные
-          </button>
-        </p>
-      )}
-      {result && result.collection.visibility === "public" && (
-        <p>
-          Редактирование публичных подборок подключим после согласования правил
-          публикации.
-        </p>
-      )}
-      {result && result.collection.visibility === "private" && (
-        <fieldset disabled={busy || loading} style={{ border: 0, padding: 0 }}>
-          <CollectionInfoForm
-            key={result.collection.editVersion}
-            info={result.collection}
-            busy={busy}
-            onSave={(info) => run({ action: "info", ...info })}
-          />
-          <h2>Разделы</h2>
-          <form className={formStyles.form} onSubmit={addSection}>
-            <label htmlFor="section-title">Название нового раздела</label>
-            <input
-              id="section-title"
-              required
-              maxLength={160}
-              value={sectionTitle}
-              onChange={(event) => setSectionTitle(event.target.value)}
+    <ProfileLayout user={viewer.user}>
+      <div className={styles.page}>
+        <Link className={styles.back} to={back.path}>
+          ← {back.label}
+        </Link>
+        <h1>{result?.collection.title ?? "Подборка"}</h1>
+        {loading && <p role="status">Загружаем…</p>}
+        {error && (
+          <p role="alert">
+            {error}{" "}
+            <button type="button" onClick={retry}>
+              Повторить
+            </button>
+          </p>
+        )}
+        {notice && (
+          <p role="alert">
+            {notice}{" "}
+            <button type="button" onClick={retry}>
+              Обновить данные
+            </button>
+          </p>
+        )}
+        {result && result.collection.visibility === "public" && (
+          <p>
+            Редактирование публичных подборок подключим после согласования
+            правил публикации.
+          </p>
+        )}
+        {result && result.collection.visibility === "private" && (
+          <fieldset
+            disabled={busy || loading}
+            style={{ border: 0, padding: 0 }}
+          >
+            <CollectionInfoForm
+              key={result.collection.editVersion}
+              info={result.collection}
+              busy={busy}
+              onSave={(info) => run({ action: "info", ...info })}
             />
-            <button type="submit">Добавить раздел</button>
-          </form>
-          {result.sections.map((section, index) => (
-            <section className={formStyles.section} key={section.id}>
-              <div className={formStyles.actions}>
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => moveSection(index, -1)}
-                >
-                  Раздел выше
-                </button>
-                <button
-                  type="button"
-                  disabled={index === result.sections.length - 1}
-                  onClick={() => moveSection(index, 1)}
-                >
-                  Раздел ниже
-                </button>
-              </div>
-              <PersonalSectionEditor
-                collectionId={id}
-                revision={result.collection.editVersion}
-                section={section}
-                onEdit={run}
+            <h2>Разделы</h2>
+            <form className={formStyles.form} onSubmit={addSection}>
+              <label htmlFor="section-title">Название нового раздела</label>
+              <input
+                id="section-title"
+                required
+                maxLength={160}
+                value={sectionTitle}
+                onChange={(event) => setSectionTitle(event.target.value)}
               />
-            </section>
-          ))}
-        </fieldset>
-      )}
-    </div>
+              <button type="submit">Добавить раздел</button>
+            </form>
+            {result.sections.map((section, index) => (
+              <section className={formStyles.section} key={section.id}>
+                <div className={formStyles.actions}>
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => moveSection(index, -1)}
+                  >
+                    Раздел выше
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index === result.sections.length - 1}
+                    onClick={() => moveSection(index, 1)}
+                  >
+                    Раздел ниже
+                  </button>
+                </div>
+                <PersonalSectionEditor
+                  collectionId={id}
+                  revision={result.collection.editVersion}
+                  section={section}
+                  onEdit={run}
+                />
+              </section>
+            ))}
+          </fieldset>
+        )}
+      </div>
+    </ProfileLayout>
   );
 }
