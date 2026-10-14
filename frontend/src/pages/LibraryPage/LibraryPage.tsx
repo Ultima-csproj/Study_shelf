@@ -9,6 +9,13 @@ import { useApiResource } from "../../hooks/useApiResource";
 import { useViewer } from "../../hooks/useViewer";
 import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import styles from "./LibraryPage.module.css";
+import { ProfileLayout } from "../ProfilePage/ProfileLayout";
+import { Pagination } from "../../components/common/Pagination/Pagination";
+import { Badge } from "../../components/common/Badge/Badge";
+import { BookmarkSimpleIcon } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { BooksIcon } from "@phosphor-icons/react/dist/csr/Books";
+import { FileTextIcon } from "@phosphor-icons/react/dist/csr/FileText";
+import { authorLabel } from "../../utils/materialLabels";
 import {
   locationPath,
   materialPath,
@@ -16,7 +23,7 @@ import {
 } from "../../utils/navigation";
 
 export function LibraryPage() {
-  const { libraryVersion } = useViewer();
+  const { libraryVersion, viewer } = useViewer();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const parentPath = locationPath(location);
@@ -58,7 +65,7 @@ export function LibraryPage() {
     "Не удалось загрузить библиотеку",
   );
 
-  const selectTab = (tab: string) => setParams({ tab }, { replace: true });
+  const selectTab = (tab: string) => setParams({ tab });
   const selectPage = (next: number) => setParams({ tab, page: String(next) });
   let content: ReactNode = null;
   if (loading) {
@@ -83,7 +90,10 @@ export function LibraryPage() {
         );
         return (
           <li key={slot.id}>
-            <div>
+            <span className={styles.itemIcon}>
+              <FileTextIcon size={26} aria-hidden="true" />
+            </span>
+            <div className={styles.itemBody}>
               {material ? (
                 <h3>
                   <Link to={path}>{material.title}</Link>
@@ -91,9 +101,23 @@ export function LibraryPage() {
               ) : (
                 <p>Материал недоступен</p>
               )}
+              {material && (
+                <div className={styles.metadata}>
+                  <Badge type={material.type} />
+                  <span>{authorLabel(material.credits)}</span>
+                  {material.sourceYear !== null && (
+                    <span>{material.sourceYear}</span>
+                  )}
+                </div>
+              )}
+              {material && (
+                <p className={styles.description}>{material.description}</p>
+              )}
             </div>
             <SaveAction
               id={slot.id}
+              compact
+              outlined
               title={material?.title ?? "Недоступный материал"}
             />
           </li>
@@ -107,7 +131,10 @@ export function LibraryPage() {
         const path = withNavigationOrigin(target, parentPath);
         return (
           <li key={slot.id}>
-            <div>
+            <span className={styles.itemIcon}>
+              <BooksIcon size={26} aria-hidden="true" />
+            </span>
+            <div className={styles.itemBody}>
               {slot.title === null ? (
                 <p>Подборка недоступна</p>
               ) : (
@@ -120,6 +147,8 @@ export function LibraryPage() {
             <SaveAction
               id={slot.id}
               title={slot.title ?? "Недоступная подборка"}
+              compact
+              outlined
               kind="collection"
             />
           </li>
@@ -128,65 +157,74 @@ export function LibraryPage() {
     }
     content = (
       <>
-        {result.page.total === 0 && <p>Здесь появятся ваши сохранения.</p>}
+        {result.page.total === 0 && (
+          <div className={styles.empty}>
+            <BookmarkSimpleIcon size={36} aria-hidden="true" />
+            <h2>Пока ничего нет</h2>
+            <p>
+              Сохраняйте полезные материалы и подборки, чтобы быстро
+              возвращаться к ним.
+            </p>
+            <Link to="/catalog">Перейти в каталог →</Link>
+          </div>
+        )}
+        {result.page.total > 0 && (
+          <p className={styles.resultCount}>Всего: {result.page.total}</p>
+        )}
         <ul className={styles.materials}>{items}</ul>
-        <nav aria-label="Страницы библиотеки">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => selectPage(page - 1)}
-          >
-            Назад
-          </button>
-          <span>
-            {" "}
-            Страница {page} из {Math.max(1, result.page.pageCount)} · Всего{" "}
-            {result.page.total}{" "}
-          </span>
-          <button
-            type="button"
-            disabled={page >= result.page.pageCount}
-            onClick={() => selectPage(page + 1)}
-          >
-            Далее
-          </button>
-        </nav>
+        <Pagination
+          page={page}
+          pageCount={result.page.pageCount}
+          onChange={selectPage}
+          label="Страницы библиотеки"
+        />
       </>
     );
   }
+  if (viewer.kind !== "authenticated") {
+    return null;
+  }
   return (
-    <div className={styles.page}>
-      <h1>Моя библиотека</h1>
-      <p className={styles.subtitle}>
-        Сохранённые материалы и учебные маршруты.
-      </p>
-      <Link to="/library/collections">
-        Создать и редактировать свои подборки →
-      </Link>
-      <nav className={styles.tabs} aria-label="Разделы библиотеки">
-        <button
-          type="button"
-          aria-current={!collections ? "page" : undefined}
-          onClick={() => selectTab("saved")}
-        >
-          Материалы
-        </button>
-        <button
-          type="button"
-          aria-current={collections && !contributions ? "page" : undefined}
-          onClick={() => selectTab("collections")}
-        >
-          Подборки
-        </button>
-        <button
-          type="button"
-          aria-current={contributions ? "page" : undefined}
-          onClick={() => selectTab("contributions")}
-        >
-          С моим участием
-        </button>
-      </nav>
-      <div className={styles.content}>{content}</div>
-    </div>
+    <ProfileLayout user={viewer.user}>
+      <div className={styles.page}>
+        <header className={styles.heading}>
+          <div>
+            <h1>Библиотека</h1>
+            <p>Ваша подборка полезного для учёбы.</p>
+          </div>
+          <Link
+            className={styles.manage}
+            to={withNavigationOrigin("/library/collections", parentPath)}
+          >
+            <BooksIcon size={18} aria-hidden="true" />
+            Мои подборки
+          </Link>
+        </header>
+        <nav className={styles.tabs} aria-label="Разделы библиотеки">
+          <button
+            type="button"
+            aria-current={!collections ? "page" : undefined}
+            onClick={() => selectTab("saved")}
+          >
+            Материалы
+          </button>
+          <button
+            type="button"
+            aria-current={collections && !contributions ? "page" : undefined}
+            onClick={() => selectTab("collections")}
+          >
+            Подборки
+          </button>
+          <button
+            type="button"
+            aria-current={contributions ? "page" : undefined}
+            onClick={() => selectTab("contributions")}
+          >
+            С моим участием
+          </button>
+        </nav>
+        <div className={styles.content}>{content}</div>
+      </div>
+    </ProfileLayout>
   );
 }
