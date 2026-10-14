@@ -147,9 +147,7 @@ export function CollectionPage() {
   }
 
   const navigation = (
-    <nav aria-label="Разделы подборки">
-      {sectionNavigationLinks}
-    </nav>
+    <nav aria-label="Разделы подборки">{sectionNavigationLinks}</nav>
   );
 
   let disciplineBreadcrumb: ReactNode = null;

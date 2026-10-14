@@ -102,7 +102,7 @@ export function CatalogPage() {
     <>
       <PageContainer>
         <div className={styles.layout}>
-          <aside className={styles.sidebar}>{filterPanel}</aside>
+          <aside className={styles.sidebar} aria-label="Фильтры каталога">{filterPanel}</aside>
           <main id="main-content" className={styles.content} tabIndex={-1}>
             <div className={styles.heading}>
               <h1>Каталог материалов</h1>

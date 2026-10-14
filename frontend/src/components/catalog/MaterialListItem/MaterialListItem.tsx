@@ -4,23 +4,42 @@ import type { ReactNode } from "react";
 import type { CatalogMaterial } from "../../../types/material";
 import { Badge } from "../../common/Badge/Badge";
 import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
-import { authorLabel, exactPublication, formatDuration, publicationLabel, relativePublication } from "../../../utils/materialLabels";
+import {
+  authorLabel,
+  exactPublication,
+  formatDuration,
+  publicationLabel,
+  relativePublication,
+} from "../../../utils/materialLabels";
 import styles from "./MaterialListItem.module.css";
-import { locationPath, materialPath, withNavigationOrigin } from "../../../utils/navigation";
+import { SaveAction } from "../../common/SaveAction/SaveAction";
+import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
+import {
+  locationPath,
+  materialPath,
+  withNavigationOrigin,
+} from "../../../utils/navigation";
 
 interface MaterialListItemProps {
   material: CatalogMaterial;
   selectedTags: string[];
   onTagClick: (tag: string) => void;
 }
-export function MaterialListItem({ material, selectedTags, onTagClick }: MaterialListItemProps) {
+export function MaterialListItem({
+  material,
+  selectedTags,
+  onTagClick,
+}: MaterialListItemProps) {
   const location = useLocation();
   const path = withNavigationOrigin(
     materialPath(material.id, material.source),
     locationPath(location),
   );
   const authors = authorLabel(material.credits);
-  const dateLabel = publicationLabel(material.firstPublishedAt, material.publishedAt);
+  const dateLabel = publicationLabel(
+    material.firstPublishedAt,
+    material.publishedAt,
+  );
   const date = relativePublication(material.publishedAt);
   const exactDate = exactPublication(material.publishedAt);
   const duration = formatDuration(material.durationSeconds);
@@ -53,10 +72,9 @@ export function MaterialListItem({ material, selectedTags, onTagClick }: Materia
       <article className={styles.body}>
         <div className={styles.titleRow}>
           <Badge type={material.type} />
-          <h2><Link to={path}>{material.title}</Link></h2>
-          <time dateTime={material.publishedAt} title={exactDate} className={styles.date}>
-            {dateLabel} {date}
-          </time>
+          <h2>
+            <Link to={path}>{material.title}</Link>
+          </h2>
         </div>
         <div className={styles.meta}>
           <span title={authors}>
@@ -82,6 +100,43 @@ export function MaterialListItem({ material, selectedTags, onTagClick }: Materia
           ))}
         </div>
       </article>
+      <aside
+        className={styles.actions}
+        aria-label={`Действия: ${material.title}`}
+      >
+        <time
+          dateTime={material.publishedAt}
+          title={exactDate}
+          className={styles.date}
+        >
+          {dateLabel} {date}
+        </time>
+        <div className={styles.actionButtons}>
+          <SaveAction
+            id={material.id}
+            title={material.title}
+            compact
+            outlined
+            source={material.source}
+          />
+          <details className={styles.menu}>
+            <summary aria-label={`Больше действий: ${material.title}`}>
+              <DotsThreeIcon size={22} aria-hidden="true" />
+            </summary>
+            <nav aria-label={`Ссылки: ${material.title}`}>
+              <Link to={path}>Открыть материал</Link>
+              <Link
+                to={withNavigationOrigin(
+                  `/materials/${material.id}/history`,
+                  locationPath(location),
+                )}
+              >
+                История версий
+              </Link>
+            </nav>
+          </details>
+        </div>
+      </aside>
     </li>
   );
 }

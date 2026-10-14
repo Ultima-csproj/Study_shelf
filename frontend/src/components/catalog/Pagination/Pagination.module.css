@@ -17,6 +17,9 @@
   place-items: center;
   min-width: 33px;
   height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   margin-left: -1px;
