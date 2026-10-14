@@ -3,6 +3,11 @@
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
 }
+@media (max-width: 767px) {
+  .header {
+    display: none;
+  }
+}
 .inner {
   width: calc(100% - 68px);
   max-width: 1420px;
@@ -149,4 +154,11 @@
   .inner {
     gap: 9px;
   }
+}
+
+@media (max-width: 767px) {
+  .header { height: 58px; border-bottom: 0; background: var(--color-bg); }
+  .inner { width: calc(100% - 32px); gap: 10px; }
+  .brand { font-size: 17px; }
+  .hamburger { width: 36px; height: 36px; }
 }

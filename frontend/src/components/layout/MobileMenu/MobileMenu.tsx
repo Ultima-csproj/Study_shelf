@@ -1,3 +1,4 @@
+import { authorListPath } from "../../../utils/navigation";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { XIcon } from "@phosphor-icons/react/dist/csr/X";
@@ -77,8 +78,8 @@ export function MobileMenu({ dialogRef, onClose }: MobileMenuProps) {
         <NavLink to="/settings" onClick={close}>
           Настройки
         </NavLink>
-        <NavLink to="/author/materials" onClick={close}>
-          Мои публикации
+        <NavLink to={authorListPath(location)} onClick={close}>
+          Мои материалы
         </NavLink>
         {hasAdmin(viewer.user) && (
           <NavLink to="/admin" onClick={close}>

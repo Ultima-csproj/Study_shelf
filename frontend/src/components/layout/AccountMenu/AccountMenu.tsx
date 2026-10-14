@@ -1,3 +1,4 @@
+import { authorListPath } from "../../../utils/navigation";
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
@@ -85,9 +86,9 @@ export function AccountMenu() {
             <BookOpenIcon size={22} aria-hidden="true" />
             Моя библиотека
           </NavLink>
-          <NavLink to="/author/materials">
+          <NavLink to={authorListPath(location)}>
             <BookOpenIcon size={22} aria-hidden="true" />
-            Мои публикации
+            Мои материалы
           </NavLink>
           <NavLink to="/settings">
             <GearIcon size={22} aria-hidden="true" />

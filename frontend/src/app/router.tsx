@@ -1,5 +1,7 @@
-import { createBrowserRouter, Navigate, redirect } from "react-router-dom";
+import { createBrowserRouter, redirect } from "react-router-dom";
+import { HomePage } from "../pages/HomePage/HomePage";
 import { AppShell } from "./AppShell";
+import { RouteErrorPage } from "../pages/RouteErrorPage/RouteErrorPage";
 import { CatalogPage } from "../pages/CatalogPage/CatalogPage";
 import { DisciplinePage } from "../pages/DisciplinePage/DisciplinePage";
 import { DisciplinesPage } from "../pages/DisciplinesPage/DisciplinesPage";
@@ -18,6 +20,7 @@ import informationStyles from "../pages/InformationPage/InformationPage.module.c
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
+    errorElement: <RouteErrorPage />,
     hydrateFallbackElement: (
       <main id="main-content" className={informationStyles.page}>
         <p role="status">Загружаем страницу…</p>
@@ -26,7 +29,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Navigate to="/catalog" replace />,
+        element: <HomePage />,
       },
       { path: "/catalog", element: <CatalogPage /> },
       {
@@ -44,9 +47,8 @@ export const router = createBrowserRouter([
       {
         path: "/materials/:materialId",
         lazy: async () => {
-          const { MaterialPage } = await import(
-            "../pages/MaterialPage/MaterialPage"
-          );
+          const { MaterialPage } =
+            await import("../pages/MaterialPage/MaterialPage");
           return { Component: MaterialPage };
         },
       },

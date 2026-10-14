@@ -1,6 +1,12 @@
 import { useEffect } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Header } from "../components/layout/Header/Header";
+import { MobileAccountNavigation } from "../components/layout/MobileAccountNavigation/MobileAccountNavigation";
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -20,7 +26,18 @@ export function AppShell() {
     library: "Моя библиотека",
     settings: "Настройки",
   };
-  const pageTitle = titles[location.pathname.split("/")[1]] ?? "Учебная полка";
+  const isPublicationList = location.pathname === "/author/materials";
+  const isPublicationWorkspace = /^\/author\/materials\/\d+$/.test(
+    location.pathname,
+  );
+  const pageTitle =
+    location.pathname === "/"
+      ? "Главная"
+      : isPublicationList
+        ? "Мои материалы"
+        : isPublicationWorkspace
+          ? "Рабочая область материала"
+          : (titles[location.pathname.split("/")[1]] ?? "Учебная полка");
 
   useEffect(() => {
     document.title = `${pageTitle} — Учебная полка`;
@@ -51,6 +68,8 @@ export function AppShell() {
     <>
       <Header query={query} onQueryChange={onQueryChange} />
       <Outlet />
+      <MobileAccountNavigation />
+      <ScrollRestoration />
     </>
   );
 }

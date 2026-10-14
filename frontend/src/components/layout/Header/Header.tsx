@@ -73,7 +73,7 @@ export function Header({ query, onQueryChange }: HeaderProps) {
       <a href="#main-content" className="skip-link">
         Перейти к содержимому
       </a>
-      <header className={styles.header}>
+      <header className={styles.header} data-site-header>
         <div className={styles.inner}>
           <NavLink
             to="/catalog"

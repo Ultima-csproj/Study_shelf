@@ -1,7 +1,21 @@
 import type { MaterialSource } from "../types/material";
 
 export type NavigationOrigin =
-  | { kind: "catalog" | "collections" | "library"; path: string }
+  | {
+      kind:
+        | "catalog"
+        | "disciplines"
+        | "collections"
+        | "library"
+        | "profile"
+        | "settings"
+        | "home"
+        | "author"
+        | "workspace"
+        | "material"
+        | "personalCollections";
+      path: string;
+    }
   | { kind: "discipline" | "collection"; path: string; id: string };
 
 export function parseNavigationOrigin(
@@ -11,7 +25,11 @@ export function parseNavigationOrigin(
     !value ||
     !value.startsWith("/") ||
     value.startsWith("//") ||
-    value.includes("\\")
+    value.includes("\\") ||
+    Array.from(value).some((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127;
+    })
   ) {
     return null;
   }
@@ -31,9 +49,35 @@ export function parseNavigationOrigin(
   if (url.pathname === "/collections") {
     return { kind: "collections", path };
   }
+  if (url.pathname === "/disciplines") {
+    return { kind: "disciplines", path };
+  }
 
   if (url.pathname === "/library") {
     return { kind: "library", path };
+  }
+
+  if (url.pathname === "/profile") {
+    return { kind: "profile", path };
+  }
+
+  if (url.pathname === "/settings") {
+    return { kind: "settings", path };
+  }
+  if (url.pathname === "/") {
+    return { kind: "home", path };
+  }
+  if (url.pathname === "/author/materials") {
+    return { kind: "author", path };
+  }
+  if (/^\/author\/materials\/\d+$/.test(url.pathname)) {
+    return { kind: "workspace", path };
+  }
+  if (/^\/materials\/\d+(?:\/history(?:\/\d+)?)?$/.test(url.pathname)) {
+    return { kind: "material", path };
+  }
+  if (/^\/library\/collections(?:\/\d+)?$/.test(url.pathname)) {
+    return { kind: "personalCollections", path };
   }
 
   const discipline = /^\/disciplines\/([a-z0-9-]+)$/.exec(url.pathname);
@@ -78,15 +122,47 @@ export function materialNavigationSection(location: {
     return "collections";
   }
 
-  if (origin?.kind === "discipline") {
+  if (origin?.kind === "discipline" || origin?.kind === "disciplines") {
     return "disciplines";
   }
 
-  if (origin?.kind === "library") {
+  if (origin && origin.kind !== "catalog") {
     return null;
   }
 
   return "catalog";
+}
+
+export function navigationLabel(origin: NavigationOrigin): string {
+  if (origin.kind === "profile") {
+    const url = new URL(origin.path, "https://study-shelf.local");
+    return url.searchParams.get("tab") === "publications"
+      ? "Публикации"
+      : "Обзор профиля";
+  }
+  const labels: Record<Exclude<NavigationOrigin["kind"], "profile">, string> = {
+    catalog: "Каталог",
+    disciplines: "Дисциплины",
+    collections: "Подборки",
+    library: "Библиотека",
+    settings: "Настройки",
+    home: "Главная",
+    author: "Мои материалы",
+    workspace: "Рабочая область",
+    material: "Материал",
+    personalCollections: "Мои подборки",
+    discipline: "Дисциплина",
+    collection: "Подборка",
+  };
+  return labels[origin.kind];
+}
+
+export function returnDestination(search: string, fallback: string) {
+  const origin = navigationOrigin(search) ?? parseNavigationOrigin(fallback);
+  return {
+    path: origin?.path ?? "/profile",
+    label: origin ? navigationLabel(origin) : "Обзор профиля",
+  };
 }
 
 export function withNavigationOrigin(path: string, parentPath: string): string {
@@ -99,6 +175,27 @@ export function withNavigationOrigin(path: string, parentPath: string): string {
   const url = new URL(path, "https://study-shelf.local");
   url.searchParams.set("from", origin.path);
   return url.pathname + url.search + url.hash;
+}
+
+export function authorListPath(location: {
+  pathname: string;
+  search: string;
+  hash: string;
+}): string {
+  if (location.pathname === "/author/materials") {
+    return locationPath(location);
+  }
+  if (location.pathname.startsWith("/author/materials/")) {
+    const origin = navigationOrigin(location.search);
+    if (origin?.kind === "author") {
+      return origin.path;
+    }
+    return withNavigationOrigin(
+      "/author/materials",
+      origin?.path ?? "/profile",
+    );
+  }
+  return withNavigationOrigin("/author/materials", locationPath(location));
 }
 
 export function materialPath(id: number, source: MaterialSource): string {

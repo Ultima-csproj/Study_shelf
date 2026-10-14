@@ -15,6 +15,10 @@ const links = [
 export function PersonalLayout() {
   const { viewer, refreshViewer } = useViewer();
   const location = useLocation();
+  let contentClassName = styles.content;
+  if (location.pathname.startsWith("/author/")) {
+    contentClassName += " " + styles.wide;
+  }
 
   if (viewer.kind === "loading") {
     return (
@@ -41,6 +45,24 @@ export function PersonalLayout() {
     return <Navigate to={login} replace />;
   }
 
+  if (
+    location.pathname.startsWith("/author/") ||
+    location.pathname === "/profile" ||
+    location.pathname.startsWith("/library") ||
+    location.pathname === "/settings"
+  ) {
+    return (
+      <main
+        key={viewer.user.id}
+        id="main-content"
+        className={`${styles.content} ${styles.wide}`}
+        tabIndex={-1}
+      >
+        <Outlet />
+      </main>
+    );
+  }
+
   return (
     <div key={viewer.user.id} className={styles.layout}>
       <aside className={styles.sidebar}>
@@ -58,7 +80,7 @@ export function PersonalLayout() {
           ))}
         </nav>
       </aside>
-      <main id="main-content" className={styles.content} tabIndex={-1}>
+      <main id="main-content" className={contentClassName} tabIndex={-1}>
         <Outlet />
       </main>
     </div>
