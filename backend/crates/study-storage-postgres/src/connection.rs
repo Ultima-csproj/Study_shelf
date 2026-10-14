@@ -59,16 +59,21 @@ impl PostgresStorage {
 pub(crate) async fn read_snapshot(
     pool: &PgPool,
 ) -> study_core::error::RepositoryResult<Transaction<'_, Postgres>> {
-    let mut tx = pool.begin().await.map_err(crate::error::map_sqlx_error)?;
-    sqlx::query(
-        r#"
-                        SET TRANSACTION
-                          ISOLATION LEVEL REPEATABLE READ
-                          READ ONLY
-                        "#,
-    )
-    .execute(&mut *tx)
-    .await
-    .map_err(crate::error::map_sqlx_error)?;
-    Ok(tx)
+    let pool = pool.clone();
+    // Finish BEGIN even when an HTTP reader is cancelled. If the caller disappears,
+    // the completed task drops its Transaction and sqlx rolls it back before reuse.
+    let opening = tokio::spawn(async move {
+        pool.begin_with(
+            r#"
+                BEGIN TRANSACTION
+                    ISOLATION LEVEL REPEATABLE READ
+                    READ ONLY
+            "#,
+        )
+        .await
+    });
+    opening
+        .await
+        .map_err(study_core::error::RepositoryError::unexpected)?
+        .map_err(crate::error::map_sqlx_error)
 }

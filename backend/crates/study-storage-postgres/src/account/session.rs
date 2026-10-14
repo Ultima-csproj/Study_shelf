@@ -70,18 +70,7 @@ pub(crate) async fn require(conn: &mut PgConnection, digest: &[u8]) -> AccountRe
 pub(crate) async fn snapshot(
     pool: &sqlx::PgPool,
 ) -> AccountResult<sqlx::Transaction<'_, sqlx::Postgres>> {
-    let mut tx = pool.begin().await.map_err(map_sqlx_error)?;
-    sqlx::query(
-        r#"
-        SET TRANSACTION
-          ISOLATION LEVEL REPEATABLE READ
-          READ ONLY
-        "#,
-    )
-    .execute(&mut *tx)
-    .await
-    .map_err(map_sqlx_error)?;
-    Ok(tx)
+    Ok(crate::connection::read_snapshot(pool).await?)
 }
 pub(crate) async fn read(conn: &mut PgConnection, digest: &[u8]) -> AccountResult<Session> {
     sqlx::query_as::<_, Session>(
