@@ -17,6 +17,8 @@ pub struct WorkspaceQuery {
     #[serde(default)]
     q: String,
     state: Option<String>,
+    #[serde(default)]
+    order: study_storage_postgres::material::MaterialListOrder,
     discipline_id: Option<i64>,
     collection_id: Option<i64>,
     restriction_id: Option<i64>,

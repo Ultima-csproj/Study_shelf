@@ -76,4 +76,16 @@ WHERE (
     )
 )
 AND ($3 = '' OR h.title ILIKE '%' || $3 || '%' OR h.id::text = $3)
-AND ($4::text IS NULL OR h.lifecycle = $4)
+AND (
+    $4::text IS NULL
+    OR h.lifecycle = $4
+    OR (
+        $1::text = 'author'
+        AND h.lifecycle = 'active'
+        AND (
+            ($4 = 'draft' AND h.working_revision_state = 'draft')
+            OR ($4 = 'pending_moderation' AND h.working_revision_state = 'pending_moderation')
+            OR ($4 = 'published' AND h.publication = 'published')
+        )
+    )
+)

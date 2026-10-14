@@ -82,6 +82,7 @@ impl ContentBody {
 #[serde(rename_all = "camelCase")]
 pub struct RevisionDto {
     id: i64,
+    number: i64,
     material_id: i64,
     version: i64,
     state: &'static str,
@@ -141,6 +142,7 @@ impl RevisionResponse {
         let utc = |at| study_core::timestamp::format_utc(at).map_err(ApiError::internal);
         let dto = RevisionDto {
             id: revision.id().0,
+            number: value.number,
             material_id: revision.material_id().0,
             version: value.stored.edit_version,
             state: match revision.state() {

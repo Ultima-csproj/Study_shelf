@@ -165,7 +165,8 @@ impl PostgresMaterialRepository {
         {
             return Err(MaterialWriteError::NotFound(Entity::Revision));
         }
-        let header = read::header(&mut tx, id, "author").await?;
+        let header = read::header(&mut tx, id, "public").await?;
+        let number = read::revision_number(&mut tx, id, revision).await?;
         // Only public history is returned. Header must not disclose an unrelated working draft.
         let mut header = header;
         header.working_revision_id = None;
@@ -177,6 +178,7 @@ impl PostgresMaterialRepository {
             outdated: false,
             self_review: false,
             can_moderate: false,
+            number,
         })
     }
 }

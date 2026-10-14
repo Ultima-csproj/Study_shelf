@@ -48,7 +48,19 @@ pub async fn author_list(
     Ok(Json(
         state
             .materials
-            .workspace_list(&actor.digest, MaterialListKind::Author, &q.page())
+            .workspace_list(&actor.digest, MaterialListKind::Author, &q.page(), q.order)
+            .await?,
+    ))
+}
+pub async fn contributor_choices(
+    State(state): State<AppState>,
+    actor: Authenticated,
+    Query(q): Query<WorkspaceQuery>,
+) -> Result<Json<Vec<ContributorChoice>>, ApiError> {
+    Ok(Json(
+        state
+            .materials
+            .contributor_choices(&actor.digest, &q.q)
             .await?,
     ))
 }
@@ -60,7 +72,7 @@ pub async fn moderation_list(
     Ok(Json(
         state
             .materials
-            .workspace_list(&actor.digest, MaterialListKind::Pending, &q.page())
+            .workspace_list(&actor.digest, MaterialListKind::Pending, &q.page(), q.order)
             .await?,
     ))
 }
@@ -72,7 +84,12 @@ pub async fn restricted_list(
     Ok(Json(
         state
             .materials
-            .workspace_list(&actor.digest, MaterialListKind::Restricted, &q.page())
+            .workspace_list(
+                &actor.digest,
+                MaterialListKind::Restricted,
+                &q.page(),
+                q.order,
+            )
             .await?,
     ))
 }

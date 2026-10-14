@@ -1,5 +1,12 @@
 SELECT
     id,
+    (
+        SELECT
+            count(*)
+        FROM material_revisions AS earlier
+        WHERE earlier.material_id = material_revisions.material_id
+            AND earlier.id <= material_revisions.id
+    ) AS number,
     title,
     state,
     edit_version AS version,

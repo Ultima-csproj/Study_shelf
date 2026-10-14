@@ -18,12 +18,18 @@ pub struct MaterialHeader {
     pub published_revision_id: Option<i64>,
     pub working_revision_id: Option<i64>,
     pub working_revision_state: Option<String>,
+    pub material_type: Option<String>,
+    pub source_year: Option<i32>,
+    pub description: Option<String>,
+    pub updated_at: Option<String>,
+    pub published_revision_number: Option<i64>,
 }
 
 #[derive(Serialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct RevisionHeader {
     pub id: i64,
+    pub number: i64,
     pub title: String,
     pub state: String,
     pub version: i64,
@@ -117,6 +123,7 @@ pub struct RevisionView {
     pub outdated: bool,
     pub self_review: bool,
     pub can_moderate: bool,
+    pub number: i64,
 }
 
 pub enum MaterialStateChange {
@@ -138,6 +145,25 @@ pub enum MaterialListKind {
     Author,
     Pending,
     Restricted,
+}
+
+#[derive(Clone, Copy, Default, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MaterialListOrder {
+    #[default]
+    Newest,
+    Oldest,
+    Title,
+}
+
+impl MaterialListOrder {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Newest => "newest",
+            Self::Oldest => "oldest",
+            Self::Title => "title",
+        }
+    }
 }
 
 pub struct ContributorInput {

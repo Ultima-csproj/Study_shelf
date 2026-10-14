@@ -20,7 +20,6 @@ use study_storage_postgres::material::{MaterialStateChange, NewMaterialInput, Re
 pub struct CreateBody {
     owner_institution_id: Option<i64>,
     content: ContentBody,
-    reason: String,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -129,7 +128,7 @@ pub async fn create(
                 institution: body.owner_institution_id.map(InstitutionId),
                 content: body.content.input()?,
             },
-            &body.reason,
+            "Первоначальное создание материала",
         )
         .await?;
     Ok(Json(Created {

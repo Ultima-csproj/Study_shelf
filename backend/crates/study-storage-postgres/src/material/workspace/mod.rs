@@ -1,5 +1,6 @@
 mod audit;
 mod collaborators;
+mod contributors;
 mod drafts;
 mod learning;
 mod published;
@@ -13,6 +14,7 @@ use super::{
     write::{Entity, owner_institution},
 };
 use crate::{account::session, error::map_sqlx_error};
+pub use contributors::ContributorChoice;
 use sqlx::{Postgres, Transaction};
 use study_core::ids::{MaterialId, UserId};
 use study_core::material::{Material, MaterialError};

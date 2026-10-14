@@ -31,6 +31,10 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/api/health", get(health))
         .route(
+            "/api/me/material-contributors",
+            get(material_workspace::contributor_choices),
+        )
+        .route(
             "/api/me/author-materials",
             get(material_workspace::author_list).post(material_workspace::create),
         )

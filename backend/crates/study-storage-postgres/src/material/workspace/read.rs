@@ -50,7 +50,11 @@ static LIST: LazyLock<String> = LazyLock::new(|| {
         JOIN materials AS m
             ON m.id = h.id
         {FILTER}
-        ORDER BY h.id DESC
+        ORDER BY
+            CASE WHEN $7::text = 'title' THEN h.title END ASC,
+            CASE WHEN $7::text = 'oldest' THEN h.updated_at::timestamptz END ASC NULLS LAST,
+            CASE WHEN $7::text = 'newest' THEN h.updated_at::timestamptz END DESC NULLS LAST,
+            h.id DESC
         LIMIT $5
         OFFSET $6
     "#
@@ -111,18 +115,33 @@ pub(super) async fn restrictions(
         .map_err(map_sqlx_error)?)
 }
 
+pub(super) async fn revision_number(
+    tx: &mut PgConnection,
+    material: MaterialId,
+    revision: study_core::ids::MaterialRevisionId,
+) -> Result<i64> {
+    Ok(sqlx::query_scalar(include_str!("sql/revision_number.sql"))
+        .bind(material.0)
+        .bind(revision.0)
+        .fetch_one(tx)
+        .await
+        .map_err(map_sqlx_error)?)
+}
+
 impl PostgresMaterialRepository {
     pub async fn workspace_list(
         &self,
         digest: &[u8],
         kind: MaterialListKind,
         p: &PageRequest,
+        order: MaterialListOrder,
     ) -> Result<Page<MaterialHeader>> {
         p.validate()?;
-        if p.state
-            .as_deref()
-            .is_some_and(|value| !matches!(value, "active" | "archived"))
-        {
+        if p.state.as_deref().is_some_and(|value| {
+            !matches!(value, "active" | "archived")
+                && !(matches!(kind, MaterialListKind::Author)
+                    && matches!(value, "draft" | "pending_moderation" | "published"))
+        }) {
             return Err(study_core::account::AccountError::Validation(
                 "Неизвестное состояние материала",
             )
@@ -171,6 +190,7 @@ impl PostgresMaterialRepository {
             .bind(&p.state)
             .bind(i64::from(p.size))
             .bind(p.offset())
+            .bind(order.as_str())
             .fetch_all(&mut *tx)
             .await
             .map_err(map_sqlx_error)?;
@@ -273,7 +293,13 @@ impl PostgresMaterialRepository {
         let mut header = header(
             &mut tx,
             material_id,
-            if moderate { "pending" } else { "author" },
+            if author_access {
+                "author"
+            } else if moderate {
+                "pending"
+            } else {
+                "public"
+            },
         )
         .await?;
         if !author_access && !moderate {
@@ -286,6 +312,7 @@ impl PostgresMaterialRepository {
                 | study_core::material::RevisionState::PendingModeration
         ) && stored.revision.is_outdated_for(&material)?;
         let self_review = stored.revision.has_participated(user);
+        let number = revision_number(&mut tx, material_id, id).await?;
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(RevisionView {
             material: header,
@@ -293,6 +320,7 @@ impl PostgresMaterialRepository {
             outdated,
             self_review,
             can_moderate: moderate,
+            number,
         })
     }
 }
