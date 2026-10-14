@@ -6,13 +6,18 @@ import {
 } from "../../api/profile";
 import { getJson } from "../../api/http";
 import { useApiResource } from "../../hooks/useApiResource";
-import styles from "./AccountForm.module.css";
+import styles from "../common/Form/Form.module.css";
+import { useViewer } from "../../hooks/useViewer";
+import { StatusBadge } from "../common/StatusBadge/StatusBadge";
+import requestStyles from "./IdentityRequests.module.css";
+import { Button } from "../common/Button/Button";
 
 interface Institution {
   id: number;
   name: string;
 }
 export function IdentityRequests() {
+  const { viewer } = useViewer();
   const [version, setVersion] = useState(0);
   const [institution, setInstitution] = useState("");
   const [contributor, setContributor] = useState("");
@@ -37,6 +42,12 @@ export function IdentityRequests() {
     load,
     "Не удалось загрузить заявки",
   );
+  const existingMembership = result?.requests.memberships.find(
+    (item) => item.id === Number(institution),
+  );
+  const cannotApply =
+    existingMembership?.state === "active" ||
+    existingMembership?.state === "pending";
 
   const submit = async (
     event: FormEvent,
@@ -95,6 +106,11 @@ export function IdentityRequests() {
         onSubmit={(event) => void submit(event, "membership")}
       >
         <fieldset disabled={busy}>
+          <p>
+            Это заявка от вашего аккаунта
+            {viewer.kind === "authenticated" ? ` «${viewer.user.name}»` : ""}.
+            Она не меняет членство других пользователей.
+          </p>
           <label htmlFor="membership-institution">Учреждение</label>
           <select
             id="membership-institution"
@@ -109,7 +125,21 @@ export function IdentityRequests() {
               </option>
             ))}
           </select>
-          <button type="submit">Подать заявку на членство</button>
+          <Button
+            variant="primary"
+            type="submit"
+            loading={busy}
+            disabled={loading || !result || cannotApply}
+          >
+            Подать свою заявку на вступление
+          </Button>
+          {cannotApply && (
+            <p>
+              {existingMembership.state === "active"
+                ? "Вы уже состоите в этом учреждении."
+                : "Ваша заявка уже ожидает рассмотрения."}
+            </p>
+          )}
         </fieldset>
       </form>
       <form
@@ -135,13 +165,15 @@ export function IdentityRequests() {
             value={evidence}
             onChange={(event) => setEvidence(event.target.value)}
           />
-          <button type="submit">Запросить привязку автора</button>
+          <Button variant="primary" type="submit" loading={busy}>
+            Запросить привязку автора
+          </Button>
         </fieldset>
       </form>
-      <ul>
+      <ul className={requestStyles.requests}>
         {result?.requests.memberships.map((r) => (
           <li key={`institution:${r.id}`}>
-            {r.name} — {r.state}
+            {r.name} <StatusBadge state={r.state} />
           </li>
         ))}
         {result?.requests.contributors.map((r) => (

@@ -34,6 +34,8 @@ enum ApiErrorCode {
     AlreadyDecided,
     AccountDisabled,
     PendingInstitutionRequest,
+    MembershipAlreadyPending,
+    MembershipAlreadyActive,
     ContributorEvidenceMissing,
     MaterialVersionConflict,
     WorkingRevisionExists,
@@ -148,6 +150,12 @@ impl From<study_core::account::AccountError> for ApiError {
                 StatusCode::CONFLICT,
                 ApiErrorCode::PendingInstitutionRequest,
             ),
+            E::MembershipAlreadyPending => {
+                (StatusCode::CONFLICT, ApiErrorCode::MembershipAlreadyPending)
+            }
+            E::MembershipAlreadyActive => {
+                (StatusCode::CONFLICT, ApiErrorCode::MembershipAlreadyActive)
+            }
             E::ContributorEvidenceMissing => (
                 StatusCode::CONFLICT,
                 ApiErrorCode::ContributorEvidenceMissing,

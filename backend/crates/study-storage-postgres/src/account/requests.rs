@@ -69,53 +69,6 @@ impl PostgresAccountRepository {
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(InstitutionPage { items, total })
     }
-    pub async fn request_membership(&self, digest: &[u8], institution: i64) -> AccountResult<()> {
-        let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-        let user = session::require(&mut tx, digest).await?.user_id;
-        let exists: bool = sqlx::query_scalar(
-            r#"
-                SELECT
-                  EXISTS (
-                    SELECT
-                      1
-                    FROM
-                      institutions
-                    WHERE
-                      id = $1
-                  )
-            "#,
-        )
-        .bind(institution)
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(map_sqlx_error)?;
-        if !exists {
-            return Err(AccountError::NotFound);
-        }
-        sqlx::query(
-            r#"
-                INSERT INTO
-                  institution_memberships (user_id, institution_id, state, requested_at)
-                VALUES
-                  ($1, $2, 'pending', clock_timestamp())
-                ON CONFLICT (user_id, institution_id) DO UPDATE
-                SET
-                  state = 'pending',
-                  requested_at = clock_timestamp(),
-                  decision_reason = NULL,
-                  edit_version = institution_memberships.edit_version + 1
-                WHERE
-                  institution_memberships.state IN ('rejected', 'revoked')
-            "#,
-        )
-        .bind(user)
-        .bind(institution)
-        .execute(&mut *tx)
-        .await
-        .map_err(map_sqlx_error)?;
-        tx.commit().await.map_err(map_sqlx_error)?;
-        Ok(())
-    }
     pub async fn request_contributor(
         &self,
         digest: &[u8],

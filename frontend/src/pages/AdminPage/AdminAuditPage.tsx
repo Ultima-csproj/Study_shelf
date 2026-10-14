@@ -6,6 +6,7 @@ const actions: Record<string, string> = {
   revoke_user_sessions: "Завершение сессий",
   set_platform_permissions: "Изменение глобальных прав",
   set_membership: "Изменение членства",
+  request_membership: "Личная заявка на вступление",
   rename_institution: "Изменение учреждения",
   decide_contributor_link: "Решение по привязке автора",
   decide_institution_registration: "Решение по регистрации учреждения",

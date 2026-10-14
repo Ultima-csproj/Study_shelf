@@ -2,6 +2,7 @@ pub mod admin;
 pub mod collections;
 mod credentials;
 pub mod library;
+mod membership_request;
 mod profile;
 mod requests;
 pub(crate) mod session;

@@ -35,6 +35,10 @@ pub enum AccountError {
     AccountDisabled,
     #[error("У вас уже есть заявка на регистрацию учреждения на рассмотрении")]
     PendingInstitutionRequest,
+    #[error("Ваша заявка в это учреждение уже ожидает рассмотрения")]
+    MembershipAlreadyPending,
+    #[error("Вы уже состоите в этом учреждении")]
+    MembershipAlreadyActive,
     #[error("Для подтверждения привязки авторства заявитель должен указать основание")]
     ContributorEvidenceMissing,
     #[error("{0}")]
