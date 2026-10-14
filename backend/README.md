@@ -12,23 +12,23 @@ PostgreSQL слушает 127.0.0.1:5433. Ignored корневой .env зада
 
 ## Запуск
 
-Из корня:
+Полная пошаговая инструкция для всего приложения находится в [корневом README](../README.md). Для backend используйте команды из корня репозитория.
 
 ~~~powershell
 docker compose up -d postgres
 docker compose ps
+cargo run --manifest-path backend/Cargo.toml --bin backend
 ~~~
 
-Из backend:
+При старте backend автоматически применяет schema migrations; seed автоматически не запускается. Для новой пустой базы с демонстрационными данными запустите seed отдельно и один раз:
 
 ~~~powershell
-cargo run --bin seed
-cargo run --bin backend
+cargo run --manifest-path backend/Cargo.toml --bin seed
 ~~~
 
-При обычном старте применяются schema migrations, seed автоматически не запускается. .env загружается из текущей папки или родительской; переменные окружения имеют приоритет.
+Корневой `.env` загружается из текущей папки; переменные окружения имеют приоритет. Не заменяйте уже настроенный `.env` примером без проверки `DATABASE_URL` и пароля существующего PostgreSQL volume.
 
-Vite: из frontend выполните npm run dev. Страницы /catalog, /disciplines и /collections читают API. Proxy /api направлен на 127.0.0.1:3000. После изменения кода перезапустите уже работающий backend.
+Frontend запускается отдельно из каталога `frontend`: `npm.cmd ci` при первой установке, затем `npm.cmd run dev`. Vite proxy `/api` направлен на `127.0.0.1:3000`. После изменения backend-кода перезапустите сервер.
 
 ## Новое чистое окружение
 

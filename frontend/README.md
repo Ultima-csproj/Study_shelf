@@ -4,18 +4,21 @@ React/TypeScript/Vite, React Router, CSS Modules. Каталог, дисципл
 
 ## Запуск
 
-1. Из корня: docker compose up -d postgres.
-2. Из backend: cargo run --bin backend.
-3. Из frontend:
+Полный порядок запуска PostgreSQL, backend и frontend, настройка `.env` и устранение частых ошибок описаны в [корневом README](../README.md).
+
+Если backend уже запущен, откройте PowerShell в каталоге `frontend`. При первой установке или после изменения `package-lock.json` выполните:
 
 ~~~powershell
-npm install
-npm run dev
+npm.cmd ci
 ~~~
 
-Vite: http://127.0.0.1:5173. /api proxy → http://127.0.0.1:3000. Production тоже должен маршрутизировать /api к backend.
+Для обычного запуска frontend:
 
-Текущее dev-окружение использует study_dev_stage11, корневой .env уже настроен. Первичный seed загружен. Конфигурация/команды: ../backend/README.md.
+~~~powershell
+npm.cmd run dev
+~~~
+
+Vite: http://127.0.0.1:5173. `/api` proxy → `http://127.0.0.1:3000`. Production тоже должен маршрутизировать `/api` к backend.
 
 ## Маршруты
 
@@ -94,3 +97,8 @@ npm run lint
 Файловой загрузки, встроенного редактора и видео-примера нет. Персональные hide material/author остаются отдельным срезом 14.7; далее proposals/editor. Ручные сценарии: `.codex/docs/material-checklist.md`. Lint/build не заменяют проверку прав, browser flows и concurrency.
 
 Подробности локально: .codex/docs/backend-learning-stage.md и backend-plan.md.
+
+
+### Проверка контекстной навигации
+
+В каталоге frontend выполните `npm.cmd run test:navigation`. Тесты запускают реальные TypeScript утилиты навигации без дополнительного тестового фреймворка: исходные вкладки/фильтры/страницы, вложенные возвраты, создание/отмена, безопасные fallback и переходы меню. Внешний вид и реальные операции с API эта команда не проверяет.
