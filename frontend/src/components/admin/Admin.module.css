@@ -79,14 +79,6 @@
   width: 100%;
   min-height: 72px;
 }
-:is(.page, .list, .surface) button {
-  min-height: 40px;
-  padding: 8px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
 
 .filters input,
 .filters select,
@@ -177,15 +169,6 @@
 .filters select {
   background: var(--color-field);
   border-color: var(--color-control-border);
-}
-:is(.surface, .list, .page) button {
-  font-weight: 500;
-}
-:is(.surface, .list, .page) button:not(:disabled):hover {
-  background: var(--color-hover);
-}
-:is(.surface, .list, .page) button:disabled {
-  opacity: 0.5;
 }
 .viewSwitch {
   display: flex;
@@ -303,7 +286,7 @@
   font-size: 13px;
   padding-top: 16px;
 }
-.pagination .actions {
+.pagination nav {
   margin: 0;
 }
 @media (max-width: 600px) {

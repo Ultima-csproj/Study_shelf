@@ -5,7 +5,9 @@ import {
   stateLabels,
 } from "../../api/admin";
 import { useApiResource } from "../../hooks/useApiResource";
-import styles from "./AccountForm.module.css";
+import { Button } from "../common/Button/Button";
+import { Pagination } from "../common/Pagination/Pagination";
+import styles from "../common/Form/Form.module.css";
 export function InstitutionRegistration() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -84,7 +86,9 @@ export function InstitutionRegistration() {
               onChange={(event) => setEvidence(event.target.value)}
             />
           </label>
-          <button type="submit">Отправить заявку</button>
+          <Button variant="primary" type="submit" loading={busy}>
+            Отправить заявку
+          </Button>
         </fieldset>
       </form>
       {notice && <p role="status">{notice}</p>}
@@ -107,23 +111,13 @@ export function InstitutionRegistration() {
         ))}
       </ul>
       {result && (
-        <div className={styles.actions}>
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Назад
-          </button>
-          <span>Страница {page}</span>
-          <button
-            type="button"
-            disabled={page >= result.pageCount}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Далее
-          </button>
-        </div>
+        <Pagination
+          page={page}
+          pageCount={result.pageCount}
+          onChange={setPage}
+          loading={loading}
+          label="Страницы заявок учреждений"
+        />
       )}
     </section>
   );

@@ -1,4 +1,5 @@
 import styles from "./Admin.module.css";
+import { Pagination } from "../common/Pagination/Pagination";
 
 interface AdminPaginationProps {
   page: number;
@@ -17,29 +18,9 @@ export function AdminPagination({
     return null;
   }
   return (
-    <nav className={styles.pagination} aria-label="Страницы списка">
+    <div className={styles.pagination}>
       <span>Всего: {total}</span>
-      {pageCount > 1 && (
-        <div className={styles.actions}>
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => onPage(page - 1)}
-          >
-            Назад
-          </button>
-          <span>
-            Страница {page} из {pageCount}
-          </span>
-          <button
-            type="button"
-            disabled={page >= pageCount}
-            onClick={() => onPage(page + 1)}
-          >
-            Далее
-          </button>
-        </div>
-      )}
-    </nav>
+      <Pagination page={page} pageCount={pageCount} onChange={onPage} />
+    </div>
   );
 }

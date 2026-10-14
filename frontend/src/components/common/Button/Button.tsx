@@ -1,11 +1,14 @@
 import type { ButtonHTMLAttributes } from "react";
-import styles from "./Button.module.css";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "text" | "secondary";
+  variant?: "text" | "primary" | "secondary" | "ghost" | "danger";
+  size?: "regular" | "compact";
+  loading?: boolean;
 }
 export function Button({
   variant = "text",
+  size = "regular",
+  loading = false,
   className = "",
   type = "button",
   disabled,
@@ -13,16 +16,20 @@ export function Button({
   children,
   ...htmlAttributes
 }: ButtonProps) {
-  const buttonClassName = `${styles.button} ${styles[variant]} ${className}`;
+  const buttonClassName = `ui-button ${className}`.trim();
 
   return (
     <button
       type={type}
-      disabled={disabled}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       onClick={onClick}
       className={buttonClassName}
       {...htmlAttributes}
+      data-variant={variant}
+      data-size={size}
     >
+      {loading && <span className="ui-button-spinner" aria-hidden="true" />}
       {children}
     </button>
   );

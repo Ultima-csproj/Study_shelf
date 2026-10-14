@@ -10,6 +10,7 @@ import {
 import { AdminList, type RunAction } from "../../components/admin/AdminList";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
 import styles from "../../components/admin/Admin.module.css";
+import { StatusBadge } from "../../components/common/StatusBadge/StatusBadge";
 
 export function AdminRequestsPage() {
   const access = useAdminAccess();
@@ -88,7 +89,8 @@ function RequestDecision({
         Заявитель: {request.userName} · #{request.userId}
       </p>
       <p>
-        {stateLabels[request.state]} · {request.createdAt}
+        <StatusBadge state={request.state} label={stateLabels[request.state]} />{" "}
+        · {request.createdAt}
       </p>
       <p>{request.description}</p>
       {request.decisionReason && (

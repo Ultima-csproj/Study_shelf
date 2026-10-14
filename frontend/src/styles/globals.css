@@ -1,5 +1,6 @@
 @import "./variables.css";
 @import "./themes.css";
+@import "./buttons.css";
 
 *,
 *::before,
@@ -12,7 +13,6 @@ body {
   color: var(--color-text);
   font: 14px/1.5 var(--font-body);
 }
-button,
 input,
 select {
   font: inherit;
@@ -25,11 +25,16 @@ summary {
   -webkit-tap-highlight-color: transparent;
 }
 button {
-  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
   cursor: pointer;
 }
+:where(button[class]:not(.ui-button)) {
+  color: inherit;
+}
 button:disabled {
-  cursor: default;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 a {
   color: inherit;
