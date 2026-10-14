@@ -1,20 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
 import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
+import type { ReactNode } from "react";
 import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
 import type { CollectionItemView } from "../../../types/collection";
 import type { PreviewKind } from "../../../types/material";
 import styles from "./CollectionRouteItem.module.css";
 import { materialPath, withNavigationOrigin } from "../../../utils/navigation";
 
+interface CollectionRouteItemProps {
+  item: CollectionItemView;
+  sectionNumber: number;
+  sectionId: string;
+}
+
 export function CollectionRouteItem({
   item,
   sectionNumber,
   sectionId,
-}: {
-  item: CollectionItemView;
-  sectionNumber: number;
-  sectionId: string;
-}) {
+}: CollectionRouteItemProps) {
   const material = item.material;
   const location = useLocation();
   const number = `${sectionNumber}.${item.position}`;
@@ -28,23 +31,52 @@ export function CollectionRouteItem({
   let previewKind: PreviewKind | undefined;
 
   if (material.type !== "video" && material.type !== "article") {
-    previewKind = sourceDocument ? "document" : "pdf";
+    if (sourceDocument) {
+      previewKind = "document";
+    } else {
+      previewKind = "pdf";
+    }
   }
 
-  const duration = material.duration
-    ? `${Number(material.duration.split(":")[0])} мин`
-    : null;
-  let lastLabel: string | null = "PDF";
+  let durationLabel: string | null = null;
+
+  if (material.durationSeconds !== null) {
+    const minutes = Math.ceil(material.durationSeconds / 60);
+    durationLabel = `${minutes} мин`;
+  }
+
+  let lastLabel: string | null = null;
 
   if (material.type === "video") {
-    lastLabel = duration;
+    lastLabel = durationLabel;
   } else if (externalArticle) {
     lastLabel = null;
   }
 
-  const metadata = [item.formatLabel, item.attributionLabel, lastLabel]
-    .filter(Boolean)
-    .join(" · ");
+  const metadataParts = [item.formatLabel, item.attributionLabel];
+
+  if (lastLabel) {
+    metadataParts.push(lastLabel);
+  }
+
+  const metadata = metadataParts.join(" · ");
+  let previewContent: ReactNode;
+
+  if (externalArticle) {
+    previewContent = (
+      <span className={styles.external}>
+        <LinkIcon size={31} aria-hidden="true" />
+      </span>
+    );
+  } else {
+    previewContent = (
+      <MaterialPreview
+        material={material}
+        variant="collection"
+        kind={previewKind}
+      />
+    );
+  }
 
   return (
     <li className={styles.row}>
@@ -57,17 +89,7 @@ export function CollectionRouteItem({
         tabIndex={-1}
         aria-hidden="true"
       >
-        {externalArticle ? (
-          <span className={styles.external}>
-            <LinkIcon size={31} aria-hidden="true" />
-          </span>
-        ) : (
-          <MaterialPreview
-            material={material}
-            variant="collection"
-            kind={previewKind}
-          />
-        )}
+        {previewContent}
       </Link>
       <article className={styles.body}>
         <h3>

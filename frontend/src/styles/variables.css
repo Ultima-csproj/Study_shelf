@@ -1,4 +1,6 @@
 :root {
   --radius: 5px;
+  --button-radius: 8px;
+  --button-height: 40px;
   --font-body: "Arimo", Arial, sans-serif;
 }

@@ -1,51 +1,48 @@
-import { materials } from "../data/materials";
-import { collectionMaterials } from "../data/collectionMaterials";
-import { disciplines } from "../data/disciplines";
-import { teachers } from "../data/teachers";
-import type { CatalogMaterial, MaterialSource } from "../types/material";
+import type {
+  CatalogMaterial,
+  MaterialSource,
+  MaterialDetail,
+} from "../types/material";
 import { getJson, HttpError } from "./http";
 
 export async function getMaterial(
   id: string | number,
   signal?: AbortSignal,
   source: MaterialSource = "api",
+  allowPrivate = false,
+  context = "",
 ): Promise<CatalogMaterial | null> {
+  // Retired demo references never resolve to an unrelated real API material.
   if (source === "mock") {
-    return getDemoMaterial(id, signal);
+    return null;
   }
-
   try {
-    const material = await getJson<Omit<CatalogMaterial, "source">>(
-      `/api/materials/${encodeURIComponent(String(id))}`,
+    const material = await getJson<MaterialDetail>(
+      "/api/materials/" + encodeURIComponent(String(id)) + "?" + context.replace(/^&/, ""),
       signal,
     );
     return { ...material, source: "api" };
   } catch (reason) {
     if (reason instanceof HttpError && reason.status === 404) {
-      return null;
+      if (!allowPrivate) {
+        return null;
+      }
+      try {
+        const material = await getJson<MaterialDetail>(
+          "/api/me/materials/" + encodeURIComponent(String(id)) + "?" + context.replace(/^&/, ""),
+          signal,
+        );
+        return { ...material, source: "api" };
+      } catch (privateError) {
+        if (
+          privateError instanceof HttpError &&
+          [401, 404].includes(privateError.status)
+        ) {
+          return null;
+        }
+        throw privateError;
+      }
     }
-
     throw reason;
   }
-}
-
-export async function getDemoMaterial(
-  id: string | number,
-  signal?: AbortSignal,
-): Promise<CatalogMaterial | null> {
-  await Promise.resolve();
-  signal?.throwIfAborted();
-  const material = [...materials, ...collectionMaterials].find(
-    (item) => item.id === Number(id),
-  );
-  return material
-    ? {
-        ...material,
-        source: "mock",
-        discipline:
-          disciplines.find((item) => item.id === material.disciplineId) ?? null,
-        teacher:
-          teachers.find((item) => item.id === material.teacherId) ?? null,
-      }
-    : null;
 }

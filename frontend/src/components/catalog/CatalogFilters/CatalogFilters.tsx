@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { materialTypeLabels } from "../../../utils/materialLabels";
 import type {
@@ -13,19 +13,25 @@ import { FilterGroup } from "./FilterGroup";
 import styles from "./CatalogFilters.module.css";
 
 interface CatalogFiltersProps {
-  value: Filters;
+  filters: Filters;
   facets: CatalogFacets;
   onChange: (filters: Filters) => void;
   onReset: () => void;
 }
 const visibleTypes: MaterialType[] = ["lecture", "book", "article", "video"];
-const toggle = <T,>(items: T[], value: T) =>
-  items.includes(value)
-    ? items.filter((item) => item !== value)
-    : [...items, value];
+
+function toggle<T>(items: T[], value: T): T[] {
+  const alreadySelected = items.includes(value);
+
+  if (alreadySelected) {
+    return items.filter((item) => item !== value);
+  }
+
+  return [...items, value];
+}
 
 export function CatalogFilters({
-  value,
+  filters,
   facets,
   onChange,
   onReset,
@@ -34,16 +40,121 @@ export function CatalogFilters({
   const [allDisciplines, setAllDisciplines] = useState(false);
   const [allTeachers, setAllTeachers] = useState(false);
   const [teacherQuery, setTeacherQuery] = useState("");
-  const shownDisciplines = allDisciplines
-    ? disciplines
-    : disciplines.slice(0, 3);
-  const shownTeachers = (
-    teacherQuery || allTeachers ? teachers : teachers.slice(0, 4)
-  ).filter((teacher) =>
-    teacher.name
-      .toLocaleLowerCase("ru")
-      .includes(teacherQuery.toLocaleLowerCase("ru")),
-  );
+  let shownDisciplines = disciplines.slice(0, 3);
+
+  if (allDisciplines) {
+    shownDisciplines = disciplines;
+  }
+
+  let teachersToFilter = teachers;
+
+  if (!teacherQuery && !allTeachers) {
+    teachersToFilter = teachers.slice(0, 4);
+  }
+
+  const normalizedTeacherQuery = teacherQuery.toLocaleLowerCase("ru");
+  const shownTeachers = teachersToFilter.filter((teacher) => {
+    const normalizedName = teacher.name.toLocaleLowerCase("ru");
+    return normalizedName.includes(normalizedTeacherQuery);
+  });
+
+  const changeTypes = (type: MaterialType) => {
+    const types = toggle(filters.types, type);
+    const nextFilters = { ...filters, types };
+    onChange(nextFilters);
+  };
+
+  const changeDisciplines = (disciplineId: number) => {
+    const disciplineIds = toggle(filters.disciplineIds, disciplineId);
+    const nextFilters = { ...filters, disciplineIds };
+    onChange(nextFilters);
+  };
+
+  const changeTeachers = (teacherId: number) => {
+    const teacherIds = toggle(filters.teacherIds, teacherId);
+    const nextFilters = { ...filters, teacherIds };
+    onChange(nextFilters);
+  };
+
+  const changeCourses = (course: number) => {
+    const courses = toggle(filters.courses, course);
+    const nextFilters = { ...filters, courses };
+    onChange(nextFilters);
+  };
+
+  const changeYears = (year: number) => {
+    const years = toggle(filters.years, year);
+    const nextFilters = { ...filters, years };
+    onChange(nextFilters);
+  };
+
+  const toggleAllDisciplines = () => {
+    setAllDisciplines((currentlyShowingAll) => {
+      if (currentlyShowingAll) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const toggleAllTeachers = () => {
+    setAllTeachers((currentlyShowingAll) => {
+      if (currentlyShowingAll) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const handleTeacherQueryChange = (query: string) => {
+    setTeacherQuery(query);
+  };
+
+  let noTeachersMessage: ReactNode = null;
+
+  if (shownTeachers.length === 0) {
+    noTeachersMessage = (
+      <p className={styles.noTeachers}>Преподаватель не найден</p>
+    );
+  }
+
+  let disciplineToggleLabel = "Показать все дисциплины";
+  let disciplineToggleClassName = "";
+
+  if (allDisciplines) {
+    disciplineToggleLabel = "Скрыть дисциплины";
+    disciplineToggleClassName = styles.rotated;
+  }
+
+  let teacherToggleLabel = "Показать всех преподавателей";
+  let teacherToggleClassName = "";
+
+  if (allTeachers) {
+    teacherToggleLabel = "Скрыть преподавателей";
+    teacherToggleClassName = styles.rotated;
+  }
+
+  let teacherToggleButton: ReactNode = null;
+
+  if (!teacherQuery) {
+    teacherToggleButton = (
+      <Button
+        className={styles.more}
+        onClick={toggleAllTeachers}
+        aria-expanded={allTeachers}
+      >
+        {teacherToggleLabel}
+        <CaretDownIcon
+          size={12}
+          className={teacherToggleClassName}
+          aria-hidden="true"
+        />
+      </Button>
+    );
+  }
+
   return (
     <section className={styles.filters} aria-label="Фильтры каталога">
       <div className={styles.heading}>
@@ -56,10 +167,8 @@ export function CatalogFilters({
             key={type}
             label={materialTypeLabels[type]}
             count={facets.types[type] ?? 0}
-            checked={value.types.includes(type)}
-            onChange={() =>
-              onChange({ ...value, types: toggle(value.types, type) })
-            }
+            checked={filters.types.includes(type)}
+            onChange={() => changeTypes(type)}
           />
         ))}
       </FilterGroup>
@@ -69,24 +178,19 @@ export function CatalogFilters({
             key={discipline.id}
             label={discipline.name}
             count={discipline.materialCount}
-            checked={value.disciplineIds.includes(discipline.id)}
-            onChange={() =>
-              onChange({
-                ...value,
-                disciplineIds: toggle(value.disciplineIds, discipline.id),
-              })
-            }
+            checked={filters.disciplineIds.includes(discipline.id)}
+            onChange={() => changeDisciplines(discipline.id)}
           />
         ))}
         <Button
           className={styles.more}
-          onClick={() => setAllDisciplines((current) => !current)}
+          onClick={toggleAllDisciplines}
           aria-expanded={allDisciplines}
         >
-          {allDisciplines ? "Скрыть дисциплины" : "Показать все дисциплины"}
+          {disciplineToggleLabel}
           <CaretDownIcon
             size={12}
-            className={allDisciplines ? styles.rotated : ""}
+            className={disciplineToggleClassName}
             aria-hidden="true"
           />
         </Button>
@@ -96,7 +200,7 @@ export function CatalogFilters({
           <SearchInput
             compact
             value={teacherQuery}
-            onChange={setTeacherQuery}
+            onChange={handleTeacherQueryChange}
             label="Поиск преподавателя"
             placeholder="Поиск преподавателя…"
           />
@@ -106,34 +210,12 @@ export function CatalogFilters({
             key={teacher.id}
             label={teacher.shortName}
             count={teacher.materialCount}
-            checked={value.teacherIds.includes(teacher.id)}
-            onChange={() =>
-              onChange({
-                ...value,
-                teacherIds: toggle(value.teacherIds, teacher.id),
-              })
-            }
+            checked={filters.teacherIds.includes(teacher.id)}
+            onChange={() => changeTeachers(teacher.id)}
           />
         ))}
-        {!shownTeachers.length && (
-          <p className={styles.noTeachers}>Преподаватель не найден</p>
-        )}
-        {!teacherQuery && (
-          <Button
-            className={styles.more}
-            onClick={() => setAllTeachers((current) => !current)}
-            aria-expanded={allTeachers}
-          >
-            {allTeachers
-              ? "Скрыть преподавателей"
-              : "Показать всех преподавателей"}
-            <CaretDownIcon
-              size={12}
-              className={allTeachers ? styles.rotated : ""}
-              aria-hidden="true"
-            />
-          </Button>
-        )}
+        {noTeachersMessage}
+        {teacherToggleButton}
       </FilterGroup>
       <FilterGroup title="Курс">
         {facets.courses.map(({ value: course, materialCount }) => (
@@ -141,10 +223,8 @@ export function CatalogFilters({
             key={course}
             label={`${course} курс`}
             count={materialCount}
-            checked={value.courses.includes(course)}
-            onChange={() =>
-              onChange({ ...value, courses: toggle(value.courses, course) })
-            }
+            checked={filters.courses.includes(course)}
+            onChange={() => changeCourses(course)}
           />
         ))}
       </FilterGroup>
@@ -154,10 +234,8 @@ export function CatalogFilters({
             key={year}
             label={String(year)}
             count={materialCount}
-            checked={value.years.includes(year)}
-            onChange={() =>
-              onChange({ ...value, years: toggle(value.years, year) })
-            }
+            checked={filters.years.includes(year)}
+            onChange={() => changeYears(year)}
           />
         ))}
       </FilterGroup>

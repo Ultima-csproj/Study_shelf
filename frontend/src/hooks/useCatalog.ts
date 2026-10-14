@@ -7,6 +7,7 @@ import type {
 } from "../types/material";
 
 export const emptyFilters: CatalogFilters = {
+  includeArchived: false,
   query: "",
   types: [],
   disciplineIds: [],
@@ -21,7 +22,7 @@ export function useCatalog(request: CatalogRequest) {
     items: [],
     total: 0,
     page: 1,
-    pageCount: 1,
+    pageCount: 0,
     facets: {
       types: {},
       disciplines: [],

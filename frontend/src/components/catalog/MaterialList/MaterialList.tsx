@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { CatalogMaterial } from "../../../types/material";
 import { MaterialListItem } from "../MaterialListItem/MaterialListItem";
 import { Button } from "../../common/Button/Button";
@@ -21,7 +22,7 @@ export function MaterialList({
   onReset,
   onRetry,
 }: MaterialListProps) {
-  if (error)
+  if (error) {
     return (
       <div role="alert" className={styles.state}>
         <h2>Не удалось загрузить каталог</h2>
@@ -31,7 +32,9 @@ export function MaterialList({
         </Button>
       </div>
     );
-  if (!loading && !materials.length)
+  }
+
+  if (!loading && materials.length === 0) {
     return (
       <div className={styles.state} role="status">
         <h2>Материалы не найдены</h2>
@@ -41,6 +44,18 @@ export function MaterialList({
         </Button>
       </div>
     );
+  }
+
+  let loadingMessage: ReactNode = null;
+
+  if (loading && materials.length === 0) {
+    loadingMessage = (
+      <li className={styles.state} role="status">
+        Загрузка материалов…
+      </li>
+    );
+  }
+
   return (
     <ul
       className={styles.list}
@@ -55,11 +70,7 @@ export function MaterialList({
           onTagClick={onTagClick}
         />
       ))}
-      {loading && !materials.length && (
-        <li className={styles.state} role="status">
-          Загрузка материалов…
-        </li>
-      )}
+      {loadingMessage}
     </ul>
   );
 }

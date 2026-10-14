@@ -209,3 +209,8 @@
     height: 32px;
   }
 }
+
+.catalog { width: 110px; }
+.catalog .image, .catalog .icon { width: 110px; height: 118px; border-radius: 8px; }
+@media (max-width: 700px) { .catalog { width: 76px; } .catalog .image, .catalog .icon { width: 76px; height: 90px; } }
+@media (max-width: 420px) { .catalog { width: 58px; } .catalog .image, .catalog .icon { width: 58px; height: 72px; } }

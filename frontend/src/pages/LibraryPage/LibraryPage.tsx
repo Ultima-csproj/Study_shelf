@@ -1,11 +1,21 @@
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { getLibrary } from "../../api/library";
+import {
+  getSavedMaterials,
+  getSavedCollections,
+  getContributedCollections,
+} from "../../api/library";
 import { useApiResource } from "../../hooks/useApiResource";
 import { useViewer } from "../../hooks/useViewer";
-import { CollectionListItem } from "../../components/collections/CollectionListItem/CollectionListItem";
 import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import styles from "./LibraryPage.module.css";
+import { ProfileLayout } from "../ProfilePage/ProfileLayout";
+import { Pagination } from "../../components/common/Pagination/Pagination";
+import { Badge } from "../../components/common/Badge/Badge";
+import { BookmarkSimpleIcon } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
+import { BooksIcon } from "@phosphor-icons/react/dist/csr/Books";
+import { FileTextIcon } from "@phosphor-icons/react/dist/csr/FileText";
+import { authorLabel } from "../../utils/materialLabels";
 import {
   locationPath,
   materialPath,
@@ -13,32 +23,51 @@ import {
 } from "../../utils/navigation";
 
 export function LibraryPage() {
-  const { viewer, savedMaterials, savedCollectionIds } = useViewer();
+  const { libraryVersion, viewer } = useViewer();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const parentPath = locationPath(location);
-  const tab = params.get("tab") === "collections" ? "collections" : "saved";
-  const userId = viewer.kind === "authenticated" ? viewer.user.id : 0;
+  const contributions = params.get("tab") === "contributions";
+  const collections = params.get("tab") === "collections" || contributions;
+  let tab = "saved";
+  if (contributions) {
+    tab = "contributions";
+  } else if (collections) {
+    tab = "collections";
+  }
+  const requested = Number(params.get("page") ?? "1");
+  const page = Number.isSafeInteger(requested) && requested > 0 ? requested : 1;
   const load = useCallback(
-    (signal: AbortSignal) => {
-      return getLibrary(userId, savedMaterials, savedCollectionIds, signal);
+    async (signal: AbortSignal) => {
+      const version = libraryVersion;
+      void version;
+      if (contributions) {
+        return {
+          kind: "collections" as const,
+          page: await getContributedCollections(page, signal),
+        };
+      }
+      if (collections) {
+        return {
+          kind: "collections" as const,
+          page: await getSavedCollections(page, signal),
+        };
+      }
+      return {
+        kind: "materials" as const,
+        page: await getSavedMaterials(page, signal),
+      };
     },
-    [userId, savedMaterials, savedCollectionIds],
+    [collections, contributions, page, libraryVersion],
   );
   const { result, error, loading, retry } = useApiResource(
     load,
     "Не удалось загрузить библиотеку",
   );
-  const materials = result?.materials ?? [];
-  const savedCollections = result?.savedCollections ?? [];
-  const contributedCollections = result?.contributedCollections ?? [];
 
-  const changeTab = (next: string) => {
-    setParams({ tab: next }, { replace: true, flushSync: true });
-  };
-
-  let content;
-
+  const selectTab = (tab: string) => setParams({ tab });
+  const selectPage = (next: number) => setParams({ tab, page: String(next) });
+  let content: ReactNode = null;
   if (loading) {
     content = <p role="status">Загружаем библиотеку…</p>;
   } else if (error) {
@@ -46,108 +75,156 @@ export function LibraryPage() {
       <div>
         <p role="alert">{error}</p>
         <button type="button" onClick={retry}>
-          Повторить загрузку
+          Повторить
         </button>
       </div>
     );
-  } else if (tab === "saved") {
-    content = (
-      <section aria-labelledby="saved-materials-heading">
-        <h2 id="saved-materials-heading">Сохранённые материалы</h2>
-        {materials.length === 0 && (
-          <div className={styles.empty}>
-            <p>Здесь появятся материалы, которые вы сохраните.</p>
-            <Link to="/catalog">Найти материалы в каталоге →</Link>
-          </div>
-        )}
-        <ul className={styles.materials}>
-          {materials.map((material) => {
-            const path = withNavigationOrigin(
-              materialPath(material.id, material.source),
-              parentPath,
-            );
-
-            return (
-              <li key={`${material.source}:${material.id}`}>
-                <div>
-                  <h3>
-                    <Link to={path}>{material.title}</Link>
-                  </h3>
-                  <p>{material.discipline?.name}</p>
+  } else if (result) {
+    let items: ReactNode;
+    if (result.kind === "materials") {
+      items = result.page.items.map((slot) => {
+        const material = slot.material;
+        const path = withNavigationOrigin(
+          materialPath(slot.id, "api"),
+          parentPath,
+        );
+        return (
+          <li key={slot.id}>
+            <span className={styles.itemIcon}>
+              <FileTextIcon size={26} aria-hidden="true" />
+            </span>
+            <div className={styles.itemBody}>
+              {material ? (
+                <h3>
+                  <Link to={path}>{material.title}</Link>
+                </h3>
+              ) : (
+                <p>Материал недоступен</p>
+              )}
+              {material && (
+                <div className={styles.metadata}>
+                  <Badge type={material.type} />
+                  <span>{authorLabel(material.credits)}</span>
+                  {material.sourceYear !== null && (
+                    <span>{material.sourceYear}</span>
+                  )}
                 </div>
-                <SaveAction
-                  id={material.id}
-                  title={material.title}
-                  source={material.source}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    );
-  } else {
+              )}
+              {material && (
+                <p className={styles.description}>{material.description}</p>
+              )}
+            </div>
+            <SaveAction
+              id={slot.id}
+              compact
+              outlined
+              title={material?.title ?? "Недоступный материал"}
+            />
+          </li>
+        );
+      });
+    } else {
+      items = result.page.items.map((slot) => {
+        const target = slot.owned
+          ? `/library/collections/${slot.id}`
+          : `/collections/${slot.id}`;
+        const path = withNavigationOrigin(target, parentPath);
+        return (
+          <li key={slot.id}>
+            <span className={styles.itemIcon}>
+              <BooksIcon size={26} aria-hidden="true" />
+            </span>
+            <div className={styles.itemBody}>
+              {slot.title === null ? (
+                <p>Подборка недоступна</p>
+              ) : (
+                <h3>
+                  <Link to={path}>{slot.title}</Link>
+                </h3>
+              )}
+              <p>{slot.shortDescription}</p>
+            </div>
+            <SaveAction
+              id={slot.id}
+              title={slot.title ?? "Недоступная подборка"}
+              compact
+              outlined
+              kind="collection"
+            />
+          </li>
+        );
+      });
+    }
     content = (
       <>
-        <section aria-labelledby="saved-collections-heading">
-          <h2 id="saved-collections-heading">Сохранённые подборки</h2>
-          {savedCollections.length === 0 && (
-            <div className={styles.empty}>
-              <p>Вы пока не сохранили ни одной подборки.</p>
-              <Link to="/collections">Посмотреть публичные подборки →</Link>
-            </div>
-          )}
-          <ul className={styles.collections}>
-            {savedCollections.map((collection) => (
-              <CollectionListItem key={collection.id} collection={collection} />
-            ))}
-          </ul>
-        </section>
-        {contributedCollections.length > 0 && (
-          <section
-            className={styles.contributions}
-            aria-labelledby="contributed-collections-heading"
-          >
-            <h2 id="contributed-collections-heading">
-              Подборки с вашим участием
-            </h2>
-            <ul className={styles.collections}>
-              {contributedCollections.map((collection) => (
-                <CollectionListItem
-                  key={collection.id}
-                  collection={collection}
-                />
-              ))}
-            </ul>
-          </section>
+        {result.page.total === 0 && (
+          <div className={styles.empty}>
+            <BookmarkSimpleIcon size={36} aria-hidden="true" />
+            <h2>Пока ничего нет</h2>
+            <p>
+              Сохраняйте полезные материалы и подборки, чтобы быстро
+              возвращаться к ним.
+            </p>
+            <Link to="/catalog">Перейти в каталог →</Link>
+          </div>
         )}
+        {result.page.total > 0 && (
+          <p className={styles.resultCount}>Всего: {result.page.total}</p>
+        )}
+        <ul className={styles.materials}>{items}</ul>
+        <Pagination
+          page={page}
+          pageCount={result.page.pageCount}
+          onChange={selectPage}
+          label="Страницы библиотеки"
+        />
       </>
     );
   }
-
+  if (viewer.kind !== "authenticated") {
+    return null;
+  }
   return (
-    <div className={styles.page}>
-      <h1>Моя библиотека</h1>
-      <p className={styles.subtitle}>
-        Сохранённые материалы и учебные маршруты.
-      </p>
-      <nav className={styles.tabs} aria-label="Разделы библиотеки">
-        <button
-          type="button"
-          aria-current={tab === "saved" ? "page" : undefined}
-          onClick={() => changeTab("saved")}
-        >
-          Сохранённое ({savedMaterials.length})
-        </button>
-        <button
-          type="button"
-          aria-current={tab === "collections" ? "page" : undefined}
-          onClick={() => changeTab("collections")}
-        >
-          Подборки ({savedCollectionIds.length})
-        </button>
-      </nav>
-      <div className={styles.content}>{content}</div>
-    </div>
+    <ProfileLayout user={viewer.user}>
+      <div className={styles.page}>
+        <header className={styles.heading}>
+          <div>
+            <h1>Библиотека</h1>
+            <p>Ваша подборка полезного для учёбы.</p>
+          </div>
+          <Link
+            className={styles.manage}
+            to={withNavigationOrigin("/library/collections", parentPath)}
+          >
+            <BooksIcon size={18} aria-hidden="true" />
+            Мои подборки
+          </Link>
+        </header>
+        <nav className={styles.tabs} aria-label="Разделы библиотеки">
+          <button
+            type="button"
+            aria-current={!collections ? "page" : undefined}
+            onClick={() => selectTab("saved")}
+          >
+            Материалы
+          </button>
+          <button
+            type="button"
+            aria-current={collections && !contributions ? "page" : undefined}
+            onClick={() => selectTab("collections")}
+          >
+            Подборки
+          </button>
+          <button
+            type="button"
+            aria-current={contributions ? "page" : undefined}
+            onClick={() => selectTab("contributions")}
+          >
+            С моим участием
+          </button>
+        </nav>
+        <div className={styles.content}>{content}</div>
+      </div>
+    </ProfileLayout>
   );
 }

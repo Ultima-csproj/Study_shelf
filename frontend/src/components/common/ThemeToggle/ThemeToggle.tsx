@@ -1,13 +1,33 @@
 import { SunIcon } from "@phosphor-icons/react/dist/csr/Sun";
 import { MoonIcon } from "@phosphor-icons/react/dist/csr/Moon";
+import type { ReactNode } from "react";
 import { useTheme } from "../../../hooks/useTheme";
 import styles from "./ThemeToggle.module.css";
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
   const light = theme === "light";
-  const title = light ? "Включить тёмную тему" : "Включить светлую тему";
-  const trackClassName = `${styles.track} ${light ? "" : styles.light}`;
+  let title = "Включить светлую тему";
+
+  if (light) {
+    title = "Включить тёмную тему";
+  }
+
+  const trackClassNames = [styles.track];
+
+  if (!light) {
+    trackClassNames.push(styles.light);
+  }
+
+  const trackClassName = trackClassNames.join(" ");
+  let themeIcon: ReactNode;
+
+  if (light) {
+    themeIcon = <SunIcon size={20} aria-hidden="true" />;
+  } else {
+    themeIcon = <MoonIcon size={20} aria-hidden="true" />;
+  }
+
   return (
     <button
       type="button"
@@ -18,11 +38,7 @@ export function ThemeToggle() {
       title={title}
       className={styles.control}
     >
-      {light ? (
-        <SunIcon size={20} aria-hidden="true" />
-      ) : (
-        <MoonIcon size={20} aria-hidden="true" />
-      )}
+      {themeIcon}
       <span className={trackClassName} aria-hidden="true">
         <span className={styles.thumb} />
       </span>

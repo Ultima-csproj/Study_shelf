@@ -62,3 +62,9 @@
   font-size: 13px;
   padding: 4px 0;
 }
+
+.filters { padding: 22px; border-radius: 12px; }
+.heading { padding-bottom: 18px; border-bottom: 1px solid var(--color-border); }
+.heading h2 { font-size: 20px; }
+.group + .group { margin-top: 18px; }
+.options { margin-top: 12px; }

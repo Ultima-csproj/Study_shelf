@@ -1,0 +1,23 @@
+.requests {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.requests li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .requests li {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

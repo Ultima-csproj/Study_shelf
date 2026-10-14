@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { CollectionRouteItem } from "../../components/collections/CollectionRouteItem/CollectionRouteItem";
+import { CollectionSectionEntries } from "../../components/collections/CollectionSectionEntries/CollectionSectionEntries";
 import { SaveAction } from "../../components/common/SaveAction/SaveAction";
 import { useCollection } from "../../hooks/useCollections";
 import { useViewer } from "../../hooks/useViewer";
@@ -28,14 +28,19 @@ export function CollectionPage() {
   } = useCollection(collectionId);
   const { viewer } = useViewer();
   const origin = navigationOrigin(location.search);
-  const parentPath =
-    origin?.kind === "collections" || origin?.kind === "library"
-      ? origin.path
-      : "/collections";
-  const parentLabel =
-    origin?.kind === "library" ? "Моя библиотека" : "Подборки";
-  const backLabel =
-    origin?.kind === "library" ? "Моя библиотека" : "К списку подборок";
+  let parentPath = "/collections";
+  let parentLabel = "Подборки";
+  let backLabel = "К списку подборок";
+
+  if (origin?.kind === "collections" || origin?.kind === "library") {
+    parentPath = origin.path;
+  }
+
+  if (origin?.kind === "library") {
+    parentLabel = "Моя библиотека";
+    backLabel = "Моя библиотека";
+  }
+
   const requestedSection = location.hash.slice(1);
 
   useEffect(() => {
@@ -85,42 +90,92 @@ export function CollectionPage() {
   }
 
   const metadata = collectionMetadata(collection);
-  const difficulty = collection.difficulty
-    ? difficultyLabels[collection.difficulty]
-    : null;
-  const fullMetadata = difficulty ? `${metadata} · ${difficulty}` : metadata;
+  let difficulty: string | null = null;
+
+  if (collection.difficulty) {
+    difficulty = difficultyLabels[collection.difficulty];
+  }
+
+  let fullMetadata = metadata;
+
+  if (difficulty) {
+    fullMetadata = `${metadata} · ${difficulty}`;
+  }
+
   const names = compilerNames(collection.contributors);
   const validSection = collection.sections.some((section) => {
     return `route-${section.id}` === requestedSection;
   });
-  const currentSection = validSection
-    ? requestedSection
-    : `route-${collection.sections[0]?.id}`;
-  const disciplinePath = collection.discipline
-    ? collectionsForDiscipline(collection.discipline.id)
-    : null;
-  const navigation = (
-    <nav aria-label="Разделы подборки">
-      {collection.sections.map((section) => {
-        const id = `route-${section.id}`;
-        const selected = currentSection === id;
-        const className = selected ? styles.selected : "";
-        const current = selected ? "location" : undefined;
+  let currentSection = `route-${collection.sections[0]?.id}`;
 
-        return (
-          <a
-            key={section.id}
-            href={`#${id}`}
-            className={className}
-            aria-current={current}
-          >
-            <span>{section.position}.</span>
-            {section.title}
-          </a>
-        );
-      })}
-    </nav>
+  if (validSection) {
+    currentSection = requestedSection;
+  }
+
+  let disciplinePath: string | null = null;
+
+  if (collection.discipline) {
+    disciplinePath = collectionsForDiscipline(collection.discipline.id);
+  }
+
+  const sectionNavigationLinks: ReactNode[] = [];
+
+  for (const section of collection.sections) {
+    const id = `route-${section.id}`;
+    const selected = currentSection === id;
+    let className = "";
+    let current: "location" | undefined = undefined;
+
+    if (selected) {
+      className = styles.selected;
+      current = "location";
+    }
+
+    const sectionLink = (
+      <a
+        key={section.id}
+        href={`#${id}`}
+        className={className}
+        aria-current={current}
+      >
+        <span>{section.position}.</span>
+        {section.title}
+      </a>
+    );
+
+    sectionNavigationLinks.push(sectionLink);
+  }
+
+  const navigation = (
+    <nav aria-label="Разделы подборки">{sectionNavigationLinks}</nav>
   );
+
+  let disciplineBreadcrumb: ReactNode = null;
+
+  if (disciplinePath && collection.discipline) {
+    disciplineBreadcrumb = (
+      <>
+        <span aria-hidden="true">/</span>
+        <Link to={disciplinePath} title="Подборки по этой дисциплине">
+          {collection.discipline.name}
+        </Link>
+      </>
+    );
+  }
+
+  let guestSaveHint: ReactNode = null;
+
+  if (viewer.kind === "guest") {
+    guestSaveHint = <p>Сохранение — после входа.</p>;
+  }
+
+  let emptySectionsMessage: ReactNode = null;
+
+  if (collection.sections.length === 0) {
+    emptySectionsMessage = (
+      <p className={styles.empty}>В этой подборке пока нет материалов.</p>
+    );
+  }
 
   return (
     <div className={styles.layout}>
@@ -144,14 +199,7 @@ export function CollectionPage() {
       <main id="main-content" className={styles.content} tabIndex={-1}>
         <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}>
           <Link to={parentPath}>{parentLabel}</Link>
-          {disciplinePath && (
-            <>
-              <span aria-hidden="true">/</span>
-              <Link to={disciplinePath} title="Подборки по этой дисциплине">
-                {collection.discipline?.name}
-              </Link>
-            </>
-          )}
+          {disciplineBreadcrumb}
         </nav>
         <div className={styles.heading}>
           <div className={styles.intro}>
@@ -167,7 +215,7 @@ export function CollectionPage() {
               title={collection.title}
               outlined
             />
-            {viewer.kind === "guest" && <p>Сохранение — после входа.</p>}
+            {guestSaveHint}
           </div>
         </div>
         <div className={styles.purpose}>
@@ -180,9 +228,7 @@ export function CollectionPage() {
             <p>{collection.targetAudience}</p>
           </section>
         </div>
-        {collection.sections.length === 0 && (
-          <p className={styles.empty}>В этой подборке пока нет материалов.</p>
-        )}
+        {emptySectionsMessage}
         {collection.sections.map((section) => {
           const id = `route-${section.id}`;
           const headingId = `${id}-heading`;
@@ -198,16 +244,11 @@ export function CollectionPage() {
                 <span>{section.position}</span>
                 {section.title}
               </h2>
-              <ol aria-label={`Материалы раздела «${section.title}»`}>
-                {section.items.map((item) => (
-                  <CollectionRouteItem
-                    key={item.id}
-                    item={item}
-                    sectionNumber={section.position}
-                    sectionId={id}
-                  />
-                ))}
-              </ol>
+              <CollectionSectionEntries
+                collectionId={collection.id}
+                section={section}
+                sectionId={id}
+              />
             </section>
           );
         })}

@@ -1,0 +1,132 @@
+.page {
+  max-width: 1000px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+.eyebrow {
+  color: var(--color-primary-text);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.page h1 {
+  font-size: 30px;
+}
+.intro {
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+}
+.topLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mobileTheme {
+  display: none;
+}
+.search {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.authorAction {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: var(--color-primary-soft);
+  border-radius: 12px;
+}
+.authorAction p {
+  color: var(--color-text-secondary);
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.authorAction a {
+  flex-shrink: 0;
+  color: var(--color-primary-text);
+  font-weight: 600;
+}
+.sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+.sections a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+.sections a > svg:first-child {
+  color: var(--color-primary-text);
+  flex-shrink: 0;
+}
+.sections span {
+  flex: 1;
+  min-width: 0;
+}
+.sections strong {
+  display: block;
+  font-size: 17px;
+}
+.sections small {
+  display: block;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+.sections a:hover {
+  border-color: var(--color-primary);
+  background: var(--color-hover);
+}
+.login {
+  display: inline-block;
+  color: var(--color-primary-text);
+  margin-top: 22px;
+}
+.page a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .mobileTheme {
+    display: inline-flex;
+  }
+  .authorAction {
+    flex-direction: column;
+    align-items: start;
+    padding: 16px;
+    gap: 14px;
+  }
+  .search input {
+    padding: 12px;
+    font-size: 16px;
+  }
+  .page {
+    margin: 20px auto;
+    padding: 0 16px;
+  }
+  .sections {
+    grid-template-columns: 1fr;
+  }
+  .sections a {
+    padding: 16px;
+    gap: 12px;
+  }
+}

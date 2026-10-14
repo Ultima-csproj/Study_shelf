@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_DB: study_dev
+      POSTGRES_USER: study_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}
+    command: ["postgres", "-c", "timezone=UTC"]
+    volumes:
+      - study_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U study_dev -d study_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  study_postgres:

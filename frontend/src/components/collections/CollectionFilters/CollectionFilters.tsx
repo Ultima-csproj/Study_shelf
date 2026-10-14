@@ -1,7 +1,15 @@
 import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import type { CollectionRequest } from "../../../types/collection";
-import type { Discipline } from "../../../types/discipline";
+import type { EducationalDiscipline } from "../../../types/material";
 import styles from "./CollectionFilters.module.css";
+
+interface CollectionFiltersProps {
+  request: CollectionRequest;
+  disciplines: EducationalDiscipline[];
+  courses: number[];
+  onChange: (request: CollectionRequest) => void;
+  onReset: () => void;
+}
 
 export function CollectionFilters({
   request,
@@ -9,27 +17,39 @@ export function CollectionFilters({
   courses,
   onChange,
   onReset,
-}: {
-  request: CollectionRequest;
-  disciplines: Discipline[];
-  courses: number[];
-  onChange: (request: CollectionRequest) => void;
-  onReset: () => void;
-}) {
+}: CollectionFiltersProps) {
   const toggleDiscipline = (id: number) => {
-    const disciplineIds = request.disciplineIds.includes(id)
-      ? request.disciplineIds.filter((value) => value !== id)
-      : [...request.disciplineIds, id];
+    let disciplineIds: number[];
 
-    onChange({ ...request, disciplineIds });
+    if (request.disciplineIds.includes(id)) {
+      disciplineIds = request.disciplineIds.filter((value) => value !== id);
+    } else {
+      disciplineIds = [...request.disciplineIds, id];
+    }
+
+    const nextRequest: CollectionRequest = {
+      ...request,
+      disciplineIds,
+    };
+
+    onChange(nextRequest);
   };
 
   const toggleCourse = (course: number) => {
-    const courses = request.courses.includes(course)
-      ? request.courses.filter((value) => value !== course)
-      : [...request.courses, course];
+    let courses: number[];
 
-    onChange({ ...request, courses });
+    if (request.courses.includes(course)) {
+      courses = request.courses.filter((value) => value !== course);
+    } else {
+      courses = [...request.courses, course];
+    }
+
+    const nextRequest: CollectionRequest = {
+      ...request,
+      courses,
+    };
+
+    onChange(nextRequest);
   };
 
   return (

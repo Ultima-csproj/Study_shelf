@@ -1,33 +1,70 @@
+
 export type MaterialType = "lecture" | "book" | "article" | "video" | "lab";
 export type CatalogSort = "newest" | "oldest" | "title";
 export type MaterialSource = "api" | "mock";
+export type ContributorRole = "author" | "co_author" | "editor" | "translator" | "lecturer" | "reviewer";
 
 export interface MaterialReference {
   id: number;
   source: MaterialSource;
 }
-
-export interface Material {
+export interface MaterialCredit {
+  contributorId: number;
+  displayName: string;
+  role: ContributorRole;
+}
+export interface EducationalDiscipline {
   id: number;
+  slug: string;
+  name: string;
+}
+export interface ResponsiblePerson {
+  id: number;
+  name: string;
+  shortName: string;
+}
+export interface EducationalPlacement {
+  id: number;
+  discipline: EducationalDiscipline;
+  responsible: ResponsiblePerson | null;
+  course: number | null;
+}
+export interface MaterialSummary {
+  id: number;
+  publishedRevisionId: number;
   title: string;
   description: string;
   type: MaterialType;
-  disciplineId: number;
-  teacherId: number;
   tags: string[];
-  year: number;
-  course: number;
-  createdAt: string;
-  dateLabel: "Добавлено" | "Обновлено";
-  preview?: string;
-  duration?: string;
-  fileSize?: string;
-  authorName?: string;
+  credits: MaterialCredit[];
+  placements: EducationalPlacement[];
+  sourceYear: number | null;
+  publishedAt: string;
+  firstPublishedAt: string;
+  preview: string | null;
+  durationSeconds: number | null;
+  fileSizeBytes: number | null;
+}
+export interface MaterialDetail extends MaterialSummary {
+  lifecycle: "active" | "archived";
+  publication: "published" | "unpublished";
+  restrictions: { id: number; institutionId: number | null; institutionName: string | null; reason: string; createdAt: string }[];
+  // File/body access is introduced in its own backend stage.
+}
+export interface CreditView extends Omit<MaterialCredit, "contributorId"> {
+  contributorId: number | null;
+}
+export interface CatalogMaterial extends MaterialSummary {
+  lifecycle?: MaterialDetail["lifecycle"];
+  publication?: MaterialDetail["publication"];
+  restrictions?: MaterialDetail["restrictions"];
+  source: "api";
 }
 
 export type PreviewKind = "presentation" | "document" | "pdf";
 export interface CourseMaterial {
-  material: Material;
+  id: number;
+  material: CatalogMaterial;
   number: number;
   title: string;
   description: string;
@@ -40,14 +77,17 @@ export interface CourseMaterial {
   previewKind?: PreviewKind;
 }
 export interface MaterialSectionData {
-  id: "start" | "lectures" | "practice";
+  id: number;
+  position: number;
+  stepCount: number;
+  initialPageSize: number;
   title: string;
   description: string;
   mobileDescription?: string;
   items: CourseMaterial[];
 }
-
 export interface CatalogFilters {
+  includeArchived: boolean;
   query: string;
   types: MaterialType[];
   disciplineIds: number[];
@@ -56,14 +96,12 @@ export interface CatalogFilters {
   years: number[];
   tags: string[];
 }
-
 export interface CatalogRequest {
   filters: CatalogFilters;
   sort: CatalogSort;
   page: number;
   pageSize: number;
 }
-
 export interface CatalogResponse {
   items: CatalogMaterial[];
   total: number;
@@ -71,18 +109,10 @@ export interface CatalogResponse {
   pageCount: number;
   facets: CatalogFacets;
 }
-import type { Discipline } from "./discipline";
-import type { Teacher } from "./teacher";
-
-export interface CatalogMaterial extends Material {
-  source: MaterialSource;
-  discipline: Discipline | null;
-  teacher: Teacher | null;
-}
 export interface CatalogFacets {
   types: Partial<Record<MaterialType, number>>;
-  disciplines: (Discipline & { materialCount: number })[];
-  teachers: (Teacher & { materialCount: number })[];
+  disciplines: (EducationalDiscipline & { materialCount: number })[];
+  teachers: (ResponsiblePerson & { materialCount: number })[];
   courses: { value: number; materialCount: number }[];
   years: { value: number; materialCount: number }[];
 }

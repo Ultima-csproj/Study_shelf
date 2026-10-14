@@ -1,0 +1,37 @@
+.navigation {
+  display: none;
+}
+@media (max-width: 767px) {
+  .navigation {
+    position: fixed;
+    z-index: 20;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .navigation a {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 6px;
+    min-height: 44px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    border-radius: 8px;
+  }
+  .navigation a[aria-current] {
+    color: var(--color-primary-text);
+  }
+  .navigation a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+  :global(body:has(nav[aria-label="Нижняя навигация"])) {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}

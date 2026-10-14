@@ -1,46 +1,37 @@
-import { getCollections } from "./collections";
-import { getMaterial } from "./materials";
-import type { CollectionSummary } from "../types/collection";
-import type { CatalogMaterial, MaterialReference } from "../types/material";
+import type { MaterialSummary } from "../types/material";
+import { getJson } from "./http";
 
-export interface LibraryResponse {
-  materials: CatalogMaterial[];
-  savedCollections: CollectionSummary[];
-  contributedCollections: CollectionSummary[];
+export interface Page<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageCount: number;
 }
-
-export async function getLibrary(
-  userId: number,
-  savedMaterials: MaterialReference[],
-  collectionIds: number[],
-  signal?: AbortSignal,
-): Promise<LibraryResponse> {
-  const [materialResults, collectionResults] = await Promise.all([
-    Promise.all(
-      savedMaterials.map((material) => {
-        return getMaterial(material.id, signal, material.source);
-      }),
-    ),
-    getCollections(
-      { query: "", disciplineIds: [], courses: [], sort: "newest" },
-      signal,
-    ),
-  ]);
-
-  signal?.throwIfAborted();
-
-  return {
-    materials: materialResults.filter(
-      (material): material is CatalogMaterial => material !== null,
-    ),
-    savedCollections: collectionResults.items.filter((collection) =>
-      collectionIds.includes(collection.id),
-    ),
-    contributedCollections: collectionResults.items.filter((collection) => {
-      return collection.contributors.some((contributor) => {
-        const identity = contributor.identity;
-        return identity.kind === "user" && identity.userId === userId;
-      });
-    }),
-  };
+export interface SavedMaterial {
+  id: number;
+  material: MaterialSummary | null;
+}
+export interface SavedCollection {
+  id: number;
+  title: string | null;
+  shortDescription: string | null;
+  owned: boolean;
+}
+export function getSavedMaterials(page: number, signal?: AbortSignal) {
+  return getJson<Page<SavedMaterial>>(
+    `/api/me/library/materials?page=${page}&pageSize=20`,
+    signal,
+  );
+}
+export function getSavedCollections(page: number, signal?: AbortSignal) {
+  return getJson<Page<SavedCollection>>(
+    `/api/me/library/collections?page=${page}&pageSize=20`,
+    signal,
+  );
+}
+export function getContributedCollections(page: number, signal?: AbortSignal) {
+  return getJson<Page<SavedCollection>>(
+    `/api/me/library/contributions?page=${page}&pageSize=20`,
+    signal,
+  );
 }

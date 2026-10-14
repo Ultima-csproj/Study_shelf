@@ -1,0 +1,312 @@
+.page {
+  max-width: 1200px;
+  margin: auto;
+  padding: 28px clamp(16px, 4vw, 36px);
+}
+.heading,
+.actions,
+.navigation,
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin: 18px 0;
+}
+.heading {
+  justify-content: space-between;
+}
+
+.filters {
+  align-items: flex-end;
+}
+
+.filters > label {
+  min-width: 0;
+}
+
+.filters > label:first-child {
+  flex: 0 1 260px;
+}
+
+:is(.page, .list, .surface) a {
+  color: var(--color-primary-text);
+}
+.navigation {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 16px;
+}
+.navigation a[aria-current="page"] {
+  font-weight: 700;
+}
+.cards {
+  display: grid;
+  gap: 18px;
+}
+.card {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.card h2,
+.card h3 {
+  margin-bottom: 12px;
+}
+.card p {
+  margin: 10px 0;
+}
+.fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+:is(.page, .list, .surface) input:not([type="checkbox"]),
+:is(.page, .list, .surface) textarea,
+:is(.page, .list, .surface) select {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+:is(.page, .list, .surface) label {
+  display: grid;
+  gap: 6px;
+}
+:is(.page, .list, .surface) textarea {
+  width: 100%;
+  min-height: 72px;
+}
+
+.filters input,
+.filters select,
+.filters button {
+  min-height: 44px;
+}
+
+.filters input {
+  width: 100%;
+}
+.form {
+  display: grid;
+  gap: 14px;
+  max-width: 720px;
+  margin-top: 16px;
+}
+.permissions {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+}
+.permissions label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.details {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.list {
+  min-width: 0;
+}
+
+.surface {
+  min-width: 0;
+}
+.surface h1,
+.list h1 {
+  font-size: clamp(25px, 3vw, 30px);
+  line-height: 1.25;
+  margin: 0;
+}
+.surface h2,
+.list h2 {
+  font-size: 20px;
+  line-height: 1.35;
+}
+.surface > section {
+  display: grid;
+  gap: 18px;
+}
+.listHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.card h2,
+.card h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.card {
+  padding: 18px 20px;
+}
+.cards {
+  gap: 12px;
+}
+.filters {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-subtle);
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.filters > label:first-child {
+  flex: 1 1 230px;
+}
+.filters input,
+.filters select {
+  background: var(--color-field);
+  border-color: var(--color-control-border);
+}
+.viewSwitch {
+  display: flex;
+  gap: 4px;
+  background: var(--color-subtle);
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+}
+.viewSwitch button {
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+}
+.viewSwitch button[aria-pressed="true"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  text-align: left;
+  background: var(--color-surface);
+}
+.table th:first-child,
+.table td:first-child {
+  min-width: 220px;
+}
+.tableScroll:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+.table th {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  background: var(--color-subtle);
+  font-weight: 600;
+}
+.table th,
+.table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+.table th {
+  white-space: nowrap;
+}
+.table td {
+  overflow-wrap: anywhere;
+  min-width: 90px;
+}
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.table tbody tr:hover {
+  background: var(--color-hover);
+}
+.badge {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  background: var(--color-tag);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.empty {
+  padding: 30px 20px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.empty h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.empty p {
+  color: var(--color-text-secondary);
+}
+.status {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius);
+  background: var(--color-subtle);
+}
+.status svg {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+.status p {
+  color: var(--color-text-secondary);
+  margin: 6px 0 12px;
+}
+.notice,
+.loading {
+  padding: 14px 0;
+  color: var(--color-text-secondary);
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  padding-top: 16px;
+}
+.pagination nav {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .filters {
+    padding: 12px;
+  }
+  .filters > label,
+  .filters > label:first-child {
+    flex: 1 1 100%;
+  }
+  .card {
+    padding: 16px;
+  }
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+}
+
+.actions[aria-label="Управление учреждением"] { gap: 6px; padding-bottom: 16px; border-bottom: 1px solid var(--color-border); }
+.actions[aria-label="Управление учреждением"] a { padding: 9px 12px; border-radius: 5px; }
+.actions[aria-label="Управление учреждением"] a[aria-current="page"] { background: var(--color-primary-soft); color: var(--color-primary-text); }
+.form button { justify-self: start; }

@@ -1,0 +1,26 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.draft,
+.archived {
+  color: var(--color-text-secondary);
+  background: var(--color-tag);
+}
+.pending {
+  color: var(--color-status-warning);
+  background: var(--color-status-warning-soft);
+}
+.published {
+  color: var(--color-status-success);
+  background: var(--color-status-success-soft);
+}
+.rejected {
+  color: var(--color-status-danger);
+  background: var(--color-status-danger-soft);
+}

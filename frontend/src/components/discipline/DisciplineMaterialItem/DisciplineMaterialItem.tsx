@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
 import type { CourseMaterial } from "../../../types/material";
 import { MaterialPreview } from "../../common/MaterialPreview/MaterialPreview";
 import { Badge } from "../../common/Badge/Badge";
 import { SaveAction } from "../../common/SaveAction/SaveAction";
 import styles from "./DisciplineMaterialItem.module.css";
-import { durationMinutes } from "../../../utils/format";
 import {
   locationPath,
   materialPath,
@@ -16,29 +16,80 @@ const date = new Intl.DateTimeFormat("ru-RU", {
   year: "numeric",
   timeZone: "UTC",
 });
-export function DisciplineMaterialItem({ item }: { item: CourseMaterial }) {
+
+interface DisciplineMaterialItemProps {
+  item: CourseMaterial;
+}
+
+export function DisciplineMaterialItem({
+  item,
+}: DisciplineMaterialItemProps) {
   const location = useLocation();
   const path = withNavigationOrigin(
-    materialPath(item.material.id, "mock"),
+    materialPath(item.material.id, item.material.source),
     locationPath(location),
   );
-  const duration = item.material.duration
-    ? durationMinutes(item.material.duration)
-    : null;
+  let duration: string | null = null;
+
+  if (item.material.durationSeconds !== null) {
+    duration = `${Math.ceil(item.material.durationSeconds / 60)} мин`;
+  }
+
   const typeLabels = { book: "Учебник", lab: "Практика" };
   let mobileType = item.formatLabel;
+
   if (item.previewKind) {
     mobileType = "PDF";
   } else if (item.material.type === "book" || item.material.type === "lab") {
     mobileType = typeLabels[item.material.type];
   }
-  const typeBadge =
-    item.material.type === "video" ? (
-      <Badge type="video" />
-    ) : (
-      <span className={styles.mobileBadge}>{mobileType}</span>
-    );
+
+  let typeBadge: ReactNode;
+
+  if (item.material.type === "video") {
+    typeBadge = <Badge type="video" />;
+  } else {
+    typeBadge = <span className={styles.mobileBadge}>{mobileType}</span>;
+  }
+
   const addedAt = date.format(new Date(item.addedAt)).replace(/\s?г\.$/, "");
+  let formatMetadata: ReactNode = null;
+
+  if (item.material.type !== "video") {
+    formatMetadata = (
+      <>
+        <span className={styles.format}>{item.formatLabel}</span>
+        <span className={styles.dot} aria-hidden="true">
+          ·
+        </span>
+      </>
+    );
+  }
+
+  let publicationMetadata: ReactNode;
+
+  if (item.publicationYear) {
+    publicationMetadata = <span>{item.publicationYear}</span>;
+  } else {
+    publicationMetadata = <time dateTime={item.addedAt}>{addedAt}</time>;
+  }
+
+  let additionalMetadata: ReactNode = null;
+  const hasAdditionalMetadata = Boolean(item.fileSize || duration);
+
+  if (hasAdditionalMetadata) {
+    const sizeOrDuration = item.fileSize ?? duration;
+
+    additionalMetadata = (
+      <>
+        <span aria-hidden="true">·</span>
+        <span>{sizeOrDuration}</span>
+      </>
+    );
+  }
+
+  const compactDescription = item.summary ?? item.description;
+
   return (
     <li className={styles.item}>
       <span className={styles.number} aria-label={`Материал ${item.number}`}>
@@ -61,32 +112,16 @@ export function DisciplineMaterialItem({ item }: { item: CourseMaterial }) {
           <Link to={path}>{item.title}</Link>
         </h3>
         <p className={styles.meta}>
-          {item.material.type !== "video" && (
-            <>
-              <span className={styles.format}>{item.formatLabel}</span>
-              <span className={styles.dot} aria-hidden="true">
-                ·
-              </span>
-            </>
-          )}
+          {formatMetadata}
           <span>{item.contributor}</span>
           <span aria-hidden="true">·</span>
-          {item.publicationYear ? (
-            <span>{item.publicationYear}</span>
-          ) : (
-            <time dateTime={item.addedAt}>{addedAt}</time>
-          )}
-          {(item.fileSize || duration) && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>{item.fileSize ?? duration}</span>
-            </>
-          )}
+          {publicationMetadata}
+          {additionalMetadata}
         </p>
         <p className={styles.description}>
           <span className={styles.fullDescription}>{item.description}</span>
           <span className={styles.compactDescription}>
-            {item.summary ?? item.description}
+            {compactDescription}
           </span>
         </p>
       </article>

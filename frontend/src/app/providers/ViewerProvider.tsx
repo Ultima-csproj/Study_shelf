@@ -1,179 +1,127 @@
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ViewerContext } from "./ViewerContext";
-import { demoUser } from "../../data/viewer";
+import { useSavedLibrary, type SavedKind } from "./useSavedLibrary";
+import {
+  enter,
+  getViewer,
+  leave,
+  type LoginInput,
+  type RegisterInput,
+} from "../../api/auth";
+import { HttpError } from "../../api/http";
 import type { User, Viewer } from "../../types/viewer";
 import type { MaterialReference } from "../../types/material";
-import { parseSavedMaterials } from "../../utils/savedMaterials";
-
-const viewerKey = "study-shelf-demo-viewer";
-const materialsKey = "study-shelf-demo-saved";
-const collectionsKey = "study-shelf-demo-collections";
-const profileKey = "study-shelf-demo-profile";
-
-function initialSaved(storageKey: string): number[] {
-  try {
-    if (sessionStorage.getItem(viewerKey) !== "authenticated") {
-      return [];
-    }
-
-    const value: unknown = JSON.parse(
-      sessionStorage.getItem(storageKey) ?? "[]",
-    );
-
-    if (!Array.isArray(value)) {
-      return [];
-    }
-
-    return value.filter((id): id is number => {
-      return typeof id === "number" && Number.isInteger(id) && id > 0;
-    });
-  } catch {
-    return [];
-  }
-}
-
-function initialViewer(): Viewer {
-  try {
-    if (sessionStorage.getItem(viewerKey) === "authenticated") {
-      const stored: unknown = JSON.parse(
-        sessionStorage.getItem(profileKey) ?? "null",
-      );
-
-      if (typeof stored === "object" && stored !== null) {
-        const profile = stored as Partial<User>;
-        const firstName = profile.firstName;
-        const lastName = profile.lastName;
-        const course = profile.course;
-        const group = profile.group;
-        const validCourse =
-          course === null ||
-          (typeof course === "number" &&
-            Number.isInteger(course) &&
-            course >= 1 &&
-            course <= 6);
-
-        if (
-          typeof firstName === "string" &&
-          firstName.trim() &&
-          firstName.length <= 64 &&
-          typeof lastName === "string" &&
-          lastName.trim() &&
-          lastName.length <= 64 &&
-          typeof group === "string" &&
-          group.length <= 30 &&
-          validCourse
-        ) {
-          return {
-            kind: "authenticated",
-            user: {
-              ...demoUser,
-              firstName: firstName.trim(),
-              lastName: lastName.trim(),
-              name: `${firstName.trim()} ${lastName.trim()[0]}.`,
-              initials:
-                `${firstName.trim()[0]}${lastName.trim()[0]}`.toLocaleUpperCase(
-                  "ru",
-                ),
-              course: course ?? null,
-              group,
-            },
-          };
-        }
-      }
-
-      return { kind: "authenticated", user: demoUser };
-    }
-  } catch {
-    // Browsing remains available without session storage.
-  }
-
-  return { kind: "guest" };
-}
 
 export function ViewerProvider({ children }: { children: ReactNode }) {
-  const [viewer, setViewer] = useState<Viewer>(initialViewer);
-  const [savedMaterials, setSavedMaterials] = useState<MaterialReference[]>(() => {
-    try {
-      if (sessionStorage.getItem(viewerKey) !== "authenticated") {
-        return [];
-      }
+  const [viewer, setViewer] = useState<Viewer>({ kind: "loading" });
+  const [actionError, setActionError] = useState<string | null>(null);
+  const viewerRequest = useRef(0);
+  const authenticated = useRef(false);
+  const currentUser = useRef<number | null>(null);
+  const {
+    savedStates,
+    libraryVersion,
+    registerSave,
+    retrySave,
+    resetLibrary,
+    toggle,
+  } = useSavedLibrary(authenticated);
 
-      const stored: unknown = JSON.parse(
-        sessionStorage.getItem(materialsKey) ?? "[]",
-      );
-      return parseSavedMaterials(stored);
-    } catch {
-      return [];
+  const reset = useCallback(() => {
+    viewerRequest.current += 1;
+    resetLibrary();
+    setActionError(null);
+  }, [resetLibrary]);
+
+  const refreshViewer = useCallback(async () => {
+    const version = ++viewerRequest.current;
+    try {
+      const result = await getViewer();
+      if (version !== viewerRequest.current) {
+        return;
+      }
+      const user = result.kind === "authenticated" ? result.user.id : null;
+      if (currentUser.current !== user) {
+        reset();
+        currentUser.current = user;
+      }
+      authenticated.current = result.kind === "authenticated";
+      setViewer(result);
+    } catch (reason) {
+      if (version === viewerRequest.current) {
+        authenticated.current = false;
+        setViewer({
+          kind: "error",
+          message:
+            reason instanceof Error
+              ? reason.message
+              : "Не удалось загрузить аккаунт",
+        });
+      }
     }
-  });
-  const [savedCollectionIds, setSavedCollectionIds] = useState<number[]>(() =>
-    initialSaved(collectionsKey),
-  );
+  }, [reset]);
 
   useEffect(() => {
-    try {
-      if (viewer.kind === "authenticated") {
-        sessionStorage.setItem(viewerKey, "authenticated");
-        sessionStorage.setItem(profileKey, JSON.stringify(viewer.user));
-        sessionStorage.setItem(materialsKey, JSON.stringify(savedMaterials));
-        sessionStorage.setItem(
-          collectionsKey,
-          JSON.stringify(savedCollectionIds),
-        );
-      } else {
-        sessionStorage.removeItem(viewerKey);
-        sessionStorage.removeItem(profileKey);
-        sessionStorage.removeItem(materialsKey);
-        sessionStorage.removeItem(collectionsKey);
+    let mounted = true;
+    queueMicrotask(() => {
+      if (mounted) {
+        void refreshViewer();
       }
-    } catch {
-      // Demo persistence is optional; the current UI state still works.
-    }
-  }, [viewer, savedMaterials, savedCollectionIds]);
-
-  const signInDemo = () => {
-    setViewer((current) => {
-      if (current.kind === "authenticated") {
-        return current;
-      }
-
-      return { kind: "authenticated", user: demoUser };
     });
+    return () => {
+      mounted = false;
+      viewerRequest.current += 1;
+    };
+  }, [refreshViewer]);
+
+  const signIn = async (
+    input: LoginInput | RegisterInput,
+    register: boolean,
+  ) => {
+    const result = await enter(input, register);
+    reset();
+    authenticated.current = result.kind === "authenticated";
+    currentUser.current =
+      result.kind === "authenticated" ? result.user.id : null;
+    setViewer(result);
   };
 
-  const signOut = () => {
-    setViewer({ kind: "guest" });
-    setSavedMaterials([]);
-    setSavedCollectionIds([]);
-  };
-
-  const toggleSaved = (material: MaterialReference) => {
-    if (viewer.kind === "authenticated") {
-      setSavedMaterials((items) => {
-        const saved = items.some((item) => {
-          return item.id === material.id && item.source === material.source;
-        });
-
-        if (saved) {
-          return items.filter((item) => {
-            return item.id !== material.id || item.source !== material.source;
-          });
-        }
-
-        return [...items, material];
-      });
+  const signOut = async () => {
+    try {
+      await leave();
+      reset();
+      authenticated.current = false;
+      currentUser.current = null;
+      setViewer({ kind: "guest" });
+    } catch (reason) {
+      setActionError(
+        reason instanceof Error ? reason.message : "Не удалось выйти",
+      );
     }
   };
 
-  const toggleSavedCollection = (id: number) => {
-    if (viewer.kind === "authenticated") {
-      setSavedCollectionIds((ids) => {
-        if (ids.includes(id)) {
-          return ids.filter((value) => value !== id);
-        }
-
-        return [...ids, id];
-      });
+  const toggleSaved = async (kind: SavedKind, id: number) => {
+    const user = currentUser.current;
+    try {
+      await toggle(kind, id);
+    } catch (reason) {
+      if (
+        user === currentUser.current &&
+        reason instanceof HttpError &&
+        reason.status === 401
+      ) {
+        reset();
+        authenticated.current = false;
+        currentUser.current = null;
+        setViewer({ kind: "guest" });
+      }
+      throw reason;
     }
   };
 
@@ -182,23 +130,39 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
       if (current.kind !== "authenticated" || current.user.id !== user.id) {
         return current;
       }
-
       return { kind: "authenticated", user };
     });
   };
-
+  const retryAccount = () => {
+    reset();
+    void refreshViewer();
+  };
   const value = {
     viewer,
-    savedMaterials,
-    savedCollectionIds,
-    signInDemo,
+    libraryVersion,
+    signIn,
     signOut,
-    toggleSaved,
-    toggleSavedCollection,
+    refreshViewer,
+    registerSave,
+    retrySave,
+    savedStates,
+    toggleSaved: (material: MaterialReference) =>
+      toggleSaved("material", material.id),
+    toggleSavedCollection: (id: number) => toggleSaved("collection", id),
     updateUser,
   };
 
   return (
-    <ViewerContext.Provider value={value}>{children}</ViewerContext.Provider>
+    <ViewerContext.Provider value={value}>
+      {actionError && (
+        <p role="alert">
+          {actionError}
+          <button type="button" onClick={retryAccount}>
+            Повторить
+          </button>
+        </p>
+      )}
+      {children}
+    </ViewerContext.Provider>
   );
 }

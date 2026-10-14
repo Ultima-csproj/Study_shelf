@@ -1,11 +1,21 @@
 import { useEffect } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Header } from "../components/layout/Header/Header";
+import { MobileAccountNavigation } from "../components/layout/MobileAccountNavigation/MobileAccountNavigation";
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
-  const query = location.pathname === "/catalog" ? (params.get("q") ?? "") : "";
+  let query = "";
+
+  if (location.pathname === "/catalog") {
+    query = params.get("q") ?? "";
+  }
   const titles: Record<string, string> = {
     catalog: "Каталог материалов",
     disciplines: "Дисциплины",
@@ -16,15 +26,30 @@ export function AppShell() {
     library: "Моя библиотека",
     settings: "Настройки",
   };
-  const pageTitle = titles[location.pathname.split("/")[1]] ?? "Учебная полка";
+  const isPublicationList = location.pathname === "/author/materials";
+  const isPublicationWorkspace = /^\/author\/materials\/\d+$/.test(
+    location.pathname,
+  );
+  const pageTitle =
+    location.pathname === "/"
+      ? "Главная"
+      : isPublicationList
+        ? "Мои материалы"
+        : isPublicationWorkspace
+          ? "Рабочая область материала"
+          : (titles[location.pathname.split("/")[1]] ?? "Учебная полка");
+
   useEffect(() => {
     document.title = `${pageTitle} — Учебная полка`;
   }, [pageTitle]);
+
   const onQueryChange = (value: string) => {
-    const next =
-      location.pathname === "/catalog"
-        ? new URLSearchParams(location.search)
-        : new URLSearchParams();
+    let next = new URLSearchParams();
+
+    if (location.pathname === "/catalog") {
+      next = new URLSearchParams(location.search);
+    }
+
     if (location.pathname !== "/catalog") {
       next.set("all", "1");
     }
@@ -43,6 +68,8 @@ export function AppShell() {
     <>
       <Header query={query} onQueryChange={onQueryChange} />
       <Outlet />
+      <MobileAccountNavigation />
+      <ScrollRestoration />
     </>
   );
 }

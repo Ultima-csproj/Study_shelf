@@ -1,26 +1,66 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
 import type { DisciplineSummary } from "../../../types/discipline";
 import { useViewer } from "../../../hooks/useViewer";
 import styles from "./DisciplineHeader.module.css";
+
+interface DisciplineHeaderProps {
+  discipline: DisciplineSummary;
+}
+
 export function DisciplineHeader({
   discipline,
-}: {
-  discipline: DisciplineSummary;
-}) {
+}: DisciplineHeaderProps) {
   const [expanded, setExpanded] = useState(false);
   const { viewer } = useViewer();
-  const teacher = discipline.teacher;
-  const descriptionClassName = `${styles.description} ${expanded ? styles.expanded : ""}`;
-  const descriptionAction = expanded ? "Свернуть" : "Подробнее";
-  const compactDescription = expanded
-    ? discipline.description
-    : (discipline.summary ?? discipline.description);
+  const responsible = discipline.responsible.map((person) => person.name).join(", ");
+  const courses = discipline.courses.join(", ");
+  let descriptionClassName = styles.description;
+  let descriptionAction = "Подробнее";
+
+  if (expanded) {
+    descriptionClassName = `${styles.description} ${styles.expanded}`;
+    descriptionAction = "Свернуть";
+  }
+
+  let compactDescription = discipline.summary ?? discipline.description;
+
+  if (expanded) {
+    compactDescription = discipline.description;
+  }
+
+  const handleDescriptionToggle = () => {
+    setExpanded((currentExpanded) => {
+      if (currentExpanded) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  let guestHint: ReactNode = null;
+
+  if (viewer.kind === "guest") {
+    guestHint = (
+      <p className={styles.hint}>
+        <LockKeyIcon size={16} weight="fill" aria-hidden="true" />
+        <span className={styles.desktopHint}>
+          Для сохранения материалов потребуется вход.
+        </span>
+        <span className={styles.mobileHint}>
+          Сохранение материалов — после входа.
+        </span>
+      </p>
+    );
+  }
+
   return (
     <div className={styles.header}>
       <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}>
-        <Link to="/disciplines/database">Дисциплины</Link>
+        <Link to="/disciplines">Дисциплины</Link>
         <span aria-hidden="true">/</span>
         <span>{discipline.name}</span>
       </nav>
@@ -34,28 +74,18 @@ export function DisciplineHeader({
         className={styles.more}
         aria-expanded={expanded}
         aria-controls="discipline-description"
-        onClick={() => setExpanded((value) => !value)}
+        onClick={handleDescriptionToggle}
       >
         {descriptionAction}
       </button>
       <div className={styles.meta}>
         <span>
-          {discipline.course} курс <span aria-hidden="true">·</span>{" "}
-          {discipline.semester} семестр
+          {discipline.institution.name}
         </span>
-        <span className={styles.teacher}>{teacher?.shortName}</span>
+        {courses && <span>Курсы: {courses}</span>}
+        {responsible && <span className={styles.teacher}>Ответственные: {responsible}</span>}
       </div>
-      {viewer.kind === "guest" && (
-        <p className={styles.hint}>
-          <LockKeyIcon size={16} weight="fill" aria-hidden="true" />
-          <span className={styles.desktopHint}>
-            Для сохранения материалов потребуется вход.
-          </span>
-          <span className={styles.mobileHint}>
-            Сохранение материалов — после входа.
-          </span>
-        </p>
-      )}
+      {guestHint}
     </div>
   );
 }

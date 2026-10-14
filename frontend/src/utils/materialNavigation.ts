@@ -1,6 +1,10 @@
 import type { CatalogMaterial } from "../types/material";
 import type { CollectionDetail } from "../types/collection";
-import { navigationOrigin, type NavigationOrigin } from "./navigation";
+import {
+  navigationLabel,
+  navigationOrigin,
+  type NavigationOrigin,
+} from "./navigation";
 
 export interface NavigationCrumb {
   label: string;
@@ -18,6 +22,27 @@ export function materialNavigation(
   material: CatalogMaterial | null,
   collection: CollectionDetail | null,
 ): MaterialNavigation {
+  if (
+    origin &&
+    [
+      "profile",
+      "settings",
+      "home",
+      "author",
+      "workspace",
+      "material",
+      "disciplines",
+      "personalCollections",
+    ].includes(origin.kind)
+  ) {
+    const label = navigationLabel(origin);
+    return {
+      backPath: origin.path,
+      backLabel: `Назад: ${label}`,
+      crumbs: [{ label, path: origin.path }],
+    };
+  }
+
   if (origin?.kind === "catalog") {
     return {
       backPath: origin.path,
@@ -42,7 +67,13 @@ export function materialNavigation(
     };
   }
 
-  const discipline = material?.discipline;
+  const discipline = material?.placements.find((placement) => {
+    return (
+      origin?.kind === "discipline" &&
+      (origin.id === placement.discipline.slug ||
+        origin.id === String(placement.discipline.id))
+    );
+  })?.discipline;
   const sameDiscipline =
     origin?.kind === "discipline" &&
     discipline &&

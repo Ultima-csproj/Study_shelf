@@ -3,8 +3,8 @@ use backend::api;
 use backend::api::state::AppState;
 use backend::catalog::CatalogService;
 use backend::config::Config;
-use study_storage_sqlite::SqliteStorage;
-use study_storage_sqlite::catalog::SqliteCatalogRepository;
+use study_storage_postgres::PostgresStorage;
+use study_storage_postgres::catalog::PostgresCatalogRepository;
 use tokio::net::TcpListener;
 use tracing_subscriber::EnvFilter;
 
@@ -17,14 +17,32 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::from_env()?;
 
-    let storage = SqliteStorage::open(&config.database_path).await?;
+    let storage = PostgresStorage::open(
+        &config.database_url,
+        config.max_connections,
+        config.acquire_timeout,
+    )
+    .await?;
 
     let pool = storage.pool().clone();
 
-    let repository = SqliteCatalogRepository::new(pool.clone());
+    let repository = PostgresCatalogRepository::new(pool.clone());
 
     let service = CatalogService::new(repository);
-    let state = AppState::new(service);
+    let state = AppState::new(
+        study_storage_postgres::material::PostgresMaterialRepository::new(pool.clone()),
+        study_storage_postgres::administration::Administration::new(pool.clone()),
+        backend::auth::AuthService::new(
+            study_storage_postgres::account::PostgresAccountRepository::new(pool.clone()),
+            config.secure_cookie,
+            config.session_seconds,
+            config.auth_origins,
+        )
+        .await?,
+        service,
+        study_storage_postgres::discipline::PostgresDisciplineRepository::new(pool.clone()),
+        study_storage_postgres::collection::PostgresCollectionRepository::new(pool.clone()),
+    );
     let app = api::router(state);
 
     let listener = TcpListener::bind(config.bind_address)
@@ -33,13 +51,15 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!(
         address = %listener.local_addr()?,
-        database = %config.database_path.display(),
         "HTTP-сервер запущен"
     );
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await?;
 
     pool.close().await;
 

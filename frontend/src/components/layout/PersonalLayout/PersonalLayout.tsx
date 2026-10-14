@@ -8,12 +8,35 @@ import styles from "./PersonalLayout.module.css";
 const links = [
   { to: "/profile", label: "Профиль", Icon: UserIcon },
   { to: "/library", label: "Моя библиотека", Icon: BookOpenIcon },
+  { to: "/author/materials", label: "Мои публикации", Icon: BookOpenIcon },
   { to: "/settings", label: "Настройки", Icon: GearIcon },
 ];
 
 export function PersonalLayout() {
-  const { viewer } = useViewer();
+  const { viewer, refreshViewer } = useViewer();
   const location = useLocation();
+  let contentClassName = styles.content;
+  if (location.pathname.startsWith("/author/")) {
+    contentClassName += " " + styles.wide;
+  }
+
+  if (viewer.kind === "loading") {
+    return (
+      <main id="main-content">
+        <p role="status">Загружаем аккаунт…</p>
+      </main>
+    );
+  }
+  if (viewer.kind === "error") {
+    return (
+      <main id="main-content">
+        <p role="alert">{viewer.message}</p>
+        <button type="button" onClick={() => void refreshViewer()}>
+          Повторить
+        </button>
+      </main>
+    );
+  }
 
   if (viewer.kind === "guest") {
     const redirect = location.pathname + location.search + location.hash;
@@ -22,8 +45,26 @@ export function PersonalLayout() {
     return <Navigate to={login} replace />;
   }
 
+  if (
+    location.pathname.startsWith("/author/") ||
+    location.pathname === "/profile" ||
+    location.pathname.startsWith("/library") ||
+    location.pathname === "/settings"
+  ) {
+    return (
+      <main
+        key={viewer.user.id}
+        id="main-content"
+        className={`${styles.content} ${styles.wide}`}
+        tabIndex={-1}
+      >
+        <Outlet />
+      </main>
+    );
+  }
+
   return (
-    <div className={styles.layout}>
+    <div key={viewer.user.id} className={styles.layout}>
       <aside className={styles.sidebar}>
         <h2>Личная зона</h2>
         <nav aria-label="Разделы личной зоны">
@@ -31,9 +72,7 @@ export function PersonalLayout() {
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) => {
-                return isActive ? styles.selected : "";
-              }}
+              className={({ isActive }) => getNavigationLinkClassName(isActive)}
             >
               <Icon size={25} aria-hidden="true" />
               {label}
@@ -41,9 +80,17 @@ export function PersonalLayout() {
           ))}
         </nav>
       </aside>
-      <main id="main-content" className={styles.content} tabIndex={-1}>
+      <main id="main-content" className={contentClassName} tabIndex={-1}>
         <Outlet />
       </main>
     </div>
   );
+}
+
+function getNavigationLinkClassName(isActive: boolean): string {
+  if (isActive) {
+    return styles.selected;
+  }
+
+  return "";
 }

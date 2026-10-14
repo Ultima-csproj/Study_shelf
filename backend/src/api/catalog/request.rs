@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::str::FromStr;
 
 use study_core::catalog::{CatalogQuery, CatalogSort, MaterialType};
@@ -31,20 +30,39 @@ pub fn parse_catalog_query(raw_query: Option<&str>) -> Result<CatalogQuery, ApiE
         sort: CatalogSort::Newest,
         page: 1,
         page_size: 5,
+        include_archived: false,
     };
 
-    let mut scalar_fields = HashSet::new();
+    let mut scalar_fields = 0_u8;
 
     for (key, value) in pairs {
-        let is_scalar = matches!(key.as_str(), "q" | "sort" | "page" | "pageSize");
-
-        if is_scalar && !scalar_fields.insert(key.clone()) {
+        let scalar_bit = match key.as_str() {
+            "q" => 1,
+            "sort" => 2,
+            "page" => 4,
+            "pageSize" => 8,
+            "includeArchived" => 16,
+            _ => 0,
+        };
+        if scalar_bit != 0 && scalar_fields & scalar_bit != 0 {
             return Err(ApiError::bad_request(format!(
                 "Параметр {key} указан несколько раз"
             )));
         }
+        scalar_fields |= scalar_bit;
 
         match key.as_str() {
+            "includeArchived" => {
+                query.include_archived = match value.as_str() {
+                    "true" => true,
+                    "false" => false,
+                    _ => {
+                        return Err(ApiError::bad_request(
+                            "includeArchived должен быть true или false",
+                        ));
+                    }
+                };
+            }
             "q" => {
                 if value.chars().count() > 256 {
                     return Err(ApiError::bad_request(

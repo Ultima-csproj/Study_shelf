@@ -1,0 +1,127 @@
+.page {
+  max-width: 1040px;
+}
+.page > h1 {
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
+  margin-top: 20px;
+}
+.page > section > h2 {
+  font-size: 1.3rem;
+  margin: 24px 0 16px;
+}
+.card > summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.card[open] > summary {
+  margin-bottom: 20px;
+}
+.header,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.header {
+  justify-content: space-between;
+}
+.card {
+  padding: 20px;
+  margin: 20px 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+.page h1 {
+  overflow-wrap: anywhere;
+}
+.card h2,
+.card h3 {
+  margin-bottom: 12px;
+}
+.card p {
+  margin: 10px 0;
+}
+.page a,
+.card a {
+  color: var(--color-primary-text);
+}
+.form,
+.fields {
+  display: grid;
+  gap: 16px;
+}
+.form {
+  max-width: 760px;
+}
+.form fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+.form label,
+.label {
+  display: grid;
+  gap: 6px;
+}
+.form input:not([type="checkbox"]),
+.form select,
+.form textarea,
+.label input,
+.label select,
+.label textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+.banner {
+  padding: 14px 18px;
+  margin: 16px 0;
+  color: var(--color-text);
+  background: var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary);
+}
+.body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.credit {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(110px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.list {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+}
+@media (max-width: 600px) {
+  .credit {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 16px;
+  }
+}
+.permissionList {
+  display: grid;
+  gap: 10px;
+}
+.permissionList label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

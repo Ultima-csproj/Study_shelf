@@ -1,2 +1,11 @@
+pub mod account;
 pub mod catalog;
+pub mod collection;
+pub mod discipline;
+pub mod error;
+pub mod identity;
 pub mod ids;
+pub mod institution;
+pub mod learning;
+pub mod material;
+pub mod timestamp;

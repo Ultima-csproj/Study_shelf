@@ -1,15 +1,14 @@
+import type { ResponsiblePerson } from "./material";
 export interface Discipline {
   id: number;
   name: string;
-  course: number;
   slug: string;
-  semester: number;
-  teacherId: number;
   description: string;
-  summary?: string;
-}
-export interface DisciplineSummary extends Discipline {
+  summary: string;
+  institution: { id: number; name: string };
   materialCount: number;
-  teacher: Teacher | null;
+  stepCount: number;
+  courses: number[];
+  responsible: ResponsiblePerson[];
 }
-import type { Teacher } from "./teacher";
+export type DisciplineSummary = Discipline;

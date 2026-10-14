@@ -1,36 +1,35 @@
-use backend::catalog::CatalogService;
-use backend::config::Config;
+use backend::{catalog::CatalogService, config::Config};
 use study_core::catalog::{CatalogQuery, CatalogSort};
-use study_storage_sqlite::SqliteStorage;
-use study_storage_sqlite::catalog::SqliteCatalogRepository;
+use study_storage_postgres::{PostgresStorage, catalog::PostgresCatalogRepository};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let db_path = Config::from_env()?.database_path;
-    let storage = SqliteStorage::open(db_path).await?;
-    let service = CatalogService::new(SqliteCatalogRepository::new(storage.pool().clone()));
+    let config = Config::from_env()?;
+    let storage = PostgresStorage::open(
+        &config.database_url,
+        config.max_connections,
+        config.acquire_timeout,
+    )
+    .await?;
+    let service = CatalogService::new(PostgresCatalogRepository::new(storage.pool().clone()));
     let query = CatalogQuery {
-        text: std::env::args().skip(1).collect::<Vec<_>>().join(" "),
-        material_types: Vec::new(),
-        discipline_ids: Vec::new(),
-        teacher_ids: Vec::new(),
-        courses: Vec::new(),
-        years: Vec::new(),
-        tags: Vec::new(),
+        text: std::env::args().nth(1).unwrap_or_default(),
+        material_types: vec![],
+        discipline_ids: vec![],
+        teacher_ids: vec![],
+        courses: vec![],
+        years: vec![],
+        tags: vec![],
         sort: CatalogSort::Newest,
         page: 1,
-        page_size: 12,
+        page_size: 5,
+        include_archived: false,
     };
-    let view = service.list(query).await?;
-    println!(
-        "Найдено: {}. Страница {}/{}",
-        view.total, view.page, view.page_count
-    );
-    for item in view.items {
-        println!(
-            "{} · {} · {}",
-            item.material.id.0, item.material.title, item.discipline.name
-        );
+    let page = service.list(query).await?;
+    println!("Public materials: {}, page {}", page.total, page.page);
+    for item in page.items {
+        println!("{} — {}", item.id.0, item.title);
     }
+    storage.pool().close().await;
     Ok(())
 }
