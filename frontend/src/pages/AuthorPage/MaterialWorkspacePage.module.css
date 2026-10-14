@@ -1,0 +1,252 @@
+.workspacePage[data-material-workspace] {
+  max-width: none;
+}
+.workspaceTop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  margin-bottom: 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--color-border);
+}
+.workspaceHeading {
+  min-width: 0;
+}
+.backLink {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: var(--color-primary-text);
+  font-size: 14px;
+  text-decoration: none;
+}
+.backLink:hover {
+  text-decoration: underline;
+}
+.workspacePage .workspaceHeading h1 {
+  margin: 0 0 14px;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  line-height: 1.2;
+}
+.workspaceStatuses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.workspaceMeta {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.workspaceLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-left: auto;
+}
+.workspaceLinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--color-primary-text);
+  font-size: 14px;
+}
+.primaryAction {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-primary-text);
+  border-radius: var(--button-radius);
+  background: var(--color-primary-text);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primaryAction:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+:global([data-theme="dark"]) .primaryAction {
+  color: var(--color-bg);
+}
+.primaryAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.62fr);
+  align-items: start;
+  gap: 20px;
+}
+.editorColumn,
+.contextColumn {
+  min-width: 0;
+}
+.contextColumn {
+  display: grid;
+  gap: 12px;
+}
+.revisionSection {
+  min-width: 0;
+}
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 0 0 16px;
+}
+.sectionHeading h2 {
+  margin: 0 0 5px;
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+.sectionHeading p:not(.eyebrow) {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.eyebrow {
+  margin-bottom: 5px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.versionLabel {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.workspaceDisclosure {
+  margin: 0;
+  padding: 0;
+  overflow: clip;
+}
+.workspaceDisclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 16px 18px;
+  line-height: 1.45;
+}
+.workspaceDisclosure > summary::marker {
+  color: var(--color-primary-text);
+}
+.workspaceDisclosure[open] > summary {
+  margin: 0 18px 16px;
+  padding: 16px 0 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.disclosureMeta {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: right;
+}
+.disclosureBody {
+  padding: 0 18px 18px;
+}
+.disclosureBody > :global([data-material-panel]) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.disclosureBody
+  > :global([data-material-panel])
+  + :global([data-material-panel]) {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+.activityDisclosure {
+  margin-top: 20px;
+}
+.activityDisclosure .disclosureBody > section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.activityDisclosure .disclosureBody > section > h2 {
+  display: none;
+}
+.workspaceNotice {
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+@media (max-width: 900px) {
+  .workspaceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contextColumn {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .contextColumn > details:last-child:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 767px) {
+  .workspaceTop {
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+  }
+  .workspacePage .workspaceHeading h1 {
+    margin-bottom: 10px;
+    font-size: clamp(1.55rem, 6vw, 1.9rem);
+  }
+  .workspaceLinks {
+    margin-left: 0;
+  }
+  .workspaceLinks a {
+    min-height: 36px;
+  }
+  .primaryAction {
+    width: 100%;
+  }
+  .contextColumn {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contextColumn > details:last-child:nth-child(3) {
+    grid-column: auto;
+  }
+  .sectionHeading {
+    display: grid;
+  }
+  .workspaceDisclosure > summary {
+    align-items: flex-start;
+    padding: 15px;
+  }
+  .workspaceDisclosure[open] > summary {
+    margin: 0 15px 14px;
+    padding: 15px 0 11px;
+  }
+  .disclosureBody {
+    padding: 0 15px 15px;
+  }
+  .activityDisclosure {
+    margin-top: 16px;
+  }
+}

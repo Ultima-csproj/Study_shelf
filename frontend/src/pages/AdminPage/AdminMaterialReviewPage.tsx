@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getRevision, transitionRevision } from "../../api/materialWorkspace";
 import { useApiResource } from "../../hooks/useApiResource";
 import { useMaterialAction } from "../../hooks/useMaterialAction";
-import { RevisionContent } from "../../components/materialWorkspace/RevisionContent";
-import styles from "../../components/materialWorkspace/Workspace.module.css";
+import { RevisionContent } from "../../components/materials/revisions/RevisionContent";
+import styles from "../../components/materials/shared/Panel.module.css";
 
 export function AdminMaterialReviewPage() {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { PublicMaterialRestrictionPanel } from "../../components/materialWorkspace/PublicMaterialRestrictionPanel";
+import { PublicMaterialRestrictionPanel } from "../../components/materials/access/PublicMaterialRestrictionPanel";
 import {
   authorLabel,
   contributorRoles,

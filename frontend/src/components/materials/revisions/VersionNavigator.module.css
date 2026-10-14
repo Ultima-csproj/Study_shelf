@@ -1,0 +1,45 @@
+.list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.version {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.version[aria-pressed="true"] {
+  border-color: var(--color-control-border);
+  background: var(--color-hover);
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.status {
+  padding: 2px 8px;
+  border-radius: var(--button-radius);
+  background: var(--color-tag);
+  color: var(--color-tag-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.title {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}

@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import {
   getRestrictionTarget,
   restrictMaterial,
-} from "../../api/materialWorkspace";
-import { useApiResource } from "../../hooks/useApiResource";
-import { useMaterialAction } from "../../hooks/useMaterialAction";
-import { useViewer } from "../../hooks/useViewer";
-import styles from "./Workspace.module.css";
+} from "../../../api/materialWorkspace";
+import { useApiResource } from "../../../hooks/useApiResource";
+import { useMaterialAction } from "../../../hooks/useMaterialAction";
+import { useViewer } from "../../../hooks/useViewer";
+import styles from "../shared/Panel.module.css";
 
 interface PublicMaterialRestrictionPanelProps {
   id: number;
@@ -33,7 +33,7 @@ function RestrictionForm({ id }: PublicMaterialRestrictionPanelProps) {
   const selected =
     scope ?? (result?.global ? "" : String(result?.institutions[0] ?? ""));
   return (
-    <section className={styles.card}>
+    <section data-material-panel className={styles.card}>
       <h2>Ограничить публичный материал</h2>
       {loading && <p role="status">Загрузка полномочий…</p>}
       {error && (

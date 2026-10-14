@@ -4,9 +4,9 @@ import {
   setCollaborator,
   collaboratorLabels,
   type MaterialHeader,
-} from "../../api/materialWorkspace";
-import { PagedPanel } from "./PagedPanel";
-import styles from "./Workspace.module.css";
+} from "../../../api/materialWorkspace";
+import { PagedPanel } from "../shared/PagedPanel";
+import styles from "../shared/Panel.module.css";
 
 interface CollaboratorsPanelProps {
   material: MaterialHeader;
@@ -35,7 +35,7 @@ export function CollaboratorsPanel({
     void run(() => setCollaborator(material, id, true, permissions, reason));
   };
   return (
-    <section className={styles.card}>
+    <section data-material-panel className={styles.card}>
       <h2>Приглашённые пользователи</h2>
       <p>
         Права действуют для аккаунта. Указание соавтора в редакции само по себе

@@ -6,9 +6,9 @@ import {
   getPlacementEntries,
   type MaterialHeader,
   type Placement,
-} from "../../api/materialWorkspace";
-import { PagedPanel } from "./PagedPanel";
-import styles from "./Workspace.module.css";
+} from "../../../api/materialWorkspace";
+import { PagedPanel } from "../shared/PagedPanel";
+import styles from "../shared/Panel.module.css";
 
 interface MaterialPlacementsPanelProps {
   material: MaterialHeader;
@@ -108,7 +108,7 @@ export function MaterialPlacementsPanel({
     return null;
   }
   return (
-    <section className={styles.card}>
+    <section data-material-panel className={styles.card}>
       <h2>Учебные размещения</h2>
       {placements.map((placement) => (
         <PlacementPanel

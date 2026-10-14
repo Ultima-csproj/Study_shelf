@@ -1,7 +1,8 @@
 import { useCallback, useState, type ReactNode } from "react";
-import { useApiResource } from "../../hooks/useApiResource";
-import type { Page } from "../../api/library";
-import styles from "./Workspace.module.css";
+import { useApiResource } from "../../../hooks/useApiResource";
+import type { Page } from "../../../api/library";
+import { Pagination } from "../../common/Pagination/Pagination";
+import styles from "./Panel.module.css";
 
 interface PagedPanelProps<T> {
   title: string;
@@ -19,7 +20,7 @@ export function PagedPanel<T>({ title, load, render }: PagedPanelProps<T>) {
     "Не удалось загрузить список",
   );
   return (
-    <section className={styles.card}>
+    <section data-material-panel className={styles.card}>
       <h2>{title}</h2>
       {loading && <p role="status">Загружаем…</p>}
       {error && (
@@ -35,25 +36,13 @@ export function PagedPanel<T>({ title, load, render }: PagedPanelProps<T>) {
         <div key={index}>{render(item)}</div>
       ))}
       {result && (
-        <nav className={styles.actions} aria-label={"Страницы: " + title}>
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((value) => value - 1)}
-          >
-            Назад
-          </button>
-          <span>
-            {page} / {Math.max(1, result.pageCount)}
-          </span>
-          <button
-            type="button"
-            disabled={page >= result.pageCount}
-            onClick={() => setPage((value) => value + 1)}
-          >
-            Далее
-          </button>
-        </nav>
+        <Pagination
+          page={page}
+          pageCount={result.pageCount}
+          onChange={setPage}
+          loading={loading}
+          label={"Страницы: " + title}
+        />
       )}
     </section>
   );

@@ -1,3 +1,6 @@
+import historyStyles from "./MaterialHistoryPage.module.css";
+import { StatusBadge } from "../../components/common/StatusBadge/StatusBadge";
+import { useNavigationContext } from "../../hooks/useNavigationContext";
 import { useCallback } from "react";
 import {
   Link,
@@ -10,10 +13,12 @@ import { useApiResource } from "../../hooks/useApiResource";
 import { useViewer } from "../../hooks/useViewer";
 import { materialContext } from "../../utils/materialContext";
 import { exactPublication } from "../../utils/materialLabels";
+import { Pagination } from "../../components/common/Pagination/Pagination";
 import common from "../InformationPage/InformationPage.module.css";
-import styles from "../../components/materialWorkspace/Workspace.module.css";
+import styles from "../../components/materials/shared/Panel.module.css";
 
 export function MaterialHistoryPage() {
+  const { back } = useNavigationContext("/catalog");
   const id = Number(useParams().materialId);
   const location = useLocation();
   const [params, setParams] = useSearchParams();
@@ -44,7 +49,16 @@ export function MaterialHistoryPage() {
       <Link className={common.back} to={"/materials/" + id + location.search}>
         ← Текущая публикация
       </Link>
-      <h1>История опубликованных редакций</h1>
+      <header className={historyStyles.header}>
+        <h1>История публикаций</h1>
+        <p>
+          Опубликованные версии материала. Выберите редакцию, чтобы посмотреть
+          её содержание.
+        </p>
+        <nav className={historyStyles.links} aria-label="Вернуться в раздел">
+          <Link to={back.path}>← {back.label}</Link>
+        </nav>
+      </header>
       {loading && <p role="status">Загрузка…</p>}
       {error && (
         <p role="alert">
@@ -59,50 +73,48 @@ export function MaterialHistoryPage() {
           Материал в архиве. Доступные опубликованные версии сохранены.
         </p>
       )}
+      {result?.revisions.items.length === 0 && (
+        <p>Опубликованных версий пока нет.</p>
+      )}
       {result && (
         <>
-          <ul className={styles.list}>
+          <ul className={historyStyles.list}>
             {result.revisions.items.map((revision) => (
-              <li key={revision.id}>
-                <Link
-                  to={
-                    "/materials/" +
-                    id +
-                    "/history/" +
-                    revision.id +
-                    location.search
-                  }
-                >
-                  {revision.title} · #{revision.id}
-                </Link>{" "}
-                —{" "}
-                {revision.publishedAt
-                  ? exactPublication(revision.publishedAt)
-                  : ""}
-                {revision.id === result.currentRevisionId &&
-                  " · текущая редакция"}
+              <li className={historyStyles.item} key={revision.id}>
+                <div>
+                  <Link
+                    to={
+                      "/materials/" +
+                      id +
+                      "/history/" +
+                      revision.id +
+                      location.search
+                    }
+                  >
+                    {revision.title} · Версия {revision.number}
+                  </Link>
+                  <time
+                    className={historyStyles.date}
+                    dateTime={revision.publishedAt ?? undefined}
+                  >
+                    {revision.publishedAt
+                      ? exactPublication(revision.publishedAt)
+                      : ""}
+                  </time>
+                </div>
+                {revision.id === result.currentRevisionId && (
+                  <StatusBadge state="published" label="Текущая версия" />
+                )}
               </li>
             ))}
           </ul>
-          <nav className={styles.actions} aria-label="Страницы истории">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => changePage(page - 1)}
-            >
-              Назад
-            </button>
-            <span>
-              {page} / {Math.max(1, result.revisions.pageCount)}
-            </span>
-            <button
-              type="button"
-              disabled={page >= result.revisions.pageCount}
-              onClick={() => changePage(page + 1)}
-            >
-              Далее
-            </button>
-          </nav>
+          <Pagination
+            page={page}
+            pageCount={result.revisions.pageCount}
+            onChange={changePage}
+            loading={loading}
+            label="Страницы истории"
+          />
         </>
       )}
     </main>

@@ -2,8 +2,8 @@ import {
   revisionLabels,
   creditLabels,
   type RevisionResponse,
-} from "../../api/materialWorkspace";
-import styles from "./Workspace.module.css";
+} from "../../../api/materialWorkspace";
+import styles from "../shared/Panel.module.css";
 
 interface RevisionContentProps {
   value: RevisionResponse;
@@ -11,18 +11,21 @@ interface RevisionContentProps {
 export function RevisionContent({ value }: RevisionContentProps) {
   const revision = value.revision;
   return (
-    <article className={styles.card}>
+    <article data-material-panel className={styles.card}>
       <h2>{revision.title}</h2>
       <p>
-        Редакция #{revision.id} ·{" "}
+        Версия {revision.number} ·{" "}
         {revisionLabels[revision.state] ?? revision.state}
       </p>
-      <p>
-        База:{" "}
-        {revision.baseRevisionId === null
-          ? "первая публикация"
-          : "#" + revision.baseRevisionId}
-      </p>
+      <details>
+        <summary>Технические сведения</summary>
+        <p>
+          ID версии: #{revision.id}.{" "}
+          {revision.baseRevisionId === null
+            ? "Первая публикация."
+            : "ID базовой версии: #" + revision.baseRevisionId}
+        </p>
+      </details>
       {value.outdated && (
         <p className={styles.banner}>
           Опубликованная база изменилась. Перед отправкой или принятием
@@ -39,7 +42,7 @@ export function RevisionContent({ value }: RevisionContentProps) {
       </ul>
       {value.decision && (
         <p>
-          Решение:{" "}
+          Решение модератора:{" "}
           {value.decision.decision === "approved" ? "принято" : "отклонено"}.{" "}
           {value.decision.reason}
           {value.decision.wasSelfReview &&

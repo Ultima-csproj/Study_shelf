@@ -4,7 +4,10 @@ export function useMaterialAction(onChanged: () => void) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const running = useRef(false);
-  const run = async (operation: () => Promise<unknown>) => {
+  const run = async (
+    operation: () => Promise<unknown>,
+    successMessage = "Изменения сохранены.",
+  ) => {
     if (running.current) {
       return false;
     }
@@ -13,7 +16,7 @@ export function useMaterialAction(onChanged: () => void) {
     setNotice(null);
     try {
       await operation();
-      setNotice("Изменения сохранены.");
+      setNotice(successMessage);
       onChanged();
       return true;
     } catch (reason) {

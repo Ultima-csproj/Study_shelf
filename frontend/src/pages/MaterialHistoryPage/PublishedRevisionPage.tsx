@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { getPublishedRevision } from "../../api/materialWorkspace";
-import { RevisionContent } from "../../components/materialWorkspace/RevisionContent";
+import { RevisionContent } from "../../components/materials/revisions/RevisionContent";
 import { useViewer } from "../../hooks/useViewer";
 import { useApiResource } from "../../hooks/useApiResource";
 import { materialContext } from "../../utils/materialContext";
 import common from "../InformationPage/InformationPage.module.css";
-import styles from "../../components/materialWorkspace/Workspace.module.css";
+import styles from "../../components/materials/shared/Panel.module.css";
 
 export function PublishedRevisionPage() {
   const params = useParams();
@@ -43,7 +43,9 @@ export function PublishedRevisionPage() {
       >
         ← История публикаций
       </Link>
-      <h1>Опубликованная редакция #{revision}</h1>
+      <h1>
+        {result ? `Версия ${result.revision.number}` : "Опубликованная версия"}
+      </h1>
       {loading && <p role="status">Загрузка…</p>}
       {error && (
         <p role="alert">

@@ -4,8 +4,8 @@ import {
   restrictMaterial,
   unrestrictMaterial,
   type Workspace,
-} from "../../api/materialWorkspace";
-import styles from "./Workspace.module.css";
+} from "../../../api/materialWorkspace";
+import styles from "../shared/Panel.module.css";
 
 interface MaterialStateControlsProps {
   workspace: Workspace;
@@ -34,7 +34,7 @@ export function MaterialStateControls({
   const canRestrict =
     capabilities.restrictGlobal || scopedInstitutions.length > 0;
   return (
-    <section className={styles.card}>
+    <section data-material-panel className={styles.card}>
       <h2>Доступность материала</h2>
       <p>
         {material.visibility === "private" ? "Приватный" : "Публичный"} ·{" "}

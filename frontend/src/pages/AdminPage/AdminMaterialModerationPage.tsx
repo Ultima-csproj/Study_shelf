@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { AdminList } from "../../components/admin/AdminList";
 import { getModerationMaterials } from "../../api/materialWorkspace";
-import styles from "../../components/materialWorkspace/Workspace.module.css";
+import styles from "../../components/materials/shared/Panel.module.css";
 
 export function AdminMaterialModerationPage() {
   return (

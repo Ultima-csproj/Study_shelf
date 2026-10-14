@@ -1,6 +1,12 @@
-import { RevisionEditorPanel } from "../../components/materialWorkspace/RevisionEditorPanel";
+import { useNavigationContext } from "../../hooks/useNavigationContext";
+import { RevisionEditorPanel } from "../../components/materials/revisions/RevisionEditorPanel";
 import { useCallback, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useApiResource } from "../../hooks/useApiResource";
 import { useMaterialAction } from "../../hooks/useMaterialAction";
 import {
@@ -9,13 +15,21 @@ import {
   forkRevision,
   revisionLabels,
 } from "../../api/materialWorkspace";
-import { MaterialStateControls } from "../../components/materialWorkspace/MaterialStateControls";
-import { CollaboratorsPanel } from "../../components/materialWorkspace/CollaboratorsPanel";
-import { MaterialPlacementsPanel } from "../../components/materialWorkspace/MaterialPlacementsPanel";
-import { MaterialEventsPanel } from "../../components/materialWorkspace/MaterialEventsPanel";
-import styles from "../../components/materialWorkspace/Workspace.module.css";
+import { MaterialStateControls } from "../../components/materials/access/MaterialStateControls";
+import { CollaboratorsPanel } from "../../components/materials/access/CollaboratorsPanel";
+import { MaterialPlacementsPanel } from "../../components/materials/placements/MaterialPlacementsPanel";
+import { MaterialEventsPanel } from "../../components/materials/history/MaterialEventsPanel";
+import { VersionNavigator } from "../../components/materials/revisions/VersionNavigator";
+import {
+  PublicationStatus,
+  type PublicationTone,
+} from "../../components/materials/status/PublicationStatus";
+import styles from "./MaterialWorkspacePage.module.css";
+import panelStyles from "../../components/materials/shared/Panel.module.css";
 
 export function MaterialWorkspacePage() {
+  const { back, linkTo } = useNavigationContext("/author/materials");
+  const location = useLocation();
   const id = Number(useParams().id);
   const [params, setParams] = useSearchParams();
   const [revisionCounter, setRevisionCounter] = useState(0);
@@ -71,15 +85,115 @@ export function MaterialWorkspacePage() {
     const material = workspace.result.material;
     const source = version.result?.revision.id ?? null;
     void action.run(async () => {
-      const result = await forkRevision(material, source, reason);
+      const result = await forkRevision(
+        material,
+        source,
+        "Подготовка новой версии материала",
+      );
       choose(result.revisionId);
     });
   };
-  const ready = !action.busy && reason.trim().length >= 3;
+  const ready = !action.busy;
+  const material = workspace.result?.material;
+  let publicationLabel = "Не опубликован";
+  let publicationTone: PublicationTone = "archived";
+  if (material?.publication === "published") {
+    publicationLabel = "Опубликован";
+    publicationTone = "published";
+  }
+  if (material?.lifecycle === "archived") {
+    publicationLabel = "В архиве";
+    publicationTone = "archived";
+  }
+  let workingLabel = "";
+  let workingTone: PublicationTone = "draft";
+  if (material?.workingRevisionState === "draft") {
+    workingLabel =
+      material.publication === "published"
+        ? "Есть черновик новой редакции"
+        : "Черновик";
+  } else if (material?.workingRevisionState === "pending_moderation") {
+    workingLabel =
+      material.publication === "published"
+        ? "Новая редакция на проверке"
+        : "На проверке";
+    workingTone = "pending";
+  }
+  const revision = version.result?.revision;
+  let revisionHeading = "Редакция материала";
+  let revisionHelp = "Выберите редакцию в разделе «Версии и история».";
+  if (revision?.state === "draft") {
+    revisionHeading =
+      revision.baseRevisionId === null
+        ? "Редактирование черновика"
+        : "Подготовка новой редакции";
+    revisionHelp =
+      revision.baseRevisionId === null
+        ? "Сохраните черновик или отправьте его на модерацию."
+        : "Публичная версия продолжит действовать, пока новую редакцию не одобрят.";
+  } else if (revision?.state === "pending_moderation") {
+    revisionHeading = "Редакция на проверке";
+    revisionHelp = "Материал ожидает решения модератора.";
+  } else if (revision) {
+    revisionHeading = "Просмотр редакции";
+    revisionHelp = "Эта редакция доступна только для просмотра.";
+  }
+  const [eventsLoaded, setEventsLoaded] = useState(false);
   return (
-    <div className={styles.page}>
-      <Link to="/author/materials">← Мои публикации</Link>
-      <h1>{workspace.result?.material.title ?? "Рабочая область материала"}</h1>
+    <div
+      data-material-workspace
+      className={`${panelStyles.page} ${styles.workspacePage}`}
+    >
+      <div className={styles.workspaceTop}>
+        <div className={styles.workspaceHeading}>
+          <Link className={styles.backLink} to={back.path}>
+            ← {back.label}
+          </Link>
+          <h1>{material?.title ?? "Рабочая область материала"}</h1>
+          {material && (
+            <>
+              <div className={styles.workspaceStatuses}>
+                <PublicationStatus tone={publicationTone}>
+                  {publicationLabel}
+                </PublicationStatus>
+                {workingLabel && (
+                  <PublicationStatus tone={workingTone}>
+                    {workingLabel}
+                  </PublicationStatus>
+                )}
+              </div>
+              <p className={styles.workspaceMeta}>
+                Владелец: {material.ownerName}
+              </p>
+            </>
+          )}
+        </div>
+        {material?.publishedRevisionId !== null && material && (
+          <div className={styles.workspaceLinks}>
+            <Link to={linkTo(`/materials/${id}`)}>Открыть публикацию</Link>
+            <Link to={linkTo(`/materials/${id}/history`)}>
+              История публикаций
+            </Link>
+          </div>
+        )}
+        {material &&
+          workspace.result?.capabilities.edit &&
+          material.workingRevisionId === null && (
+            <button
+              type="button"
+              className={styles.primaryAction}
+              disabled={!ready}
+              onClick={fork}
+            >
+              Подготовить новую версию
+            </button>
+          )}
+      </div>
+      {location.state?.notice && !action.notice && (
+        <p className={panelStyles.banner} role="status">
+          {location.state.notice}
+        </p>
+      )}
       {workspace.loading && <p role="status">Загрузка…</p>}
       {workspace.error && (
         <p role="alert">
@@ -90,7 +204,7 @@ export function MaterialWorkspacePage() {
         </p>
       )}
       {action.notice && (
-        <p role="status">
+        <p className={styles.workspaceNotice} role="status">
           {action.notice}{" "}
           <button type="button" onClick={changed}>
             Обновить данные
@@ -99,111 +213,159 @@ export function MaterialWorkspacePage() {
       )}
       {workspace.result && (
         <>
-          <p>
-            Владелец: {workspace.result.material.ownerName} · Материал #{id}
-          </p>
-          {workspace.result.material.publishedRevisionId !== null && (
-            <p>
-              <Link to={"/materials/" + id}>
-                Последняя опубликованная редакция
-              </Link>{" "}
-              ·{" "}
-              <Link to={"/materials/" + id + "/history"}>
-                История публикаций
-              </Link>
-            </p>
-          )}
-          <label className={styles.label}>
-            Причина действия
-            <textarea
-              minLength={3}
-              maxLength={2000}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-            />
-          </label>
-          <div className={styles.actions}>
-            {workspace.result.capabilities.edit &&
-              workspace.result.material.workingRevisionId === null && (
-                <button type="button" disabled={!ready} onClick={fork}>
-                  Создать черновик из выбранной редакции
-                </button>
+          <div className={styles.workspaceGrid}>
+            <section
+              className={styles.editorColumn}
+              aria-label="Редактирование редакции"
+            >
+              <section className={styles.revisionSection}>
+                <header className={styles.sectionHeading}>
+                  <div>
+                    <p className={styles.eyebrow}>Рабочая редакция</p>
+                    <h2>{revisionHeading}</h2>
+                    <p>{revisionHelp}</p>
+                  </div>
+                  {revision && (
+                    <span className={styles.versionLabel}>
+                      Версия {revision.number} ·{" "}
+                      {revisionLabels[revision.state] ?? revision.state}
+                    </span>
+                  )}
+                </header>
+                {version.loading && (
+                  <p className={styles.workspaceNotice} role="status">
+                    Загружаем редакцию…
+                  </p>
+                )}
+                {version.error && (
+                  <p className={styles.workspaceNotice} role="alert">
+                    {version.error}{" "}
+                    <button type="button" onClick={version.retry}>
+                      Повторить
+                    </button>
+                  </p>
+                )}
+                {version.result && (
+                  <RevisionEditorPanel
+                    key={version.result.revision.id}
+                    value={version.result}
+                    workspace={workspace.result}
+                    reason={reason}
+                    action={action}
+                    changed={changed}
+                    onChoose={choose}
+                  />
+                )}
+                {!version.loading && !version.error && !version.result && (
+                  <p className={styles.workspaceNotice}>
+                    У материала пока нет редакции для просмотра.
+                  </p>
+                )}
+              </section>
+            </section>
+            <aside
+              className={styles.contextColumn}
+              aria-label="Управление материалом"
+            >
+              <details
+                className={`${panelStyles.card} ${styles.workspaceDisclosure}`}
+              >
+                <summary>
+                  <span>Версии и история</span>
+                  <span className={styles.disclosureMeta}>
+                    Редакций: {workspace.result.revisions.total}
+                  </span>
+                </summary>
+                <div className={styles.disclosureBody}>
+                  <VersionNavigator
+                    revisions={workspace.result.revisions}
+                    selected={selected}
+                    page={page}
+                    loading={workspace.loading}
+                    onChoose={choose}
+                    onPage={changePage}
+                  />
+                </div>
+              </details>
+              <details
+                className={`${panelStyles.card} ${styles.workspaceDisclosure}`}
+              >
+                <summary>
+                  <span>Доступность и ограничения</span>
+                  <span className={styles.disclosureMeta}>
+                    {material?.visibility === "public"
+                      ? "Публичный доступ"
+                      : "Приватный доступ"}
+                  </span>
+                </summary>
+                <div className={styles.disclosureBody}>
+                  <label className={panelStyles.label}>
+                    Причина изменения доступности или размещения
+                    <textarea
+                      minLength={3}
+                      maxLength={2000}
+                      value={reason}
+                      onChange={(event) => setReason(event.target.value)}
+                    />
+                  </label>
+                  <MaterialStateControls
+                    key={workspace.result.material.version}
+                    workspace={workspace.result}
+                    busy={action.busy}
+                    reason={reason}
+                    run={action.run}
+                  />
+                  <MaterialPlacementsPanel
+                    material={workspace.result.material}
+                    placements={workspace.result.placements}
+                    busy={action.busy}
+                    reason={reason}
+                    run={action.run}
+                  />
+                </div>
+              </details>
+              {workspace.result.capabilities.collaborators && (
+                <details
+                  className={`${panelStyles.card} ${styles.workspaceDisclosure}`}
+                >
+                  <summary>
+                    <span>Приглашённые пользователи и права</span>
+                  </summary>
+                  <div className={styles.disclosureBody}>
+                    <CollaboratorsPanel
+                      key={"collaborators:" + workspace.result.material.version}
+                      material={workspace.result.material}
+                      busy={action.busy}
+                      run={action.run}
+                    />
+                  </div>
+                </details>
               )}
+            </aside>
           </div>
-          <section className={styles.card}>
-            <h2>Редакции</h2>
-            <ul className={styles.list}>
-              {workspace.result.revisions.items.map((revision) => (
-                <li key={revision.id}>
-                  <button type="button" onClick={() => choose(revision.id)}>
-                    #{revision.id}: {revision.title}
-                  </button>{" "}
-                  — {revisionLabels[revision.state] ?? revision.state}
-                </li>
-              ))}
-            </ul>
-            <nav className={styles.actions} aria-label="Страницы редакций">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => changePage(page - 1)}
-              >
-                Назад
-              </button>
-              <span>
-                {page} / {Math.max(1, workspace.result.revisions.pageCount)}
+          <details
+            className={`${panelStyles.card} ${styles.workspaceDisclosure} ${styles.activityDisclosure}`}
+            onToggle={(event) => {
+              if (event.currentTarget.open) {
+                setEventsLoaded(true);
+              }
+            }}
+          >
+            <summary>
+              <span>История действий</span>
+              <span className={styles.disclosureMeta}>
+                Журнал изменений материала
               </span>
-              <button
-                type="button"
-                disabled={page >= workspace.result.revisions.pageCount}
-                onClick={() => changePage(page + 1)}
-              >
-                Далее
-              </button>
-            </nav>
-          </section>
-          {version.loading && <p role="status">Загружаем редакцию…</p>}
-          {version.error && (
-            <p role="alert">
-              {version.error}{" "}
-              <button type="button" onClick={version.retry}>
-                Повторить
-              </button>
-            </p>
-          )}
-          {version.result && (
-            <RevisionEditorPanel
-              value={version.result}
-              workspace={workspace.result}
-              reason={reason}
-              action={action}
-              changed={changed}
-              onChoose={choose}
-            />
-          )}
-          <MaterialStateControls
-            key={workspace.result.material.version}
-            workspace={workspace.result}
-            busy={action.busy}
-            reason={reason}
-            run={action.run}
-          />
-          {workspace.result.capabilities.collaborators && (
-            <CollaboratorsPanel
-              key={"collaborators:" + workspace.result.material.version}
-              material={workspace.result.material}
-              busy={action.busy}
-              run={action.run}
-            />
-          )}
-          <MaterialPlacementsPanel
-            material={workspace.result.material}
-            placements={workspace.result.placements}
-            busy={action.busy}
-            reason={reason}
-            run={action.run}
-          />
-          <MaterialEventsPanel key={"events:" + revisionCounter} id={id} />
+            </summary>
+            {eventsLoaded && (
+              <div className={styles.disclosureBody}>
+                <MaterialEventsPanel
+                  key={"events:" + revisionCounter}
+                  id={id}
+                />
+              </div>
+            )}
+          </details>
         </>
       )}
     </div>

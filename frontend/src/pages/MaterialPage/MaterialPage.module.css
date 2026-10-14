@@ -65,3 +65,30 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.summary {
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+@media (max-width: 600px) {
+  .summary {
+    padding: 18px;
+  }
+}
+@media (max-width: 479px) {
+  .summary > :first-child {
+    width: 84px;
+    max-height: 100px;
+  }
+  .summary h1 {
+    font-size: 23px;
+  }
+  .summary p {
+    font-size: 14px;
+  }
+  .publication {
+    gap: 12px;
+  }
+}

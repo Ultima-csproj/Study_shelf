@@ -1,7 +1,7 @@
 import { useCallback } from "react";
-import { getMaterialEvents } from "../../api/materialWorkspace";
-import { PagedPanel } from "./PagedPanel";
-import { exactPublication } from "../../utils/materialLabels";
+import { getMaterialEvents } from "../../../api/materialWorkspace";
+import { PagedPanel } from "../shared/PagedPanel";
+import { exactPublication } from "../../../utils/materialLabels";
 
 const labels: Record<string, string> = {
   create_material: "Создание материала",

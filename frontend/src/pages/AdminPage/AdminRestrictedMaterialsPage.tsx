@@ -9,7 +9,7 @@ import {
 } from "../../api/materialWorkspace";
 import { useApiResource } from "../../hooks/useApiResource";
 import { useAdminAccess } from "../../hooks/useAdminAccess";
-import styles from "../../components/materialWorkspace/Workspace.module.css";
+import styles from "../../components/materials/shared/Panel.module.css";
 
 export function AdminRestrictedMaterialsPage() {
   return (
