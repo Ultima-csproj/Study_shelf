@@ -1,0 +1,98 @@
+.mobileIntro {
+  display: none;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 30px;
+}
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+}
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 9px;
+  background: var(--color-tag);
+  color: var(--color-primary-text);
+}
+.stat dt {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.stat dd {
+  margin: 2px 0 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.statsError {
+  margin: -16px 0 24px;
+  color: var(--color-text-secondary);
+}
+@media (max-width: 1200px) {
+  .stat {
+    padding: 18px;
+    gap: 14px;
+  }
+}
+@media (max-width: 767px) {
+  .desktopIntro {
+    display: none;
+  }
+  .mobileIntro {
+    display: inline;
+  }
+  .stats {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    gap: 6px;
+    padding: 10px 8px;
+  }
+  .stat > div {
+    min-width: 0;
+  }
+  .statIcon {
+    background: transparent;
+    width: 22px;
+    height: 24px;
+  }
+  .statIcon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .stat dt {
+    font-size: 11px;
+    line-height: 16px;
+  }
+  .stat dd {
+    font-size: 22px;
+    margin-top: 2px;
+  }
+}
+@media (max-width: 360px) {
+  .stat {
+    padding: 10px;
+  }
+  .statIcon {
+    display: none;
+  }
+  .stat dt {
+    font-size: 10px;
+  }
+}
